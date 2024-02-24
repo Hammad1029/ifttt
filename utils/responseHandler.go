@@ -1,19 +1,18 @@
 package utils
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func ResponseHandler(c *gin.Context, params ...Config) {
-	var config Config
+func ResponseHandler(c *gin.Context, params ...ResponseConfig) {
+	var config ResponseConfig
 
 	if len(params) > 0 {
 		config = params[0]
 	} else {
-		config = Config{}
+		config = ResponseConfig{}
 	}
 
 	if config.Response.Code == "" || config.Response.Description == "" {
@@ -21,7 +20,7 @@ func ResponseHandler(c *gin.Context, params ...Config) {
 	}
 
 	if config.Error != nil {
-		fmt.Println(config.Error)
+		HandleError(config.Error)
 		config.Response = Responses["ServerError"]
 	}
 
@@ -43,7 +42,7 @@ type Response struct {
 	Description string
 }
 
-type Config struct {
+type ResponseConfig struct {
 	Response Response
 	Data     map[string]interface{}
 	Error    error
@@ -53,7 +52,8 @@ var Responses = map[string]Response{
 	"Success":          {"00", "Success"},
 	"ClientNotFound":   {"05", "Client Not Found"},
 	"ApiNotFound":      {"10", "Api Not Found"},
-	"ApiAlreadyExists": {"15", "APIAlreadyExists"},
+	"ApiAlreadyExists": {"15", "API Already Exists"},
+	"WrongTableFormat": {"15", "Wrong Table Format"},
 
 	"BadRequest":   {"400", "Bad request"},
 	"Unauthorized": {"401", "Unauthorized"},

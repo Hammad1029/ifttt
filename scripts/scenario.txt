@@ -1,0 +1,19 @@
+Api /createCard
+Ye call hui aik row bethgai 
+022882(cardNumber mapped at str1) 100(balance mapped at int1)
+
+Api /addFunds
+1000(balance at int1)
+
+Api /makeTnx
+Now this api has a rule that checks the balance.
+{
+   op1: "req.tnxAmount" (gets tnxamount from request body),
+   operator: "lte" (ensures that op1 tnx is less than or equal to card balance),
+   op2: "db men se balance le ao user ka"
+}
+ab by your logic this should query the db ese:
+select int1 (mapped to balance) from "data" where api = *"createCard"* and str1(mapped to cardNumber) = "022882"
+
+ab ismen masla ye he balance to ajaega but addfunds se laya hua nai aega.
+agar addfunds pe update karen /createCard ke data ko to sara maksad khatam hogya cus phir us api call ka apna original data overwrite hogya

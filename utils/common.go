@@ -9,9 +9,9 @@ import (
 
 func GetScriptString(path string) string {
 	absScriptPath, err := filepath.Abs(path)
-	HandleError(nil, err, "Error getting absolute path for Lua script: ")
+	HandleError(err, "Error getting absolute path for Lua script: ")
 	dat, err := os.ReadFile(absScriptPath)
-	HandleError(nil, err)
+	HandleError(err)
 	return string(dat[:])
 }
 
@@ -28,4 +28,12 @@ func ConvertToMap(key string, data interface{}) map[string]interface{} {
 	mapData := make(map[string]interface{})
 	mapData[key] = data
 	return mapData
+}
+
+func ConvertStringToInterfaceArray(obj []string) []interface{} {
+	s := make([]interface{}, len(obj))
+	for i, v := range obj {
+		s[i] = v
+	}
+	return s
 }

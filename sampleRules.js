@@ -1,22 +1,37 @@
 const req = {
-    email: "hammad1029@gmail.com",
-    password: "hello123",
-    name: "Hammad",
-    address: "73 faran",
-    city: "karachi",
-    nationality: "pk",
-    cnic: "4220173029169",
+    cardNumber: "201221",
+    initialBalanace: "100",
+}
+
+const createCard = {
+    name: "createCard",
+    type: "pre",
+    rule: {
+        op1: "true",
+        operator: "eq",
+        op2: "true",
+        thenActions: [{
+            type: "modifyReq",
+            data: {
+                field: "currentBalance",
+                value: {
+                    get: "initialBalance",
+                    from: "req"
+                }
+            }
+        }]
+    }
 }
 
 const addFunds = {
-    name: "checkBalance",
+    name: "addFunds",
     type: "pre",
     rule: {
         op1: "true",
         operator: "eq",
         op2: "true",
         thenAction: [{
-            type: "update",
+            type: "updateDb",
             data: {
                 table: "createCard",
                 where: {
@@ -103,7 +118,7 @@ const signUp = {
                 query: {
                     email: {
                         get: "email",
-                        from: "req"
+                        from: "req",
                     }
                 },
                 apiName: "signup"

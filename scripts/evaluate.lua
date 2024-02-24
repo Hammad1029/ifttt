@@ -1,4 +1,6 @@
-local json = require("jsonParse")
+local json = require("./scripts/jsonParse")
+local query = require("./scripts/query")
+local utils = require("./scripts/utils")
 
 local comparisionOperators = {
     ["lt"] = function(x, y)
@@ -22,10 +24,19 @@ local comparisionOperators = {
 }
 
 local function compare(ops, operator)
-    return comparisionOperators[operator(ops[1], ops[2])]
+    return comparisionOperators[operator](ops[1], ops[2])
 end
 
 local function handleActions(actions)
+    for _, ac in pairs(actions) do
+        if ac.type == "modifyReq" then
+            req[ac.data.field] = utils.getValue(ac.data.value)
+        elseif ac.type == "updateDb" then
+            query.update(ac.data)
+        elseif ac.type == "insertDb" then
+            query.insert(ac.data)
+        end
+    end
 end
 
 local function getFromDb(query)
@@ -50,7 +61,7 @@ local function resolveOperand(op, req, mapping)
     end
 end
 
-local function evaluate(rule, req, mapping)
+function evaluate(rule, req, mapping)
     local opRes = {resolveOperand(rule.op1, req, mapping), resolveOperand(rule.op2, req, mapping)}
     local comparision = compare(opRes, rule.operator)
     if comparision then
@@ -62,17 +73,15 @@ local function evaluate(rule, req, mapping)
     end
 end
 
-local function parseAndEvaluate(ruleJson, reqJson, mapping)
-    local rule = json.parse(ruleJson).rule
-    local req = json.parse(reqJson)
-    evaluate(rule, req, mapping)
+local function parseAndEvaluate()
+    return reqJson
+    -- local rule = json.parse(ruleJson).rule
+    -- req = json.parse(reqJson)
+    -- local mapping = json.parse(apiMapping)
+    -- evaluate(rule, apiMapping)
+    -- return json.stringify(utils.mapReqToInternal(mapping))
 end
 
-local function main()
-    print(parseAndEvaluate(
-        [[{"name":"signup","type":"pre","rule":{"op1":{"get":"email","from":"db","condition":{"query":{"email":{"get":"email","from":"req"}}}},"operator":"eq","op2":"nil","thenAction":[{"type":"insert","data":{"get":"*","from":"req","condition":{}}},{"type":"insert","data":{"get":"province","from":"rule","condition":{"rule":"form_of_identity"}}},{"type":"email","data":{"subject":"Signup verification","body":"You have been signed up"}}],"elseAction":[],"then":"true","else":"false"}}]],
-        [[{"email":"hammad1029@gmail.com","password":"hello123","name":"Hammad","address":"73 faran","city":"karachi","nationality":"pk","cnic":"4220173029169"}]],
-        [[{"name":"String1","age":"int2"}]]))
-end
+req = {}
 
-main()
+print(parseAndEvaluate())
