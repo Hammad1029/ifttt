@@ -25,13 +25,15 @@ func scyllaInit() {
 	fmt.Printf("%+v", session)
 	utils.HandleError(err)
 
-	// create keyspace IF NOT EXISTS
-	err = session.ExecStmt(GetSchemasProp("keyspace"))
-	utils.HandleError(err)
+	// Right now perform initial DDL manually
 
-	// create table for tables IF NOT EXISTS
-	err = session.ExecStmt(GetSchemasProp("tables.tables"))
-	utils.HandleError(err)
+	// create keyspace IF NOT EXISTS
+	// err = session.ExecStmt(GetSchemasProp("keyspace"))
+	// utils.HandleError(err)
+
+	// // create table for tables IF NOT EXISTS
+	// err = session.ExecStmt(GetSchemasProp("tables.tables"))
+	// utils.HandleError(err)
 
 	// defer session.Close()
 }

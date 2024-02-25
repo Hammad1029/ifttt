@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -36,4 +38,9 @@ func ConvertStringToInterfaceArray(obj []string) []interface{} {
 		s[i] = v
 	}
 	return s
+}
+
+func GenerateIndexName(tableName string, columns []string) string {
+	// tables_description_idx_index
+	return fmt.Sprintf("%s_%s_idx", tableName[:30], strings.Join(columns, "_"))
 }

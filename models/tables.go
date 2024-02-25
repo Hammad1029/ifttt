@@ -12,6 +12,7 @@ type TablesModel struct {
 	ClusteringKeys []string
 	AllColumns     []string
 	Mappings       map[string]string
+	Indexes        map[string]IndexModel `cql:"indexes"`
 }
 
 var TablesMetadata = table.Metadata{

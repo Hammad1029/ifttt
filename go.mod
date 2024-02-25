@@ -11,6 +11,7 @@ require (
 )
 
 require (
+	github.com/fatih/structs v1.1.0 // indirect
 	github.com/gocql/gocql v1.6.0 // indirect
 	github.com/scylladb/go-reflectx v1.0.1 // indirect
 	github.com/scylladb/gocqlx/v2 v2.8.0 // indirect

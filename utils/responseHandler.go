@@ -53,7 +53,9 @@ var Responses = map[string]Response{
 	"ClientNotFound":   {"05", "Client Not Found"},
 	"ApiNotFound":      {"10", "Api Not Found"},
 	"ApiAlreadyExists": {"15", "API Already Exists"},
-	"WrongTableFormat": {"15", "Wrong Table Format"},
+	"WrongTableFormat": {"20", "Wrong Table Format"},
+	"TableNotFound":    {"25", "Table Not Found"},
+	"IndexNotPossible": {"25", "Index Not Possible"},
 
 	"BadRequest":   {"400", "Bad request"},
 	"Unauthorized": {"401", "Unauthorized"},
