@@ -1,8 +1,8 @@
 package models
 
 type IndexModel struct {
-	Local     bool
-	Name      string
-	TableName string
-	Columns   []string
+	Local     bool     `cql:"local"`
+	Name      string   `cql:"name"`
+	TableName string   `cql:"table_name"`
+	Columns   []string `cql:"columns"`
 }

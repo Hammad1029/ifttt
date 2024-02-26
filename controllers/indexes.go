@@ -71,8 +71,14 @@ var Indexes = struct {
 			selectedTable.Indexes = make(map[string]models.IndexModel)
 		}
 
-		// m := lo.PickByKeys(selectedTable.Indexes, []string{indexName})
-		// fmt.Printf("%+v", m)
+		// check if index already exists
+		if len(lo.PickByKeys(selectedTable.Indexes, []string{indexName})) != 0 {
+			utils.ResponseHandler(c, utils.ResponseConfig{
+				Response: utils.Responses["IndexNotPossible"],
+				Data:     utils.ConvertToMap("Error", "Index already exists"),
+			})
+			return
+		}
 
 		selectedTable.Indexes[indexName] = models.IndexModel{
 			Local:     reqBody.Local,
