@@ -5,13 +5,13 @@ import (
 )
 
 type TablesModel struct {
-	InternalName   string
-	Name           string
-	Description    string
-	PartitionKeys  []string
-	ClusteringKeys []string
-	AllColumns     []string
-	Mappings       map[string]string
+	InternalName   string                `cql:"internal_name"`
+	Name           string                `cql:"name"`
+	Description    string                `cql:"description"`
+	PartitionKeys  []string              `cql:"partition_keys"`
+	ClusteringKeys []string              `cql:"clustering_keys"`
+	AllColumns     []string              `cql:"all_columns"`
+	Mappings       map[string]string     `cql:"mappings"`
 	Indexes        map[string]IndexModel `cql:"indexes"`
 }
 

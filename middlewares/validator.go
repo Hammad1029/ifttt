@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 type validatorInterface interface {
@@ -31,6 +32,17 @@ func Validator(c *gin.Context, schema interface{}) (error, interface{}) {
 		return nil, schemaInstance
 	}
 	return nil, nil
+}
+
+func NestedValidator(target interface{}, fieldRules ...*validation.FieldRules) *validation.FieldRules {
+	return validation.Field(target, validation.By(func(value interface{}) error {
+		valueV := reflect.Indirect(reflect.ValueOf(value))
+		if valueV.CanAddr() {
+			addr := valueV.Addr().Interface()
+			return validation.ValidateStruct(addr, fieldRules...)
+		}
+		return validation.ValidateStruct(target, fieldRules...)
+	}))
 }
 
 func errorRespond(c *gin.Context, err error) {

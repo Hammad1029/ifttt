@@ -7,7 +7,7 @@ import (
 )
 
 func apiRoutes(group *gin.RouterGroup) {
-	group.POST("/addApi", controllers.AddApi)
+	group.POST("/addApi", controllers.Apis.AddApi)
 	group.POST("/addMappingToApi", controllers.AddMappingToApi)
 	group.POST("/Call/:clientId/:pathName", controllers.CallApi)
 }

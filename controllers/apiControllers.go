@@ -1,41 +1,92 @@
 package controllers
 
 import (
+	"generic/config"
+	"generic/middlewares"
+	"generic/models"
+	"generic/schemas"
+	"generic/utils"
+
 	"github.com/gin-gonic/gin"
+	"github.com/scylladb/gocqlx"
+	"github.com/scylladb/gocqlx/qb"
+	"github.com/scylladb/gocqlx/v2/table"
 )
 
-func AddApi(c *gin.Context) {
-	// reqBodyAny, _ := c.Get("Req")
-	// reqBody := reqBodyAny.(*schemas.AddApi)
+var Apis = struct {
+	AddApi func(*gin.Context)
+}{
+	AddApi: func(c *gin.Context) {
+		err, reqBodyAny := middlewares.Validator(c, schemas.AddApiRequest{})
+		if err != nil {
+			return
+		}
+		reqBody := reqBodyAny.(*schemas.AddApiRequest)
 
-	// // check if client exists
-	// client, found := dbutils.FindClient(reqBody.ClientId)
-	// if !found {
-	// 	utils.ResponseHandler(c, utils.ResponseConfig{Response: utils.Responses["ClientNotFound"]})
-	// 	return
-	// }
+		var apis []models.ApiModel
 
-	// _, found = dbutils.FindApi(reqBody.ClientId, reqBody.ApiName)
-	// if found {
-	// 	utils.ResponseHandler(c, utils.ResponseConfig{Response: utils.Responses["ApiAlreadyExists"]})
-	// 	return
-	// }
+		// check if api of this name already exists
+		stmt, names := qb.Select("apis").Where(qb.Eq("api_name")).ToCql()
+		q := config.GetScylla().Query(stmt, names).BindStruct(models.ApiModel{ApiName: reqBody.ApiName})
+		if err := gocqlx.Select(&apis, q.Query); err != nil {
+			utils.HandleErrorResponse(c, err)
+			return
+		}
+		if len(apis) > 0 {
+			utils.ResponseHandler(c, utils.ResponseConfig{Response: utils.Responses["ApiAlreadyExists"]})
+			return
+		}
 
-	// // add api to mongo
-	// var api models.ApisMongo
-	// api.ApiName = reqBody.ApiName
-	// api.ApiPath = reqBody.PathName
-	// api.ClientId = reqBody.ClientId
-	// apiCollection, ctx := config.GetMongoCollection("apis")
-	// insertResult, err := apiCollection.InsertOne(ctx, api)
-	// utils.HandleError(c, err)
+		// check if api of this path already exists
+		stmt, names = qb.Select("apis").Where(qb.Eq("api_path")).ToCql()
+		q = config.GetScylla().Query(stmt, names).BindStruct(models.ApiModel{ApiPath: reqBody.ApiPath})
+		if err := gocqlx.Select(&apis, q.Query); err != nil {
+			utils.HandleErrorResponse(c, err)
+			return
+		}
+		if len(apis) > 0 {
+			utils.ResponseHandler(c, utils.ResponseConfig{Response: utils.Responses["ApiAlreadyExists"]})
+			return
+		}
 
-	// // add api _id to client
-	// client.Apis = append(client.Apis, insertResult.InsertedID.(primitive.ObjectID))
-	// err = dbutils.UpdateClient(reqBody.ClientId, client)
-	// utils.HandleError(c, err)
+		// create api struct
+		var api models.ApiModel
+		api.ApiGroup = reqBody.ApiGroup
+		api.ApiName = reqBody.ApiName
+		api.ApiPath = reqBody.ApiPath
+		api.ApiDescription = reqBody.ApiDescription
+		for _, v := range reqBody.Rules {
+			rule := models.RuleUDT{
+				Id:        v.Id,
+				Operator1: v.Operator1,
+				Operand:   v.Operand,
+				Operator2: v.Operator2,
+			}
+			for _, ac := range v.Then {
+				rule.Then = append(rule.Then, models.ActionUDT{
+					Type: ac.Type,
+					Data: ac.Data,
+				})
+			}
+			for _, ac := range v.Else {
+				rule.Else = append(rule.Else, models.ActionUDT{
+					Type: ac.Type,
+					Data: ac.Data,
+				})
+			}
+			api.Rules = append(api.Rules, rule)
+		}
 
-	// utils.ResponseHandler(c, utils.ResponseConfig{Data: utils.ConvertToMap("inserted", insertResult)})
+		// insert api
+		ApisTable := table.New(models.ApisMetadata)
+		entry := config.GetScylla().Query(ApisTable.Insert()).BindStruct(&api)
+		if err = entry.ExecRelease(); err != nil {
+			utils.HandleErrorResponse(c, err)
+			return
+		}
+
+		utils.ResponseHandler(c, utils.ResponseConfig{})
+	},
 }
 
 func AddMappingToApi(c *gin.Context) {

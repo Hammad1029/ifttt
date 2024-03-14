@@ -499,5 +499,6 @@
       "name": "boolean30",
       "type": "boolean"
     }
-  ]
+  ],
+  "operators": ["eq"]
 }

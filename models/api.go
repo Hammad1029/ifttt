@@ -1,26 +1,18 @@
 package models
 
-import (
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-)
+import "github.com/scylladb/gocqlx/v2/table"
 
-type ApisMongo struct {
-	ApiName   string               `json:"apiName"`
-	ClientId  string               `json:"clientId"`
-	ApiPath   string               `json:"pathName"`
-	PreRules  []primitive.ObjectID `json:"preRules"`
-	PostRules []primitive.ObjectID `json:"postRules"`
+type ApiModel struct {
+	ApiGroup       string    `cql:"api_group"`
+	ApiName        string    `cql:"api_name"`
+	ApiDescription string    `cql:"api_description"`
+	ApiPath        string    `cql:"api_path"`
+	Rules          []RuleUDT `cql:"rules"`
 }
 
-func AddApi(c *gin.Context) *mongo.InsertOneResult {
-	// rulesCollection, ctx := config.GetMongoCollection("apis")
-	// var api ApisMongo
-	// err := c.BindJSON(api)
-	// utils.HandleError(c, err)
-	// insertResult, err := rulesCollection.InsertOne(ctx, api)
-	// utils.HandleError(c, err)
-	// return insertResult
-	return nil
+var ApisMetadata = table.Metadata{
+	Name:    "Apis",
+	Columns: []string{"api_group", "api_name", "api_description", "api_path", "rules"},
+	PartKey: []string{"api_group"},
+	SortKey: []string{"api_name", "api_description"},
 }

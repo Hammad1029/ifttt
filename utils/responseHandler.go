@@ -56,6 +56,7 @@ var Responses = map[string]Response{
 	"WrongTableFormat": {"20", "Wrong Table Format"},
 	"TableNotFound":    {"25", "Table Not Found"},
 	"IndexNotPossible": {"25", "Index Not Possible"},
+	"IndexNotFound":    {"30", "Index Not Found"},
 
 	"BadRequest":   {"400", "Bad request"},
 	"Unauthorized": {"401", "Unauthorized"},

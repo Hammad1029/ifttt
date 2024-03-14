@@ -1,33 +1,19 @@
 package models
 
-type RuleModelMongo struct {
-	Name string                `json:"name" binding:"required"`
-	Type string                `json:"type" binding:"required"`
-	Rule ruleDetailsModelMongo `json:"rule" binding:"required"`
+import (
+	"github.com/gocql/gocql"
+)
+
+type RuleUDT struct {
+	Id        gocql.UUID  `cql:"id"`
+	Operator1 string      `cql:"op1"`
+	Operand   string      `cql:"opnd"`
+	Operator2 string      `cql:"op2"`
+	Then      []ActionUDT `cql:"then"`
+	Else      []ActionUDT `cql:"else"`
 }
 
-type ruleDetailsModelMongo struct {
-	Operator1   interface{}   `json:"op1" binding:"required"`
-	Operator2   interface{}   `json:"op2" binding:"required"`
-	Operator    string        `json:"operator" binding:"required"`
-	ThenActions []interface{} `json:"thenActions" binding:"required"`
-	ElseActions []interface{} `json:"elseActions" binding:"required"`
-	Then        interface{}   `json:"then" binding:"required"`
-	Else        interface{}   `json:"else" binding:"required"`
-}
-
-func GetRule(id string) (RuleModelMongo, string) {
-	// var rule RuleModelMongo
-	// rulesCollection, ctx := config.GetMongoCollection("rules")
-	// objectId, err := primitive.ObjectIDFromHex(id)
-	// utils.HandleError(nil, err)
-	// result := rulesCollection.FindOne(ctx, bson.M{"_id": objectId})
-	// err = result.Decode(&rule)
-	// if err == mongo.ErrNoDocuments {
-	// 	return RuleModelMongo{}, ""
-	// }
-	// raw, err := result.Raw()
-	// utils.HandleError(nil, err)
-	// return rule, raw.String()
-	return RuleModelMongo{}, ""
+type ActionUDT struct {
+	Type string `cql:"type"`
+	Data string `cql:"data"`
 }
