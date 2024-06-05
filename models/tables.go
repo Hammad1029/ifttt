@@ -21,3 +21,10 @@ var TablesMetadata = table.Metadata{
 	PartKey: []string{"internal_name"},
 	SortKey: []string{"name", "description"},
 }
+
+type IndexModel struct {
+	Local     bool     `cql:"local"`
+	IndexName string   `cql:"index_name"`
+	TableName string   `cql:"table_name"`
+	Columns   []string `cql:"columns"`
+}

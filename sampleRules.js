@@ -3,7 +3,7 @@ const req = {
     initialBalanace: "100",
 }
 
-const rules = [
+const rules = [[
     {
         "id": "uuid",
         "op1": "abc",
@@ -18,4 +18,4 @@ const rules = [
             "data": "2"
         }]
     },
-]
+]]

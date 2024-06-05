@@ -42,20 +42,26 @@ time_series_partition:
 1-11M
 1y
 
-CREATE TYPE 
-    IF NOT EXISTS action (
+CREATE TYPE
+    IF NOT EXISTS RESOLVABLE (
         type TEXT,
-        data TEXT
-);
+        data MAP<TEXT,TEXT>
+    );
 
 CREATE TYPE 
     IF NOT EXISTS rule (
-        id UUID,
-        op1 TEXT,
+        op1 FROZEN<RESOLVABLE>,
         opnd TEXT, 
-        op2 TEXT,
-        then SET<FROZEN<ACTION>>,
-        else SET<FROZEN<ACTION>>
+        op2 FROZEN<RESOLVABLE>,
+        then LIST<FROZEN<RESOLVABLE>>,
+        else LIST<FROZEN<RESOLVABLE>>
+);
+
+CREATE TYPE
+    IF NOT EXISTS query (
+        query_str TEXT,
+        resolvables LIST<FROZEN<RESOLVABLE>>,
+        type TEXT
 );
 
 CREATE TABLE
@@ -64,8 +70,40 @@ CREATE TABLE
         api_name TEXT,
         api_description TEXT,
         api_path TEXT,
-        rules SET<FROZEN<RULE>>,
+        start_rules SET<INT>,
+        rules LIST<FROZEN<RULE>>,
+        queries MAP<TEXT,FROZEN<query>>,
         PRIMARY KEY (api_group,api_name,api_description)
     );
 
-CREATE INDEX ON ifttt.apis(api_path);
+CREATE INDEX
+    IF NOT EXISTS ON ifttt.apis(api_path);
+
+CREATE TYPE
+    IF NOT EXISTS ifttt.request_data (
+        req_body  MAP<TEXT,TEXT>,
+        store    MAP<TEXT,TEXT>,
+        response MAP<TEXT,TEXT>,
+        query_res MAP<TEXT,FROZEN<SET<MAP<TEXT,TEXT>>>>,
+    );
+
+CREATE TABLE
+    IF NOT EXISTS ifttt.logs (
+        api_group TEXT,
+        api_name TEXT,
+        execution_order LIST<INT>,
+        request_data FROZEN<request_data>,
+        start TIMESTAMP,
+        start_partition TIMESTAMP,
+        end TIMESTAMP,
+        time_taken INT,
+        execution_logs LIST<FROZEN<exec_log>>,
+        PRIMARY KEY ((api_group,start_partition),api_name,start)
+    );
+
+CREATE TYPE
+    IF NOT EXISTS ifttt.exec_log (
+        log_user TEXT,
+        log_type TEXT,
+        log_data TEXT
+    );

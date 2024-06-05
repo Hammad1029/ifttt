@@ -50,32 +50,17 @@ var Apis = struct {
 		}
 
 		// create api struct
-		var api models.ApiModel
-		api.ApiGroup = reqBody.ApiGroup
-		api.ApiName = reqBody.ApiName
-		api.ApiPath = reqBody.ApiPath
-		api.ApiDescription = reqBody.ApiDescription
-		for _, v := range reqBody.Rules {
-			rule := models.RuleUDT{
-				Id:        v.Id,
-				Operator1: v.Operator1,
-				Operand:   v.Operand,
-				Operator2: v.Operator2,
-			}
-			for _, ac := range v.Then {
-				rule.Then = append(rule.Then, models.ActionUDT{
-					Type: ac.Type,
-					Data: ac.Data,
-				})
-			}
-			for _, ac := range v.Else {
-				rule.Else = append(rule.Else, models.ActionUDT{
-					Type: ac.Type,
-					Data: ac.Data,
-				})
-			}
-			api.Rules = append(api.Rules, rule)
+		api := models.ApiModel{
+			ApiGroup:       reqBody.ApiGroup,
+			ApiName:        reqBody.ApiName,
+			ApiPath:        reqBody.ApiPath,
+			ApiDescription: reqBody.ApiDescription,
+			StartRules:     reqBody.StartRules,
+			Rules:          reqBody.Rules,
 		}
+
+		// generate parameterized queries & stringify resolvable data
+		api.TransformApiForSave()
 
 		// insert api
 		ApisTable := table.New(models.ApisMetadata)

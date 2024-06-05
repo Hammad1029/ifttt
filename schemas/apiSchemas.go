@@ -1,30 +1,18 @@
 package schemas
 
 import (
+	"generic/models"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/gocql/gocql"
 )
 
-type rule struct {
-	Id        gocql.UUID `json:"id"`
-	Operator1 string     `json:"op1"`
-	Operand   string     `json:"opnd"`
-	Operator2 string     `json:"op2"`
-	Then      []action   `json:"then"`
-	Else      []action   `json:"else"`
-}
-
-type action struct {
-	Type string `json:"type"`
-	Data string `json:"data"`
-}
-
 type AddApiRequest struct {
-	ApiGroup       string `json:"apiGroup"`
-	ApiName        string `json:"apiName"`
-	ApiDescription string `json:"apiDescription"`
-	ApiPath        string `json:"apiPath"`
-	Rules          []rule `json:"rules"`
+	ApiGroup       string           `json:"apiGroup"`
+	ApiName        string           `json:"apiName"`
+	ApiDescription string           `json:"apiDescription"`
+	ApiPath        string           `json:"apiPath"`
+	StartRules     []int            `json:"startRules"`
+	Rules          []models.RuleUDT `json:"rules"`
 }
 
 func (r AddApiRequest) Validate() error {
@@ -49,6 +37,12 @@ func (r AddApiRequest) Validate() error {
 			&r.ApiPath,
 			validation.Required,
 			validation.Length(3, 0),
+			// validation.Match(regexp.MustCompile(utils.Regex.Endpoint)),
+		),
+		validation.Field(
+			&r.StartRules,
+			validation.Required,
+			validation.Each(validation.Min(0)),
 			// validation.Match(regexp.MustCompile(utils.Regex.Endpoint)),
 		),
 		validation.Field(
