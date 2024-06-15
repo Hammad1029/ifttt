@@ -11,8 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
-	"github.com/scylladb/gocqlx"
-	"github.com/scylladb/gocqlx/qb"
+	"github.com/scylladb/gocqlx/v2/qb"
 )
 
 var Indexes = struct {
@@ -21,17 +20,17 @@ var Indexes = struct {
 	DropIndex func(*gin.Context)
 }{
 	AddIndex: func(c *gin.Context) {
-		err, reqBodyAny := middlewares.Validator(c, schemas.AddIndex{})
+		err, reqBodyAny := middlewares.Validator(c, schemas.AddIndexRequest{})
 		if err != nil {
 			return
 		}
-		reqBody := reqBodyAny.(*schemas.AddIndex)
+		reqBody := reqBodyAny.(*schemas.AddIndexRequest)
 
-		// check if table of this name already exists
+		// get table
 		stmt, names := qb.Select("tables").Where(qb.Eq("name")).ToCql()
 		q := config.GetScylla().Query(stmt, names).BindStruct(models.TablesModel{Name: reqBody.TableName})
 		var tables []models.TablesModel
-		if err := gocqlx.Select(&tables, q.Query); err != nil {
+		if err := q.SelectRelease(&tables); err != nil {
 			utils.HandleErrorResponse(c, err)
 			return
 		}
@@ -42,31 +41,25 @@ var Indexes = struct {
 
 		selectedTable := tables[0]
 
-		// check if column to be indexed is a partition key
-		if len(lo.Intersect(selectedTable.PartitionKeys, reqBody.IndexedColumns)) != 0 {
-			utils.ResponseHandler(c, utils.ResponseConfig{
-				Response: utils.Responses["IndexNotPossible"],
-				Data:     utils.ConvertToMap("Error", "Can not create index on partition keys"),
-			})
-			return
-		}
+		for _, col := range reqBody.IndexedColumns {
+			if colModel, found := lo.Find(selectedTable.Columns, func(item models.TableColumn) bool {
+				return item.Name == col
+			}); found {
+				if colModel.PartitionKey || colModel.ClusteringKey {
+					utils.ResponseHandler(c, utils.ResponseConfig{
+						Response: utils.Responses["IndexNotPossible"],
+						Data:     utils.ConvertToMap("Error", "Can not create index on partition and clustering keys"),
+					})
+					return
+				}
+			} else {
+				utils.ResponseHandler(c, utils.ResponseConfig{
+					Response: utils.Responses["IndexNotPossible"],
+					Data:     utils.ConvertToMap("Error", "Column not found in table"),
+				})
+				return
+			}
 
-		// check if column to be indexed is a clustering key
-		if len(lo.Intersect(selectedTable.ClusteringKeys, reqBody.IndexedColumns)) != 0 {
-			utils.ResponseHandler(c, utils.ResponseConfig{
-				Response: utils.Responses["IndexNotPossible"],
-				Data:     utils.ConvertToMap("Error", "Can not create index on clustering keys"),
-			})
-			return
-		}
-
-		// check if table has these columns
-		if len(lo.Intersect(selectedTable.AllColumns, reqBody.IndexedColumns)) != len(reqBody.IndexedColumns) {
-			utils.ResponseHandler(c, utils.ResponseConfig{
-				Response: utils.Responses["IndexNotPossible"],
-				Data:     utils.ConvertToMap("Error", "All of the specified columns are not activated for this table"),
-			})
-			return
 		}
 
 		indexName := utils.GenerateIndexName(selectedTable.InternalName, reqBody.IndexedColumns)
@@ -105,7 +98,16 @@ var Indexes = struct {
 				"CREATE INDEX %s ON %s((%s),%s)",
 				indexName,
 				selectedTable.InternalName,
-				strings.Join(selectedTable.PartitionKeys, ", "),
+				strings.Join(
+					lo.Map(
+						lo.Filter(selectedTable.Columns,
+							func(col models.TableColumn, _ int) bool {
+								return col.PartitionKey == true
+							},
+						),
+						func(col models.TableColumn, _ int) string {
+							return col.Name
+						}), ", "),
 				strings.Join(reqBody.IndexedColumns, ", "),
 			)
 		} else {
@@ -125,17 +127,17 @@ var Indexes = struct {
 		utils.ResponseHandler(c, utils.ResponseConfig{})
 	},
 	FindIndex: func(c *gin.Context) {
-		err, reqBodyAny := middlewares.Validator(c, schemas.FindIndex{})
+		err, reqBodyAny := middlewares.Validator(c, schemas.FindIndexRequest{})
 		if err != nil {
 			return
 		}
-		reqBody := reqBodyAny.(*schemas.FindIndex)
+		reqBody := reqBodyAny.(*schemas.FindIndexRequest)
 
 		// check if table exists
 		stmt, names := qb.Select("tables").Where(qb.Eq("name")).ToCql()
 		q := config.GetScylla().Query(stmt, names).BindStruct(models.TablesModel{Name: reqBody.TableName})
 		var tables []models.TablesModel
-		if err := gocqlx.Select(&tables, q.Query); err != nil {
+		if err := q.SelectRelease(&tables); err != nil {
 			utils.HandleErrorResponse(c, err)
 			return
 		}
@@ -154,17 +156,17 @@ var Indexes = struct {
 		utils.ResponseHandler(c, utils.ResponseConfig{Data: utils.ConvertToMap("filteredIndexes", filteredIndexes)})
 	},
 	DropIndex: func(c *gin.Context) {
-		err, reqBodyAny := middlewares.Validator(c, schemas.DropIndex{})
+		err, reqBodyAny := middlewares.Validator(c, schemas.DropIndexRequest{})
 		if err != nil {
 			return
 		}
-		reqBody := reqBodyAny.(*schemas.DropIndex)
+		reqBody := reqBodyAny.(*schemas.DropIndexRequest)
 
 		// check if table exists
 		stmt, names := qb.Select("tables").Where(qb.Eq("name")).ToCql()
 		q := config.GetScylla().Query(stmt, names).BindStruct(models.TablesModel{Name: reqBody.TableName})
 		var tables []models.TablesModel
-		if err := gocqlx.Select(&tables, q.Query); err != nil {
+		if err := q.SelectRelease(&tables); err != nil {
 			utils.HandleErrorResponse(c, err)
 			return
 		}

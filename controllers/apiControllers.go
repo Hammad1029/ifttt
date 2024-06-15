@@ -8,8 +8,7 @@ import (
 	"generic/utils"
 
 	"github.com/gin-gonic/gin"
-	"github.com/scylladb/gocqlx"
-	"github.com/scylladb/gocqlx/qb"
+	"github.com/scylladb/gocqlx/v2/qb"
 	"github.com/scylladb/gocqlx/v2/table"
 )
 
@@ -28,7 +27,7 @@ var Apis = struct {
 		// check if api of this name already exists
 		stmt, names := qb.Select("apis").Where(qb.Eq("api_name")).ToCql()
 		q := config.GetScylla().Query(stmt, names).BindStruct(models.ApiModel{ApiName: reqBody.ApiName})
-		if err := gocqlx.Select(&apis, q.Query); err != nil {
+		if err := q.SelectRelease(&apis); err != nil {
 			utils.HandleErrorResponse(c, err)
 			return
 		}
@@ -40,7 +39,7 @@ var Apis = struct {
 		// check if api of this path already exists
 		stmt, names = qb.Select("apis").Where(qb.Eq("api_path")).ToCql()
 		q = config.GetScylla().Query(stmt, names).BindStruct(models.ApiModel{ApiPath: reqBody.ApiPath})
-		if err := gocqlx.Select(&apis, q.Query); err != nil {
+		if err := q.SelectRelease(&apis); err != nil {
 			utils.HandleErrorResponse(c, err)
 			return
 		}
@@ -59,8 +58,11 @@ var Apis = struct {
 			Rules:          reqBody.Rules,
 		}
 
-		// generate parameterized queries & stringify resolvable data
-		api.TransformApiForSave()
+		// generate parameterized queries & serialize data
+		if err := api.TransformApiForSave(); err != nil {
+			utils.HandleErrorResponse(c, err)
+			return
+		}
 
 		// insert api
 		ApisTable := table.New(models.ApisMetadata)

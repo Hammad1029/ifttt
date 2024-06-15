@@ -7,12 +7,12 @@ import (
 )
 
 type AddApiRequest struct {
-	ApiGroup       string           `json:"apiGroup"`
-	ApiName        string           `json:"apiName"`
-	ApiDescription string           `json:"apiDescription"`
-	ApiPath        string           `json:"apiPath"`
-	StartRules     []int            `json:"startRules"`
-	Rules          []models.RuleUDT `json:"rules"`
+	ApiGroup       string            `json:"apiGroup"`
+	ApiName        string            `json:"apiName"`
+	ApiDescription string            `json:"apiDescription"`
+	ApiPath        string            `json:"apiPath"`
+	StartRules     []int             `json:"startRules"`
+	Rules          []*models.RuleUDT `json:"rules"`
 }
 
 func (r AddApiRequest) Validate() error {

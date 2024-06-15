@@ -14,5 +14,4 @@ func Init(router *gin.Engine) {
 		// rulesRoutes(v1.Group("/rules"))
 		// clientRoutes(v1.Group("/clients"))
 	}
-	router.Run()
 }

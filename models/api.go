@@ -1,6 +1,10 @@
 package models
 
-import "github.com/scylladb/gocqlx/v2/table"
+import (
+	"fmt"
+
+	"github.com/scylladb/gocqlx/v2/table"
+)
 
 type ApiModel struct {
 	ApiGroup       string              `cql:"api_group"`
@@ -8,7 +12,7 @@ type ApiModel struct {
 	ApiDescription string              `cql:"api_description"`
 	ApiPath        string              `cql:"api_path"`
 	StartRules     []int               `cql:"start_rules"`
-	Rules          []RuleUDT           `cql:"rules"`
+	Rules          []*RuleUDT          `cql:"rules"`
 	Queries        map[string]QueryUDT `cql:"queries"`
 }
 
@@ -19,9 +23,12 @@ var ApisMetadata = table.Metadata{
 	SortKey: []string{"api_name", "api_description"},
 }
 
-func (api *ApiModel) TransformApiForSave() {
+func (api *ApiModel) TransformApiForSave() error {
 	api.Queries = make(map[string]QueryUDT)
 	for _, rule := range api.Rules {
-		rule.TransformForSave(&api.Queries)
+		if err := rule.TransformForSave(&api.Queries); err != nil {
+			return fmt.Errorf("method TransformApiForSave: %s", err)
+		}
 	}
+	return nil
 }

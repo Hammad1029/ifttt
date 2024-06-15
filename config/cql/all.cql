@@ -6,10 +6,18 @@ use ifttt;
 
 CREATE TYPE 
     IF NOT EXISTS ifttt.indexes (
-    local BOOLEAN,
-    index_name TEXT,
-    table_name TEXT,
-    columns SET<TEXT>
+        local BOOLEAN,
+        index_name TEXT,
+        table_name TEXT,
+        columns SET<TEXT>
+);
+
+CREATE TYPE
+    IF NOT EXISTS ifttt.table_column (
+        name TEXT,
+        data_type TEXT,
+        partition_key BOOLEAN,
+        clustering_key BOOLEAN
 );
 
 CREATE TABLE
@@ -17,10 +25,7 @@ CREATE TABLE
         internal_name TEXT,
         name TEXT,
         description TEXT,
-        partition_keys SET<TEXT>,
-        clustering_keys SET<TEXT>,
-        all_columns SET<TEXT>,
-        mappings MAP<TEXT, TEXT>,
+        columns SET<FROZEN<table_column>>,
         indexes map<text, frozen<indexes>>,
         PRIMARY KEY (internal_name, name, description)
     );
@@ -31,7 +36,7 @@ CREATE TABLE
         int1 int,
         int2 int,
         int13 int,
-        PRIMARY KEY ((int1),(int2))
+        PRIMARY KEY ((int1),int2)
     );
 
 time_series_partition:
@@ -50,9 +55,7 @@ CREATE TYPE
 
 CREATE TYPE 
     IF NOT EXISTS rule (
-        op1 FROZEN<RESOLVABLE>,
-        opnd TEXT, 
-        op2 FROZEN<RESOLVABLE>,
+        conditions TEXT,
         then LIST<FROZEN<RESOLVABLE>>,
         else LIST<FROZEN<RESOLVABLE>>
 );
@@ -87,6 +90,13 @@ CREATE TYPE
         query_res MAP<TEXT,FROZEN<SET<MAP<TEXT,TEXT>>>>,
     );
 
+CREATE TYPE
+    IF NOT EXISTS ifttt.exec_log (
+        log_user TEXT,
+        log_type TEXT,
+        log_data TEXT
+    );
+
 CREATE TABLE
     IF NOT EXISTS ifttt.logs (
         api_group TEXT,
@@ -99,11 +109,4 @@ CREATE TABLE
         time_taken INT,
         execution_logs LIST<FROZEN<exec_log>>,
         PRIMARY KEY ((api_group,start_partition),api_name,start)
-    );
-
-CREATE TYPE
-    IF NOT EXISTS ifttt.exec_log (
-        log_user TEXT,
-        log_type TEXT,
-        log_data TEXT
     );

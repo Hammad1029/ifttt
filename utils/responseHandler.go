@@ -26,8 +26,6 @@ func ResponseHandler(c *gin.Context, params ...ResponseConfig) {
 
 	if config.Data == nil {
 		config.Data = make(map[string]interface{})
-	} else {
-		config.Data = gin.H(config.Data)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -44,7 +42,7 @@ type Response struct {
 
 type ResponseConfig struct {
 	Response Response
-	Data     map[string]interface{}
+	Data     interface{}
 	Error    error
 }
 

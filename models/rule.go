@@ -1,7 +1,9 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"generic/utils"
 
 	jsontocql "github.com/Hammad1029/json-to-cql"
@@ -9,47 +11,40 @@ import (
 )
 
 type RuleUDT struct {
-	Operator1 ResolvableUDT   `cql:"op1" json:"op1"`
-	Operand   string          `cql:"opnd" json:"opnd"`
-	Operator2 ResolvableUDT   `cql:"op2" json:"op2"`
-	Then      []ResolvableUDT `cql:"then" json:"then"`
-	Else      []ResolvableUDT `cql:"else" json:"else"`
+	Conditions interface{}     `cql:"conditions" json:"conditions"`
+	Then       []ResolvableUDT `cql:"then" json:"then"`
+	Else       []ResolvableUDT `cql:"else" json:"else"`
+}
+
+type Condition struct {
+	ConditionType string        `cql:"condition_type" json:"conditionType" mapstructure:"conditionType"`
+	Conditions    []Condition   `cql:"conditions" json:"conditions" mapstructure:"conditions"`
+	Group         bool          `cql:"group" json:"group" mapstructure:"group"`
+	Operator1     ResolvableUDT `cql:"op1" json:"op1" mapstructure:"op1"`
+	Operand       string        `cql:"opnd" json:"opnd" mapstructure:"opnd"`
+	Operator2     ResolvableUDT `cql:"op2" json:"op2" mapstructure:"op2"`
 }
 
 type ResolvableUDT struct {
-	Type string                 `cql:"type" json:"type"`
-	Data map[string]interface{} `cql:"data" json:"data"`
-}
-
-type QueryUDT struct {
-	QueryString string          `cql:"query_str"`
-	Resolvables []ResolvableUDT `cql:"resolvables"`
-	Type        string          `cql:"type"`
+	Type string                 `cql:"type" json:"type" mapstructure:"type"`
+	Data map[string]interface{} `cql:"data" json:"data" mapstructure:"data"`
 }
 
 func (r *RuleUDT) TransformForSave(queries *map[string]QueryUDT) error {
-	if err := r.generateQueries(&r.Operator1, queries); err != nil {
-		return err
-	} else {
-		if stringified, err := utils.StringifyMapInt(r.Operator1.Data); err != nil {
-			return err
-		} else {
-			r.Operator1.Data = stringified
-		}
+	cGroup := Condition{}
+	if err := mapstructure.Decode(r.Conditions, &cGroup); err != nil {
+		return fmt.Errorf("method TransformForSave: %s", err)
 	}
+	cGroup.transformGroup(queries)
 
-	if err := r.generateQueries(&r.Operator2, queries); err != nil {
-		return err
-	} else {
-		if stringified, err := utils.StringifyMapInt(r.Operator2.Data); err != nil {
-			return err
-		} else {
-			r.Operator2.Data = stringified
-		}
+	marshalled, err := json.Marshal(cGroup)
+	if err != nil {
+		return fmt.Errorf("method TransformForSave: %s", err)
 	}
+	r.Conditions = string(marshalled)
 
 	for _, ac := range r.Then {
-		if err := r.generateQueries(&ac, queries); err != nil {
+		if err := ac.generateQueries(queries); err != nil {
 			return err
 		} else {
 			if stringified, err := utils.StringifyMapInt(ac.Data); err != nil {
@@ -61,7 +56,7 @@ func (r *RuleUDT) TransformForSave(queries *map[string]QueryUDT) error {
 	}
 
 	for _, ac := range r.Else {
-		if err := r.generateQueries(&ac, queries); err != nil {
+		if err := ac.generateQueries(queries); err != nil {
 			return err
 		} else {
 			if stringified, err := utils.StringifyMapInt(ac.Data); err != nil {
@@ -75,7 +70,23 @@ func (r *RuleUDT) TransformForSave(queries *map[string]QueryUDT) error {
 	return nil
 }
 
-func (r *RuleUDT) generateQueries(ruleResolvable *ResolvableUDT, queries *map[string]QueryUDT) error {
+func (c *Condition) transformGroup(queries *map[string]QueryUDT) error {
+	for _, cond := range c.Conditions {
+		if cond.Group {
+			cond.transformGroup(queries)
+		} else {
+			if err := cond.Operator1.generateQueries(queries); err != nil {
+				return fmt.Errorf("method transformGroup: %s", err)
+			}
+			if err := cond.Operator2.generateQueries(queries); err != nil {
+				return fmt.Errorf("method transformGroup: %s", err)
+			}
+		}
+	}
+	return nil
+}
+
+func (ruleResolvable *ResolvableUDT) generateQueries(queries *map[string]QueryUDT) error {
 	if query, ok := ruleResolvable.Data["query"]; ruleResolvable.Type == "db" && ok {
 		if queryMap, ok := query.(map[string]interface{}); ok {
 			var queryDoc jsontocql.QueryDoc
