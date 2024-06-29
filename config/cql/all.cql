@@ -55,6 +55,8 @@ CREATE TYPE
 
 CREATE TYPE 
     IF NOT EXISTS rule (
+        id TEXT,
+        description TEXT,
         conditions TEXT,
         then LIST<FROZEN<RESOLVABLE>>,
         else LIST<FROZEN<RESOLVABLE>>
@@ -74,7 +76,7 @@ CREATE TABLE
         api_description TEXT,
         api_path TEXT,
         start_rules SET<INT>,
-        rules LIST<FROZEN<RULE>>,
+        rules MAP<TEXT,FROZEN<RULE>>,
         queries MAP<TEXT,FROZEN<query>>,
         PRIMARY KEY (api_group,api_name,api_description)
     );

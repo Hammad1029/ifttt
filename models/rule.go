@@ -11,9 +11,11 @@ import (
 )
 
 type RuleUDT struct {
-	Conditions interface{}     `cql:"conditions" json:"conditions"`
-	Then       []ResolvableUDT `cql:"then" json:"then"`
-	Else       []ResolvableUDT `cql:"else" json:"else"`
+	Id          string          `cql:"id" json:"id"`
+	Description string          `cql:"description" json:"description"`
+	Conditions  interface{}     `cql:"conditions" json:"conditions"`
+	Then        []ResolvableUDT `cql:"then" json:"then"`
+	Else        []ResolvableUDT `cql:"else" json:"else"`
 }
 
 type Condition struct {

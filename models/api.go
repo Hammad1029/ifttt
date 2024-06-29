@@ -11,8 +11,9 @@ type ApiModel struct {
 	ApiName        string              `cql:"api_name"`
 	ApiDescription string              `cql:"api_description"`
 	ApiPath        string              `cql:"api_path"`
-	StartRules     []int               `cql:"start_rules"`
-	Rules          []*RuleUDT          `cql:"rules"`
+	ApiRequest     string              `cql:"api_request"`
+	StartRules     []string            `cql:"start_rules"`
+	Rules          map[string]*RuleUDT `cql:"rules"`
 	Queries        map[string]QueryUDT `cql:"queries"`
 }
 
