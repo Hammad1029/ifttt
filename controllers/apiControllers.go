@@ -26,20 +26,8 @@ var Apis = struct {
 		var apis []models.ApiModel
 
 		// check if api of this name already exists
-		stmt, names := qb.Select("apis").Where(qb.Eq("api_name")).ToCql()
-		q := config.GetScylla().Query(stmt, names).BindStruct(models.ApiModel{ApiName: reqBody.ApiName})
-		if err := q.SelectRelease(&apis); err != nil {
-			utils.HandleErrorResponse(c, err)
-			return
-		}
-		if len(apis) > 0 {
-			utils.ResponseHandler(c, utils.ResponseConfig{Response: utils.Responses["ApiAlreadyExists"]})
-			return
-		}
-
-		// check if api of this path already exists
-		stmt, names = qb.Select("apis").Where(qb.Eq("api_path")).ToCql()
-		q = config.GetScylla().Query(stmt, names).BindStruct(models.ApiModel{ApiPath: reqBody.ApiPath})
+		stmt, names := qb.Select("apis").Where(qb.Eq("api_group"), qb.Eq("api_name")).ToCql()
+		q := config.GetScylla().Query(stmt, names).BindStruct(models.ApiModelSerialized{ApiName: reqBody.ApiName, ApiGroup: reqBody.ApiGroup})
 		if err := q.SelectRelease(&apis); err != nil {
 			utils.HandleErrorResponse(c, err)
 			return
@@ -55,19 +43,21 @@ var Apis = struct {
 			ApiName:        reqBody.ApiName,
 			ApiPath:        reqBody.ApiPath,
 			ApiDescription: reqBody.ApiDescription,
+			ApiRequest:     reqBody.ApiRequest,
 			StartRules:     reqBody.StartRules,
 			Rules:          reqBody.Rules,
 		}
 
 		// generate parameterized queries & serialize data
-		if err := api.TransformApiForSave(); err != nil {
+		apiSerialized, err := api.TransformApiForSave()
+		if err != nil {
 			utils.HandleErrorResponse(c, err)
 			return
 		}
 
 		// insert api
 		ApisTable := table.New(models.ApisMetadata)
-		entry := config.GetScylla().Query(ApisTable.Insert()).BindStruct(&api)
+		entry := config.GetScylla().Query(ApisTable.Insert()).BindStruct(&apiSerialized)
 		if err = entry.ExecRelease(); err != nil {
 			utils.HandleErrorResponse(c, err)
 			return

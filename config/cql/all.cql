@@ -30,44 +30,6 @@ CREATE TABLE
         PRIMARY KEY (internal_name, name, description)
     );
 
-CREATE TABLE
-    IF NOT EXISTS ifttt.newTableName (
-        created_at timestamp,
-        int1 int,
-        int2 int,
-        int13 int,
-        PRIMARY KEY ((int1),int2)
-    );
-
-time_series_partition:
-1-59s
-1-59m
-1-23h
-1-27d
-1-11M
-1y
-
-CREATE TYPE
-    IF NOT EXISTS RESOLVABLE (
-        type TEXT,
-        data MAP<TEXT,TEXT>
-    );
-
-CREATE TYPE 
-    IF NOT EXISTS rule (
-        id TEXT,
-        description TEXT,
-        conditions TEXT,
-        then LIST<FROZEN<RESOLVABLE>>,
-        else LIST<FROZEN<RESOLVABLE>>
-);
-
-CREATE TYPE
-    IF NOT EXISTS query (
-        query_str TEXT,
-        resolvables LIST<FROZEN<RESOLVABLE>>,
-        type TEXT
-);
 
 CREATE TABLE
     IF NOT EXISTS ifttt.apis (
@@ -75,9 +37,9 @@ CREATE TABLE
         api_name TEXT,
         api_description TEXT,
         api_path TEXT,
-        start_rules SET<INT>,
-        rules MAP<TEXT,FROZEN<RULE>>,
-        queries MAP<TEXT,FROZEN<query>>,
+        start_rules SET<TEXT>,
+        rules TEXT,
+        queries TEXT,
         PRIMARY KEY (api_group,api_name,api_description)
     );
 

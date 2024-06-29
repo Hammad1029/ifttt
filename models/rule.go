@@ -1,10 +1,8 @@
 package models
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"generic/utils"
 
 	jsontocql "github.com/Hammad1029/json-to-cql"
 	"github.com/mitchellh/mapstructure"
@@ -13,7 +11,7 @@ import (
 type RuleUDT struct {
 	Id          string          `cql:"id" json:"id"`
 	Description string          `cql:"description" json:"description"`
-	Conditions  interface{}     `cql:"conditions" json:"conditions"`
+	Conditions  Condition       `cql:"conditions" json:"conditions"`
 	Then        []ResolvableUDT `cql:"then" json:"then"`
 	Else        []ResolvableUDT `cql:"else" json:"else"`
 }
@@ -39,33 +37,15 @@ func (r *RuleUDT) TransformForSave(queries *map[string]QueryUDT) error {
 	}
 	cGroup.transformGroup(queries)
 
-	marshalled, err := json.Marshal(cGroup)
-	if err != nil {
-		return fmt.Errorf("method TransformForSave: %s", err)
-	}
-	r.Conditions = string(marshalled)
-
 	for _, ac := range r.Then {
 		if err := ac.generateQueries(queries); err != nil {
 			return err
-		} else {
-			if stringified, err := utils.StringifyMapInt(ac.Data); err != nil {
-				return err
-			} else {
-				ac.Data = stringified
-			}
 		}
 	}
 
 	for _, ac := range r.Else {
 		if err := ac.generateQueries(queries); err != nil {
 			return err
-		} else {
-			if stringified, err := utils.StringifyMapInt(ac.Data); err != nil {
-				return err
-			} else {
-				ac.Data = stringified
-			}
 		}
 	}
 

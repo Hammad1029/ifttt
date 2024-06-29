@@ -9,7 +9,7 @@ type AddApiRequest struct {
 	ApiName        string                     `json:"apiName"`
 	ApiDescription string                     `json:"apiDescription"`
 	ApiPath        string                     `json:"apiPath"`
-	ApiRequest     string                     `json:"apiRequest"`
+	ApiRequest     map[string]interface{}     `json:"apiRequest"`
 	StartRules     []string                   `json:"startRules"`
 	Rules          map[string]*models.RuleUDT `json:"rules"`
 }
