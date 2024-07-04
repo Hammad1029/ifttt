@@ -31,7 +31,7 @@ type ApiModel struct {
 
 var ApisMetadata = table.Metadata{
 	Name:    "Apis",
-	Columns: []string{"api_group", "api_name", "api_description", "api_path", "start_rules", "rules", "queries"},
+	Columns: []string{"api_group", "api_name", "api_description", "api_path", "api_request", "start_rules", "rules", "queries"},
 	PartKey: []string{"api_group"},
 	SortKey: []string{"api_name", "api_description"},
 }

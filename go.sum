@@ -10,6 +10,8 @@ github.com/Hammad1029/json-to-cql v0.0.0-20240523105338-2217d41adc68 h1:an2xj2Qw
 github.com/Hammad1029/json-to-cql v0.0.0-20240523105338-2217d41adc68/go.mod h1:i47bQ7CxppaC4NJ1UHO3kkB396xWVS5z2CFHpgxPquI=
 github.com/Hammad1029/json-to-cql v0.0.0-20240524080521-51bd9d23baee h1:ek9JJU6S1X5SBM4tXQQsO5FEffEF6zq3xJ4uTe46rrE=
 github.com/Hammad1029/json-to-cql v0.0.0-20240524080521-51bd9d23baee/go.mod h1:i47bQ7CxppaC4NJ1UHO3kkB396xWVS5z2CFHpgxPquI=
+github.com/Hammad1029/json-to-cql v0.0.0-20240703193233-eb78ec2cf1f2 h1:zIWfMJIP8VtqXcT2urkfPKCBMyj9BFAXwW85CJdx5iM=
+github.com/Hammad1029/json-to-cql v0.0.0-20240703193233-eb78ec2cf1f2/go.mod h1:i47bQ7CxppaC4NJ1UHO3kkB396xWVS5z2CFHpgxPquI=
 github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496 h1:zV3ejI06GQ59hwDQAvmK1qxOQGB3WuVTRoY0okPTAv0=
 github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496/go.mod h1:oGkLhpf+kjZl6xBf758TQhh5XrAeiJv/7FRz/2spLIg=
 github.com/bitly/go-hostpool v0.0.0-20171023180738-a3a6125de932 h1:mXoPYz/Ul5HYEDvkta6I8/rnYM5gSdSV2tJ6XbZuEtY=

@@ -37,6 +37,7 @@ CREATE TABLE
         api_name TEXT,
         api_description TEXT,
         api_path TEXT,
+        api_request TEXT,
         start_rules SET<TEXT>,
         rules TEXT,
         queries TEXT,

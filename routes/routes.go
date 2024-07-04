@@ -11,7 +11,5 @@ func Init(router *gin.Engine) {
 		tablesRoutes(v1.Group("/tables"))
 		indexesRoutes(v1.Group("/indexes"))
 		apiRoutes(v1.Group("/apis"))
-		// rulesRoutes(v1.Group("/rules"))
-		// clientRoutes(v1.Group("/clients"))
 	}
 }

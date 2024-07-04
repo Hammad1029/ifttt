@@ -1,10 +1,8 @@
 package models
 
 import (
-	"errors"
 	"fmt"
 
-	jsontocql "github.com/Hammad1029/json-to-cql"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -23,11 +21,6 @@ type Condition struct {
 	Operator1     ResolvableUDT `cql:"op1" json:"op1" mapstructure:"op1"`
 	Operand       string        `cql:"opnd" json:"opnd" mapstructure:"opnd"`
 	Operator2     ResolvableUDT `cql:"op2" json:"op2" mapstructure:"op2"`
-}
-
-type ResolvableUDT struct {
-	Type string                 `cql:"type" json:"type" mapstructure:"type"`
-	Data map[string]interface{} `cql:"data" json:"data" mapstructure:"data"`
 }
 
 func (r *RuleUDT) TransformForSave(queries *map[string]QueryUDT) error {
@@ -66,32 +59,4 @@ func (c *Condition) transformGroup(queries *map[string]QueryUDT) error {
 		}
 	}
 	return nil
-}
-
-func (ruleResolvable *ResolvableUDT) generateQueries(queries *map[string]QueryUDT) error {
-	if query, ok := ruleResolvable.Data["query"]; ruleResolvable.Type == "db" && ok {
-		if queryMap, ok := query.(map[string]interface{}); ok {
-			var queryDoc jsontocql.QueryDoc
-			mapstructure.Decode(queryMap, &queryDoc)
-			if paraQuery, err := queryDoc.CreateParameterizedQuery(); err != nil {
-				return err
-			} else {
-				ruleResolvable.Data["query"] = paraQuery.QueryHash
-
-				var queryResolvables []ResolvableUDT
-				mapstructure.Decode(paraQuery.Resolvables, &queryResolvables)
-
-				(*queries)[paraQuery.QueryHash] = QueryUDT{
-					QueryString: paraQuery.QueryString,
-					Resolvables: queryResolvables,
-					Type:        paraQuery.Type,
-				}
-				return nil
-			}
-		} else {
-			return errors.New("failure in typecasting map")
-		}
-	} else {
-		return nil
-	}
 }
