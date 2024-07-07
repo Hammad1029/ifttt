@@ -25,6 +25,5 @@
     "UUID",
     "VARCHAR",
     "VARINT"
-  ],
-  "operators": ["eq"]
+  ]
 }

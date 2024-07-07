@@ -23,7 +23,7 @@ var Apis = struct {
 		}
 		reqBody := reqBodyAny.(*schemas.AddApiRequest)
 
-		var apis []models.ApiModel
+		var apis []models.ApiModelSerialized
 
 		// check if api of this name already exists
 		stmt, names := qb.Select("apis").Where(qb.Eq("api_group"), qb.Eq("api_name")).ToCql()

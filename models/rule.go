@@ -7,20 +7,20 @@ import (
 )
 
 type RuleUDT struct {
-	Id          string          `cql:"id" json:"id"`
-	Description string          `cql:"description" json:"description"`
-	Conditions  Condition       `cql:"conditions" json:"conditions"`
-	Then        []ResolvableUDT `cql:"then" json:"then"`
-	Else        []ResolvableUDT `cql:"else" json:"else"`
+	Id          string       `cql:"id" json:"id"`
+	Description string       `cql:"description" json:"description"`
+	Conditions  Condition    `cql:"conditions" json:"conditions"`
+	Then        []Resolvable `cql:"then" json:"then"`
+	Else        []Resolvable `cql:"else" json:"else"`
 }
 
 type Condition struct {
-	ConditionType string        `cql:"condition_type" json:"conditionType" mapstructure:"conditionType"`
-	Conditions    []Condition   `cql:"conditions" json:"conditions" mapstructure:"conditions"`
-	Group         bool          `cql:"group" json:"group" mapstructure:"group"`
-	Operator1     ResolvableUDT `cql:"op1" json:"op1" mapstructure:"op1"`
-	Operand       string        `cql:"opnd" json:"opnd" mapstructure:"opnd"`
-	Operator2     ResolvableUDT `cql:"op2" json:"op2" mapstructure:"op2"`
+	ConditionType string      `cql:"condition_type" json:"conditionType" mapstructure:"conditionType"`
+	Conditions    []Condition `cql:"conditions" json:"conditions" mapstructure:"conditions"`
+	Group         bool        `cql:"group" json:"group" mapstructure:"group"`
+	Operator1     Resolvable  `cql:"op1" json:"op1" mapstructure:"op1"`
+	Operand       string      `cql:"opnd" json:"opnd" mapstructure:"opnd"`
+	Operator2     Resolvable  `cql:"op2" json:"op2" mapstructure:"op2"`
 }
 
 func (r *RuleUDT) TransformForSave(queries *map[string]QueryUDT) error {

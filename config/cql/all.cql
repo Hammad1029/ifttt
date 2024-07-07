@@ -66,7 +66,7 @@ CREATE TABLE
     IF NOT EXISTS ifttt.logs (
         api_group TEXT,
         api_name TEXT,
-        execution_order LIST<INT>,
+        execution_order LIST<TEXT>,
         request_data FROZEN<request_data>,
         start TIMESTAMP,
         start_partition TIMESTAMP,
