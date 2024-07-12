@@ -12,7 +12,11 @@ require (
 	github.com/spf13/viper v1.18.2
 )
 
-require github.com/scylladb/go-reflectx v1.0.1 // indirect
+require (
+	github.com/PaesslerAG/gval v1.0.0 // indirect
+	github.com/PaesslerAG/jsonpath v0.1.1 // indirect
+	github.com/scylladb/go-reflectx v1.0.1 // indirect
+)
 
 require (
 	github.com/bytedance/sonic v1.10.2 // indirect
