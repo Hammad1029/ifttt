@@ -3,7 +3,7 @@ module generic
 go 1.21.5
 
 require (
-	github.com/Hammad1029/json-to-cql v0.0.0-20240703193233-eb78ec2cf1f2
+	github.com/Hammad1029/json-to-cql v0.0.0-20240713110151-adbeee54d2c1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/gocql/gocql v1.6.0

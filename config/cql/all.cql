@@ -49,10 +49,10 @@ CREATE INDEX
 
 CREATE TYPE
     IF NOT EXISTS ifttt.request_data (
-        req_body  MAP<TEXT,TEXT>,
-        store    MAP<TEXT,TEXT>,
-        response MAP<TEXT,TEXT>,
-        query_res MAP<TEXT,FROZEN<SET<MAP<TEXT,TEXT>>>>,
+        req_body  TEXT,
+        store    TEXT,
+        response TEXT,
+        query_res TEXT,
     );
 
 CREATE TYPE

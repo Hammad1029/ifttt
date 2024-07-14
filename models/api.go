@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	jsontocql "github.com/Hammad1029/json-to-cql"
 	"github.com/scylladb/gocqlx/v2/table"
 )
 
@@ -19,14 +20,14 @@ type ApiModelSerialized struct {
 }
 
 type ApiModel struct {
-	ApiGroup       string                 `json:"api_group" mapstructure:"api_group"`
-	ApiName        string                 `json:"api_name" mapstructure:"api_name"`
-	ApiDescription string                 `json:"api_description" mapstructure:"api_description"`
-	ApiPath        string                 `json:"api_path" mapstructure:"api_path"`
-	ApiRequest     map[string]interface{} `json:"api_request" mapstructure:"api_request"`
-	StartRules     []string               `json:"start_rules" mapstructure:"start_rules"`
-	Rules          map[string]*RuleUDT    `json:"rules" mapstructure:"rules"`
-	Queries        map[string]QueryUDT    `json:"queries" mapstructure:"queries"`
+	ApiGroup       string                                  `json:"api_group" mapstructure:"api_group"`
+	ApiName        string                                  `json:"api_name" mapstructure:"api_name"`
+	ApiDescription string                                  `json:"api_description" mapstructure:"api_description"`
+	ApiPath        string                                  `json:"api_path" mapstructure:"api_path"`
+	ApiRequest     map[string]interface{}                  `json:"api_request" mapstructure:"api_request"`
+	StartRules     []string                                `json:"start_rules" mapstructure:"start_rules"`
+	Rules          map[string]*RuleUDT                     `json:"rules" mapstructure:"rules"`
+	Queries        map[string]jsontocql.ParameterizedQuery `json:"queries" mapstructure:"queries"`
 }
 
 var ApisMetadata = table.Metadata{
@@ -37,7 +38,7 @@ var ApisMetadata = table.Metadata{
 }
 
 func (api *ApiModel) TransformApiForSave() (ApiModelSerialized, error) {
-	api.Queries = make(map[string]QueryUDT)
+	api.Queries = make(map[string]jsontocql.ParameterizedQuery)
 	for _, rule := range api.Rules {
 		if err := rule.TransformForSave(&api.Queries); err != nil {
 			return ApiModelSerialized{}, fmt.Errorf("method TransformApiForSave: %s", err)
