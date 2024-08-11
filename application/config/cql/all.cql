@@ -4,33 +4,6 @@ CREATE KEYSPACE
 
 use ifttt;
 
-CREATE TYPE 
-    IF NOT EXISTS ifttt.indexes (
-        local BOOLEAN,
-        index_name TEXT,
-        table_name TEXT,
-        columns SET<TEXT>
-);
-
-CREATE TYPE
-    IF NOT EXISTS ifttt.table_column (
-        name TEXT,
-        data_type TEXT,
-        partition_key BOOLEAN,
-        clustering_key BOOLEAN
-);
-
-CREATE TABLE
-    IF NOT EXISTS ifttt.tables (
-        internal_name TEXT,
-        name TEXT,
-        description TEXT,
-        columns SET<FROZEN<table_column>>,
-        indexes map<text, frozen<indexes>>,
-        PRIMARY KEY (internal_name, name, description)
-    );
-
-
 CREATE TABLE
     IF NOT EXISTS ifttt.apis (
         api_group TEXT,
@@ -40,8 +13,7 @@ CREATE TABLE
         api_request TEXT,
         start_rules SET<TEXT>,
         rules TEXT,
-        queries TEXT,
-        PRIMARY KEY (api_group,api_name,api_description)
+        PRIMARY KEY (api_group,api_name)
     );
 
 CREATE INDEX
@@ -53,6 +25,7 @@ CREATE TYPE
         store    TEXT,
         response TEXT,
         query_res TEXT,
+        api_res TEXT
     );
 
 CREATE TYPE
@@ -74,4 +47,12 @@ CREATE TABLE
         time_taken INT,
         execution_logs LIST<FROZEN<exec_log>>,
         PRIMARY KEY ((api_group,start_partition),api_name,start)
+    );
+
+CREATE TABLE
+    IF NOT EXISTS ifttt.configurations (
+        configuration_json TEXT,
+        is_active BOOLEAN,
+        created_at TIMESTAMP,
+        PRIMARY KEY (is_active)
     );

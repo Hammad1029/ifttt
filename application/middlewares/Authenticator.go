@@ -26,7 +26,7 @@ func Authenticator() {
 	// 			return
 	// 		}
 
-	// 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	// 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 	// 			return []byte(config.GetConfigProp("jwt.secret")), nil
 	// 		})
 
@@ -53,7 +53,7 @@ func Authenticator() {
 	// 		schemaType := reflect.TypeOf(schema)
 	// 		schemaInstance := reflect.New(schemaType).Interface()
 	// 		if err := c.ShouldBindJSON(&schemaInstance); err != nil {
-	// 			ValidationErrors := make(map[string]interface{})
+	// 			ValidationErrors := make(map[string]any)
 	// 			ValidationErrors["Validation Errors"] = strings.Split(err.Error(), "\n")
 	// 			utils.ResponseHandler(c, utils.ResponseConfig{Response: utils.Responses["BadRequest"], Data: ValidationErrors})
 	// 			return

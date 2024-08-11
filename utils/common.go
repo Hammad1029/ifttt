@@ -26,14 +26,14 @@ func BenchmarkFn(fn func()) {
 	fmt.Printf("execution time: %+v\n", time.Since(start))
 }
 
-func ConvertToMap(key string, data interface{}) map[string]interface{} {
-	mapData := make(map[string]interface{})
+func ConvertToMap(key string, data any) map[string]any {
+	mapData := make(map[string]any)
 	mapData[key] = data
 	return mapData
 }
 
-func ConvertStringToInterfaceArray(obj []string) []interface{} {
-	s := make([]interface{}, len(obj))
+func ConvertStringToInterfaceArray(obj []string) []any {
+	s := make([]any, len(obj))
 	for i, v := range obj {
 		s[i] = v
 	}
@@ -45,7 +45,7 @@ func GenerateIndexName(tableName string, columns []string) string {
 	return fmt.Sprintf("%s_%s_idx", tableName[:30], strings.Join(columns, "_"))
 }
 
-func StringifyMapInt(m map[string]interface{}) (map[string]interface{}, error) {
+func StringifyMapInt(m map[string]any) (map[string]any, error) {
 	for key, val := range m {
 		if reflect.TypeOf(val).Kind() == reflect.Map {
 			if data, err := json.Marshal(val); err != nil {

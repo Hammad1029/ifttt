@@ -3,12 +3,10 @@ module generic
 go 1.21.5
 
 require (
-	github.com/Hammad1029/json-to-cql v0.0.0-20240713110151-adbeee54d2c1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/gocql/gocql v1.6.0
 	github.com/samber/lo v1.39.0
-	github.com/scylladb/gocqlx/v2 v2.8.0
 	github.com/spf13/viper v1.18.2
 )
 
@@ -16,6 +14,7 @@ require (
 	github.com/PaesslerAG/gval v1.0.0 // indirect
 	github.com/PaesslerAG/jsonpath v0.1.1 // indirect
 	github.com/scylladb/go-reflectx v1.0.1 // indirect
+	github.com/scylladb/gocqlx/v3 v3.0.0 // indirect
 )
 
 require (

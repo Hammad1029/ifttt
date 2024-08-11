@@ -14,7 +14,7 @@ type validatorInterface interface {
 	Validate() error
 }
 
-func Validator(c *gin.Context, schema interface{}) (error, interface{}) {
+func Validator(c *gin.Context, schema any) (error, any) {
 	if schema != nil {
 		schemaType := reflect.TypeOf(schema)
 		schemaInstance := reflect.New(schemaType).Interface()
@@ -34,8 +34,8 @@ func Validator(c *gin.Context, schema interface{}) (error, interface{}) {
 	return nil, nil
 }
 
-func NestedValidator(target interface{}, fieldRules ...*validation.FieldRules) *validation.FieldRules {
-	return validation.Field(target, validation.By(func(value interface{}) error {
+func NestedValidator(target any, fieldRules ...*validation.FieldRules) *validation.FieldRules {
+	return validation.Field(target, validation.By(func(value any) error {
 		valueV := reflect.Indirect(reflect.ValueOf(value))
 		if valueV.CanAddr() {
 			addr := valueV.Addr().Interface()
@@ -46,7 +46,7 @@ func NestedValidator(target interface{}, fieldRules ...*validation.FieldRules) *
 }
 
 func errorRespond(c *gin.Context, err error) {
-	ValidationErrors := make(map[string]interface{})
+	ValidationErrors := make(map[string]any)
 	ValidationErrors["Validation Errors"] = strings.Split(err.Error(), "; ")
 	utils.ResponseHandler(c, utils.ResponseConfig{Response: utils.Responses["BadRequest"], Data: ValidationErrors})
 }

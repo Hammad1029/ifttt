@@ -126,8 +126,10 @@ github.com/scylladb/gocql v1.12.0 h1:KaP25dC2Mu0H382M8KZmkQp1XuasgBG97bBhFeFKVyk
 github.com/scylladb/gocql v1.12.0/go.mod h1:ZLEJ0EVE5JhmtxIW2stgHq/v1P4fWap0qyyXSKyV8K0=
 github.com/scylladb/gocqlx v1.5.0 h1:p7NEqRaCMAtW2nvq62iyUNXmIYP29373YOC7D2Xd7Qg=
 github.com/scylladb/gocqlx v1.5.0/go.mod h1:QarZcw5kpYh31MXfxiN2JWWvF1cgZbYqfTfXwmwhpEQ=
-github.com/scylladb/gocqlx/v2 v2.8.0 h1:f/oIgoEPjKDKd+RIoeHqexsIQVIbalVmT+axwvUqQUg=
-github.com/scylladb/gocqlx/v2 v2.8.0/go.mod h1:4/+cga34PVqjhgSoo5Nr2fX1MQIqZB5eCE5DK4xeDig=
+github.com/scylladb/gocqlx/v3 v2.8.0 h1:f/oIgoEPjKDKd+RIoeHqexsIQVIbalVmT+axwvUqQUg=
+github.com/scylladb/gocqlx/v3 v2.8.0/go.mod h1:4/+cga34PVqjhgSoo5Nr2fX1MQIqZB5eCE5DK4xeDig=
+github.com/scylladb/gocqlx/v3 v3.0.0 h1:BAV+P0bP9R7ZPLyf8ACOnJJEFM4twKhTH+nuVg6wgP0=
+github.com/scylladb/gocqlx/v3 v3.0.0/go.mod h1:6RqxW9pjY58Tmm21ONqphXjVuN76HXq9IbEUBzBIoBM=
 github.com/sourcegraph/conc v0.3.0 h1:OQTbbt6P72L20UqAkXXuLOj79LfEanQ+YQFNpLA9ySo=
 github.com/sourcegraph/conc v0.3.0/go.mod h1:Sdozi7LEKbFPqYX2/J+iBAM6HpqSLTASQIKqDmF7Mt0=
 github.com/spf13/afero v1.11.0 h1:WJQKhtpdm3v2IzqG8VMqrr6Rf3UYpEF239Jy9wNepM8=

@@ -2,9 +2,8 @@ package main
 
 import (
 	"fmt"
-
-	"generic/config"
-	"generic/server"
+	"generic/application/config"
+	"generic/application/server"
 )
 
 func main() {
