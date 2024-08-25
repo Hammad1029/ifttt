@@ -2,7 +2,7 @@ package infrastructure
 
 import (
 	"fmt"
-	"generic/infrastructure/scylla"
+	"ifttt/manager/infrastructure/scylla"
 	"time"
 
 	"github.com/gocql/gocql"

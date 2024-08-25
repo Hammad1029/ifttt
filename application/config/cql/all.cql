@@ -6,18 +6,21 @@ use ifttt;
 
 CREATE TABLE
     IF NOT EXISTS ifttt.apis (
-        api_group TEXT,
-        api_name TEXT,
-        api_description TEXT,
-        api_path TEXT,
-        api_request TEXT,
+        group TEXT,
+        name TEXT,
+        method TEXT,
+        type TEXT,
+        path TEXT,
+        description TEXT,
+        request TEXT,
+        dumping TEXT,
         start_rules SET<TEXT>,
         rules TEXT,
-        PRIMARY KEY (api_group,api_name)
+        PRIMARY KEY (group,name)
     );
 
 CREATE INDEX
-    IF NOT EXISTS ON ifttt.apis(api_path);
+    IF NOT EXISTS ON ifttt.apis(path);
 
 CREATE TYPE
     IF NOT EXISTS ifttt.request_data (
@@ -47,6 +50,13 @@ CREATE TABLE
         time_taken INT,
         execution_logs LIST<FROZEN<exec_log>>,
         PRIMARY KEY ((api_group,start_partition),api_name,start)
+    );
+
+CREATE TABLE
+    IF NOT EXISTS ifttt.auth_strategies (
+        strategy TEXT,
+        enabled BOOLEAN,
+        secrets MAP<TEXT,TEXT>
     );
 
 CREATE TABLE

@@ -2,8 +2,8 @@ package infrastructure
 
 import (
 	"fmt"
-	"generic/application/config"
-	"generic/domain/api"
+	"ifttt/manager/application/config"
+	"ifttt/manager/domain/api"
 	"strings"
 )
 

@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"errors"
-	"generic/utils"
+	"ifttt/manager/utils"
 	"reflect"
 	"strings"
 

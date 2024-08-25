@@ -2,18 +2,18 @@ package server
 
 import (
 	"fmt"
-	"generic/application/config"
-	"generic/application/controllers"
-	"generic/application/middlewares"
-	infrastructure "generic/infrastructure/init"
+	"ifttt/manager/application/config"
+	"ifttt/manager/application/controllers"
+	"ifttt/manager/application/middlewares"
+	infrastructure "ifttt/manager/infrastructure/init"
 
 	"github.com/gin-gonic/gin"
 )
 
-func Init() {
+func Init() error {
 	dbStore, err := infrastructure.NewDbStore()
 	if err != nil {
-		panic(fmt.Errorf("error in creating db store: %s", err))
+		return fmt.Errorf("method Init: error in creating db store: %s", err)
 	}
 
 	controllers := controllers.NewAllController(dbStore)
@@ -23,5 +23,8 @@ func Init() {
 	router.Use(middlewares.CORSMiddleware())
 	plugRoutes(router, controllers)
 
-	router.Run(fmt.Sprintf(":%s", port))
+	if err := router.Run(fmt.Sprintf(":%s", port)); err != nil {
+		return fmt.Errorf("method Init: error in running gin router: %s", err)
+	}
+	return nil
 }

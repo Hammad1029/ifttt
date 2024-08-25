@@ -1,13 +1,14 @@
 package controllers
 
 import (
-	"generic/application/middlewares"
-	"generic/application/schemas"
-	"generic/domain/api"
-	infrastructure "generic/infrastructure/init"
-	"generic/utils"
+	"ifttt/manager/application/middlewares"
+	"ifttt/manager/application/schemas"
+	"ifttt/manager/domain/api"
+	infrastructure "ifttt/manager/infrastructure/init"
+	"ifttt/manager/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mitchellh/mapstructure"
 )
 
 type apiController struct {
@@ -28,7 +29,7 @@ func (a *apiController) CreateApi(c *gin.Context) {
 	reqBody := reqBodyAny.(*schemas.CreateApiRequest)
 
 	// check if api of this name already exists
-	_, found, err := a.store.ApiRepository.GetApiByGroupAndName(reqBody.ApiGroup, reqBody.ApiName)
+	_, found, err := a.store.ApiRepository.GetApiByGroupAndName(reqBody.Group, reqBody.Name)
 	if err != nil {
 		utils.HandleErrorResponse(c, err)
 		return
@@ -38,14 +39,9 @@ func (a *apiController) CreateApi(c *gin.Context) {
 	}
 
 	// create api struct
-	api := api.Api{
-		ApiGroup:       reqBody.ApiGroup,
-		ApiName:        reqBody.ApiName,
-		ApiPath:        reqBody.ApiPath,
-		ApiDescription: reqBody.ApiDescription,
-		ApiRequest:     reqBody.ApiRequest,
-		StartRules:     reqBody.StartRules,
-		Rules:          reqBody.Rules,
+	var api api.Api
+	if err := mapstructure.Decode(reqBody, &api); err != nil {
+		utils.ResponseHandler(c, utils.ResponseConfig{Response: utils.Responses["ServerError"]})
 	}
 
 	// serialize data

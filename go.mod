@@ -1,4 +1,4 @@
-module generic
+module ifttt/manager
 
 go 1.21.5
 

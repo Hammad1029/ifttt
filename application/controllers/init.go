@@ -1,6 +1,6 @@
 package controllers
 
-import infrastructure "generic/infrastructure/init"
+import infrastructure "ifttt/manager/infrastructure/init"
 
 type AllController struct {
 	ApiController *apiController

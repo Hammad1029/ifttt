@@ -1,7 +1,7 @@
 package server
 
 import (
-	"generic/application/controllers"
+	"ifttt/manager/application/controllers"
 
 	"github.com/gin-gonic/gin"
 )

@@ -2,27 +2,30 @@ package scylla
 
 import (
 	"fmt"
-	"generic/domain/api"
+	"ifttt/manager/domain/api"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/scylladb/gocqlx/v3/table"
 )
 
 type scyllaApiSerialized struct {
-	ApiGroup       string   `cql:"api_group"`
-	ApiName        string   `cql:"api_name"`
-	ApiDescription string   `cql:"api_description"`
-	ApiPath        string   `cql:"api_path"`
-	ApiRequest     string   `cql:"api_request"`
-	Rules          string   `cql:"rules"`
-	StartRules     []string `cql:"start_rules"`
+	Group       string   `cql:"group" mapstructure:"group"`
+	Name        string   `cql:"name" mapstructure:"name"`
+	Method      string   `cql:"method" mapstructure:"method"`
+	Type        string   `cql:"type" mapstructure:"type"`
+	Path        string   `cql:"path" mapstructure:"path"`
+	Description string   `cql:"description" mapstructure:"description"`
+	Request     string   `cql:"request" mapstructure:"request"`
+	Dumping     string   `cql:"dumping" mapstructure:"dumping"`
+	StartRules  []string `cql:"start_rules" mapstructure:"rules"`
+	Rules       string   `cql:"rules" mapstructure:"startRules"`
 }
 
 var scyllaApisMetadata = table.Metadata{
 	Name:    "apis",
-	Columns: []string{"api_group", "api_name", "api_description", "api_path", "api_request", "rules", "start_rules"},
-	PartKey: []string{"api_group"},
-	SortKey: []string{"api_name", "api_description"},
+	Columns: []string{"group", "name", "method", "type", "path", "description", "request", "dumping", "start_rules", "rules"},
+	PartKey: []string{"group"},
+	SortKey: []string{"name"},
 }
 
 var scyllaApisTable *table.Table
@@ -66,8 +69,8 @@ func (s *ScyllaApiRepository) GetApiByGroupAndName(group string, name string) (*
 
 	apisTable := s.getTable()
 	query := apisTable.SelectQuery(*s.session).BindStruct(scyllaApiSerialized{
-		ApiGroup: group,
-		ApiName:  name,
+		Group: group,
+		Name:  name,
 	})
 	if err := query.SelectRelease(&scyllaApis); err != nil {
 		return nil, found, fmt.Errorf("method *ScyllaApiRepository.GetApiByGroupAndName: failed to get api: %s", err)

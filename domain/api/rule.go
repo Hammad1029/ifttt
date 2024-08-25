@@ -1,6 +1,6 @@
 package api
 
-import "generic/domain/resolvable"
+import "ifttt/manager/domain/resolvable"
 
 type Rule struct {
 	Id          string                  `json:"id" mapstructure:"id"`
