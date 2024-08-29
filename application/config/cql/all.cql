@@ -53,16 +53,16 @@ CREATE TABLE
     );
 
 CREATE TABLE
-    IF NOT EXISTS ifttt.auth_strategies (
-        strategy TEXT,
-        enabled BOOLEAN,
-        secrets MAP<TEXT,TEXT>
-    );
-
-CREATE TABLE
     IF NOT EXISTS ifttt.configurations (
         configuration_json TEXT,
         is_active BOOLEAN,
         created_at TIMESTAMP,
         PRIMARY KEY (is_active)
+    );
+
+CREATE TABLE
+    IF NOT EXISTS ifttt.auth_strategies (
+        strategy TEXT,
+        enabled BOOLEAN,
+        secrets MAP<TEXT,TEXT>
     );

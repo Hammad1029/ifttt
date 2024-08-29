@@ -1,10 +1,9 @@
 package controllers
 
 import (
+	"ifttt/manager/application/core"
 	"ifttt/manager/application/middlewares"
-	"ifttt/manager/application/schemas"
 	"ifttt/manager/domain/api"
-	infrastructure "ifttt/manager/infrastructure/init"
 	"ifttt/manager/utils"
 
 	"github.com/gin-gonic/gin"
@@ -12,24 +11,24 @@ import (
 )
 
 type apiController struct {
-	store *infrastructure.DbStore
+	serverCore *core.ServerCore
 }
 
-func newApiController(store *infrastructure.DbStore) *apiController {
+func newApiController(serverCore *core.ServerCore) *apiController {
 	return &apiController{
-		store: store,
+		serverCore: serverCore,
 	}
 }
 
 func (a *apiController) CreateApi(c *gin.Context) {
-	err, reqBodyAny := middlewares.Validator(c, schemas.CreateApiRequest{})
+	err, reqBodyAny := middlewares.Validator(c, api.CreateApiRequest{})
 	if err != nil {
 		return
 	}
-	reqBody := reqBodyAny.(*schemas.CreateApiRequest)
+	reqBody := reqBodyAny.(*api.CreateApiRequest)
 
 	// check if api of this name already exists
-	_, found, err := a.store.ApiRepository.GetApiByGroupAndName(reqBody.Group, reqBody.Name)
+	_, found, err := a.serverCore.ConfigStore.APIRepo.GetApiByGroupAndName(reqBody.Group, reqBody.Name)
 	if err != nil {
 		utils.HandleErrorResponse(c, err)
 		return
@@ -52,7 +51,7 @@ func (a *apiController) CreateApi(c *gin.Context) {
 	}
 
 	// insert api
-	if err := a.store.ApiRepository.InsertApi(apiSerialized); err != nil {
+	if err := a.serverCore.ConfigStore.APIRepo.InsertApi(apiSerialized); err != nil {
 		utils.HandleErrorResponse(c, err)
 		return
 	}
@@ -61,7 +60,7 @@ func (a *apiController) CreateApi(c *gin.Context) {
 }
 
 func (a *apiController) GetApis(c *gin.Context) {
-	apis, err := a.store.ApiRepository.GetAllApis()
+	apis, err := a.serverCore.ConfigStore.APIRepo.GetAllApis()
 	if err != nil {
 		utils.HandleErrorResponse(c, err)
 		return

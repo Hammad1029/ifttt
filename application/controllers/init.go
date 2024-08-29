@@ -1,13 +1,15 @@
 package controllers
 
-import infrastructure "ifttt/manager/infrastructure/init"
+import "ifttt/manager/application/core"
 
 type AllController struct {
-	ApiController *apiController
+	ApiController    *apiController
+	TablesController *schemaController
 }
 
-func NewAllController(store *infrastructure.DbStore) *AllController {
+func NewAllController(serverCore *core.ServerCore) *AllController {
 	return &AllController{
-		ApiController: newApiController(store),
+		ApiController:    newApiController(serverCore),
+		TablesController: newSchemaController(serverCore),
 	}
 }

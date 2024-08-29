@@ -1,8 +1,8 @@
-package infrastructure
+package store
 
 import (
 	"fmt"
-	"ifttt/manager/infrastructure/scylla"
+	scyllaInfra "ifttt/manager/infrastructure/scylla"
 	"time"
 
 	"github.com/gocql/gocql"
@@ -10,7 +10,7 @@ import (
 	"github.com/scylladb/gocqlx/v3"
 )
 
-const scyllaDbName = "scylla"
+const scyllaDb = "scylla"
 
 type scyllaStore struct {
 	session *gocqlx.Session
@@ -47,10 +47,17 @@ func (s *scyllaStore) init(config map[string]any) error {
 	return nil
 }
 
-func (s *scyllaStore) createStore() *DbStore {
-	scyllaBase := scylla.NewScyllaBaseRepository(s.session, s.cluster)
-	return &DbStore{
-		Store:         s,
-		ApiRepository: scylla.NewScyllaApiRepository(*scyllaBase),
+func (s *scyllaStore) createDataStore() *DataStore {
+	// scyllaBase := scyllaInfra.NewScyllaBaseRepository(s.session, s.cluster)
+	return &DataStore{
+		Store: s,
+	}
+}
+
+func (s *scyllaStore) createConfigStore() *ConfigStore {
+	scyllaBase := scyllaInfra.NewScyllaBaseRepository(s.session, s.cluster)
+	return &ConfigStore{
+		Store:   s,
+		APIRepo: scyllaInfra.NewScyllaApiRepository(*scyllaBase),
 	}
 }
