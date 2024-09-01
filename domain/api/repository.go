@@ -1,7 +1,9 @@
 package api
 
 type Repository interface {
-	GetAllApis() (*[]ApiSerialized, error)
-	GetApiByGroupAndName(group string, name string) (*ApiSerialized, bool, error)
-	InsertApi(newApi *ApiSerialized) error
+	ToLocal(input *Api, output any) error
+	ToGlobal(input any) (*Api, error)
+	GetAllApis() (*[]Api, error)
+	GetApisByGroupAndName(group string, name string) (*[]Api, error)
+	InsertApi(newApi *Api) error
 }

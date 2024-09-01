@@ -26,7 +26,9 @@ type postgresConfig struct {
 
 func (p *postgresStore) init(config map[string]any) error {
 	if err := mapstructure.Decode(config, &p.config); err != nil {
-		return fmt.Errorf("method: *PostgresStore.Init: could not decode scylla configuration from env: %s", err)
+		return fmt.Errorf(
+			"method: *PostgresStore.Init: could not decode scylla configuration from env: %s", err,
+		)
 	}
 	connectionString := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Karachi",
@@ -38,6 +40,15 @@ func (p *postgresStore) init(config map[string]any) error {
 		p.store = db
 	}
 	return nil
+}
+
+func (p *postgresStore) createConfigStore() *ConfigStore {
+	postgresBase := postgresInfra.NewPostgresBaseRepository(p.store)
+	return &ConfigStore{
+		Store:    p,
+		APIRepo:  postgresInfra.NewPostgresAPIRepository(postgresBase),
+		UserRepo: postgresInfra.NewPostgresUserRepository(postgresBase),
+	}
 }
 
 func (p *postgresStore) createDataStore() *DataStore {

@@ -5,6 +5,8 @@ import (
 	"ifttt/manager/application/config"
 	"ifttt/manager/domain/api"
 	"ifttt/manager/domain/schema"
+	"ifttt/manager/domain/token"
+	"ifttt/manager/domain/user"
 	"strings"
 )
 
@@ -22,14 +24,25 @@ type dataStorer interface {
 	createDataStore() *DataStore
 }
 
+type cacheStorer interface {
+	dbStorer
+	createCacheStore() *CacheStore
+}
+
 type ConfigStore struct {
-	Store   configStorer
-	APIRepo api.Repository
+	Store    configStorer
+	APIRepo  api.Repository
+	UserRepo user.Repository
 }
 
 type DataStore struct {
 	Store      dataStorer
 	SchemaRepo schema.Repository
+}
+
+type CacheStore struct {
+	Store     cacheStorer
+	TokenRepo token.Repository
 }
 
 func NewConfigStore() (*ConfigStore, error) {
@@ -50,6 +63,15 @@ func NewDataStore() (*DataStore, error) {
 	}
 }
 
+func NewCacheStore() (*CacheStore, error) {
+	connectionSettings := config.GetConfig().GetStringMap("cacheStore")
+	if store, err := cacheStoreFactory(connectionSettings); err != nil {
+		return nil, fmt.Errorf("method InitCacheStore: could not create store: %s", err)
+	} else {
+		return store, nil
+	}
+}
+
 func configStoreFactory(connectionSettings map[string]any) (*ConfigStore, error) {
 	var storer configStorer
 	dbName, ok := connectionSettings["db"]
@@ -60,6 +82,8 @@ func configStoreFactory(connectionSettings map[string]any) (*ConfigStore, error)
 	switch strings.ToLower(fmt.Sprint(dbName)) {
 	case scyllaDb:
 		storer = &scyllaStore{}
+	case postgresDb:
+		storer = &postgresStore{}
 	default:
 		return nil, fmt.Errorf("method configStoreFactory: db not found %s", dbName)
 	}
@@ -91,4 +115,25 @@ func dataStoreFactory(connectionSettings map[string]any) (*DataStore, error) {
 		return nil, fmt.Errorf("method dataStoreFactory: could not init data store: %s", err)
 	}
 	return storer.createDataStore(), nil
+}
+
+func cacheStoreFactory(connectionSettings map[string]any) (*CacheStore, error) {
+	var storer cacheStorer
+	dbName, ok := connectionSettings["db"]
+	if !ok {
+		return nil, fmt.Errorf("method cacheStoreFactory: db name not found in env")
+	}
+
+	switch strings.ToLower(fmt.Sprint(dbName)) {
+	case redisCache:
+		storer = &RedisStore{}
+	default:
+		return nil, fmt.Errorf("method cacheStoreFactory: db not found %s", dbName)
+	}
+
+	if err := storer.init(connectionSettings); err != nil {
+		return nil, fmt.Errorf("method configStoreFactory: could not init cache store: %s", err)
+	}
+
+	return storer.createCacheStore(), nil
 }

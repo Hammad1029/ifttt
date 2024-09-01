@@ -23,16 +23,17 @@ func newApiController(serverCore *core.ServerCore) *apiController {
 func (a *apiController) CreateApi(c *gin.Context) {
 	err, reqBodyAny := middlewares.Validator(c, api.CreateApiRequest{})
 	if err != nil {
+		utils.HandleErrorResponse(c, err)
 		return
 	}
 	reqBody := reqBodyAny.(*api.CreateApiRequest)
 
 	// check if api of this name already exists
-	_, found, err := a.serverCore.ConfigStore.APIRepo.GetApiByGroupAndName(reqBody.Group, reqBody.Name)
+	foundApis, err := a.serverCore.ConfigStore.APIRepo.GetApisByGroupAndName(reqBody.Group, reqBody.Name)
 	if err != nil {
 		utils.HandleErrorResponse(c, err)
 		return
-	} else if found {
+	} else if foundApis != nil && len(*foundApis) > 0 {
 		utils.ResponseHandler(c, utils.ResponseConfig{Response: utils.Responses["ApiAlreadyExists"]})
 		return
 	}
@@ -43,15 +44,8 @@ func (a *apiController) CreateApi(c *gin.Context) {
 		utils.ResponseHandler(c, utils.ResponseConfig{Response: utils.Responses["ServerError"]})
 	}
 
-	// serialize data
-	apiSerialized, err := api.Serialize()
-	if err != nil {
-		utils.HandleErrorResponse(c, err)
-		return
-	}
-
 	// insert api
-	if err := a.serverCore.ConfigStore.APIRepo.InsertApi(apiSerialized); err != nil {
+	if err := a.serverCore.ConfigStore.APIRepo.InsertApi(&api); err != nil {
 		utils.HandleErrorResponse(c, err)
 		return
 	}

@@ -67,6 +67,7 @@ func (s *schemaController) GetSchema(c *gin.Context) {
 func (s *schemaController) CreateTable(c *gin.Context) {
 	err, reqBodyAny := middlewares.Validator(c, schema.CreateTableRequest{})
 	if err != nil {
+		utils.HandleErrorResponse(c, err)
 		return
 	}
 	reqBody := reqBodyAny.(*schema.CreateTableRequest)
@@ -82,6 +83,7 @@ func (s *schemaController) CreateTable(c *gin.Context) {
 func (s *schemaController) UpdateTable(c *gin.Context) {
 	err, reqBodyAny := middlewares.Validator(c, schema.UpdateTableRequest{})
 	if err != nil {
+		utils.HandleErrorResponse(c, err)
 		return
 	}
 	reqBody := reqBodyAny.(*schema.UpdateTableRequest)

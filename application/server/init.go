@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"ifttt/manager/application/config"
 	"ifttt/manager/application/core"
-	"ifttt/manager/application/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +19,6 @@ func Init() error {
 
 	port := config.GetConfigProp("app.port")
 	router := gin.New()
-	router.Use(middlewares.CORSMiddleware())
 	plugRoutes(router, serverCore)
 
 	if err := router.Run(fmt.Sprintf(":%s", port)); err != nil {

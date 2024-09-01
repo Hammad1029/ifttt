@@ -8,10 +8,10 @@ type CreateTableRequest struct {
 
 type UpdateTableRequest struct {
 	TableName string         `mapstructure:"tableName" json:"tableName"`
-	Updates   *[]TableUpdate `mapstructure:"updates" json:"updates"`
+	Updates   *[]tableUpdate `mapstructure:"updates" json:"updates"`
 }
 
-type TableUpdate struct {
+type tableUpdate struct {
 	UpdateType       string            `mapstructure:"updateType" json:"updateType"`
 	RenameTable      *renameTable      `mapstructure:"renameTable" json:"renameTable"`
 	RenameColumn     *renameColumn     `mapstructure:"renameColumn" json:"renameColumn"`

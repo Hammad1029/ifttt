@@ -6,14 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ResponseHandler(c *gin.Context, params ...ResponseConfig) {
-	var config ResponseConfig
-
-	if len(params) > 0 {
-		config = params[0]
-	} else {
-		config = ResponseConfig{}
-	}
+func ResponseHandler(c *gin.Context, config ResponseConfig) {
 
 	if config.Response.Code == "" || config.Response.Description == "" {
 		config.Response = Responses["Success"]
@@ -56,8 +49,10 @@ var Responses = map[string]Response{
 	"IndexNotPossible": {"25", "Index Not Possible"},
 	"IndexNotFound":    {"30", "Index Not Found"},
 
-	"BadRequest":   {"400", "Bad request"},
-	"Unauthorized": {"401", "Unauthorized"},
-	"NotFound":     {"404", "Not Found"},
-	"ServerError":  {"500", "Internal Server Error"},
+	"WrongCredentials": {"35", "Wrong login credentials"},
+	"UserNotFound":     {"40", "User not found"},
+	"BadRequest":       {"400", "Bad request"},
+	"Unauthorized":     {"401", "Unauthorized"},
+	"NotFound":         {"404", "Not Found"},
+	"ServerError":      {"500", "Internal Server Error"},
 }
