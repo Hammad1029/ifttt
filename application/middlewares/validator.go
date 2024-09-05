@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"errors"
-	"ifttt/manager/utils"
+	"ifttt/manager/common"
 	"reflect"
 	"strings"
 
@@ -48,5 +48,5 @@ func NestedValidator(target any, fieldRules ...*validation.FieldRules) *validati
 func errorRespond(c *gin.Context, err error) {
 	ValidationErrors := make(map[string]any)
 	ValidationErrors["Validation Errors"] = strings.Split(err.Error(), "; ")
-	utils.ResponseHandler(c, utils.ResponseConfig{Response: utils.Responses["BadRequest"], Data: ValidationErrors})
+	common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["BadRequest"], Data: ValidationErrors})
 }

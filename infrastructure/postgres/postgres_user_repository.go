@@ -39,3 +39,10 @@ func (p *PostgresUserRepository) GetUser(
 
 	return decodeFunc(pgUser)
 }
+
+func (p *PostgresUserRepository) CreateUser(user user.User) error {
+	if err := p.client.Create(user).Error; err != nil {
+		return fmt.Errorf("method *PostgresUserRepository.CreateUser: could not create user: %s", err)
+	}
+	return nil
+}

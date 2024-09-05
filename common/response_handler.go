@@ -1,4 +1,4 @@
-package utils
+package common
 
 import (
 	"net/http"
@@ -49,10 +49,13 @@ var Responses = map[string]Response{
 	"IndexNotPossible": {"25", "Index Not Possible"},
 	"IndexNotFound":    {"30", "Index Not Found"},
 
-	"WrongCredentials": {"35", "Wrong login credentials"},
-	"UserNotFound":     {"40", "User not found"},
-	"BadRequest":       {"400", "Bad request"},
-	"Unauthorized":     {"401", "Unauthorized"},
-	"NotFound":         {"404", "Not Found"},
-	"ServerError":      {"500", "Internal Server Error"},
+	"WrongCredentials":   {"35", "Wrong login credentials"},
+	"UserNotFound":       {"40", "User not found"},
+	"UserAlreadyExists":  {"40", "User already exists"},
+	"PermissionNotFound": {"45", "Permission not found"},
+	"RoleAlreadyExists":  {"45", "Role not found"},
+	"BadRequest":         {"400", "Bad request"},
+	"Unauthorized":       {"401", "Unauthorized"},
+	"NotFound":           {"404", "Not Found"},
+	"ServerError":        {"500", "Internal Server Error"},
 }

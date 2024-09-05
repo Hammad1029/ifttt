@@ -1,4 +1,4 @@
-package utils
+package common
 
 var Regex = struct {
 	Endpoint string

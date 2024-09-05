@@ -4,6 +4,7 @@ import (
 	"fmt"
 	postgresInfra "ifttt/manager/infrastructure/postgres"
 
+	gormadapter "github.com/casbin/gorm-adapter"
 	"github.com/mitchellh/mapstructure"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -49,6 +50,12 @@ func (p *postgresStore) createConfigStore() *ConfigStore {
 		APIRepo:  postgresInfra.NewPostgresAPIRepository(postgresBase),
 		UserRepo: postgresInfra.NewPostgresUserRepository(postgresBase),
 	}
+}
+
+func (p *postgresStore) createCasbinAdapter() *gormadapter.Adapter {
+	connectionString := fmt.Sprintf("%s:%s@%s:%s/",
+		p.config.Username, p.config.Password, p.config.Host, p.config.Port)
+	return gormadapter.NewAdapter("postgres", connectionString)
 }
 
 func (p *postgresStore) createDataStore() *DataStore {

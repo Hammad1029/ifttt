@@ -2,7 +2,6 @@ package store
 
 import (
 	"fmt"
-	scyllaInfra "ifttt/manager/infrastructure/scylla"
 	"time"
 
 	"github.com/gocql/gocql"
@@ -54,11 +53,11 @@ func (s *scyllaStore) createDataStore() *DataStore {
 	}
 }
 
-func (s *scyllaStore) createConfigStore() *ConfigStore {
-	scyllaBase := scyllaInfra.NewScyllaBaseRepository(s.session, s.cluster)
-	return &ConfigStore{
-		Store:    s,
-		APIRepo:  scyllaInfra.NewScyllaApiRepository(*scyllaBase),
-		UserRepo: scyllaInfra.NewScyllaUsersRepository(*scyllaBase),
-	}
-}
+// func (s *scyllaStore) createConfigStore() *ConfigStore {
+// 	scyllaBase := scyllaInfra.NewScyllaBaseRepository(s.session, s.cluster)
+// 	return &ConfigStore{
+// 		Store:   s,
+// 		APIRepo: scyllaInfra.NewScyllaApiRepository(*scyllaBase),
+// 		// UserRepo: scyllaInfra.NewScyllaUsersRepository(*scyllaBase),
+// 	}
+// }

@@ -3,8 +3,8 @@ package controllers
 import (
 	"ifttt/manager/application/core"
 	"ifttt/manager/application/middlewares"
+	"ifttt/manager/common"
 	"ifttt/manager/domain/schema"
-	"ifttt/manager/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
@@ -25,19 +25,19 @@ func (s *schemaController) GetSchema(c *gin.Context) {
 
 	tableNames, err := s.serverCore.DataStore.SchemaRepo.GetTableNames()
 	if err != nil {
-		utils.HandleErrorResponse(c, err)
+		common.HandleErrorResponse(c, err)
 		return
 	}
 
 	columns, err := s.serverCore.DataStore.SchemaRepo.GetAllColumns(tableNames)
 	if err != nil {
-		utils.HandleErrorResponse(c, err)
+		common.HandleErrorResponse(c, err)
 		return
 	}
 
 	constraints, err := s.serverCore.DataStore.SchemaRepo.GetAllConstraints(tableNames)
 	if err != nil {
-		utils.HandleErrorResponse(c, err)
+		common.HandleErrorResponse(c, err)
 		return
 	}
 
@@ -60,38 +60,38 @@ func (s *schemaController) GetSchema(c *gin.Context) {
 		schemas = append(schemas, newSchema)
 	}
 
-	utils.ResponseHandler(c, utils.ResponseConfig{Data: schemas})
+	common.ResponseHandler(c, common.ResponseConfig{Data: schemas})
 
 }
 
 func (s *schemaController) CreateTable(c *gin.Context) {
 	err, reqBodyAny := middlewares.Validator(c, schema.CreateTableRequest{})
 	if err != nil {
-		utils.HandleErrorResponse(c, err)
+		common.HandleErrorResponse(c, err)
 		return
 	}
 	reqBody := reqBodyAny.(*schema.CreateTableRequest)
 
 	if err := s.serverCore.DataStore.SchemaRepo.CreateTable(reqBody); err != nil {
-		utils.HandleErrorResponse(c, err)
+		common.HandleErrorResponse(c, err)
 		return
 	}
 
-	utils.ResponseHandler(c, utils.ResponseConfig{})
+	common.ResponseHandler(c, common.ResponseConfig{})
 }
 
 func (s *schemaController) UpdateTable(c *gin.Context) {
 	err, reqBodyAny := middlewares.Validator(c, schema.UpdateTableRequest{})
 	if err != nil {
-		utils.HandleErrorResponse(c, err)
+		common.HandleErrorResponse(c, err)
 		return
 	}
 	reqBody := reqBodyAny.(*schema.UpdateTableRequest)
 
 	if err := s.serverCore.DataStore.SchemaRepo.UpdateTable(reqBody); err != nil {
-		utils.HandleErrorResponse(c, err)
+		common.HandleErrorResponse(c, err)
 		return
 	}
 
-	utils.ResponseHandler(c, utils.ResponseConfig{})
+	common.ResponseHandler(c, common.ResponseConfig{})
 }

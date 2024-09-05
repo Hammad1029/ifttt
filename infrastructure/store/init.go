@@ -8,6 +8,9 @@ import (
 	"ifttt/manager/domain/token"
 	"ifttt/manager/domain/user"
 	"strings"
+
+	"github.com/casbin/casbin/v2"
+	gormadapter "github.com/casbin/gorm-adapter"
 )
 
 type dbStorer interface {
@@ -17,6 +20,7 @@ type dbStorer interface {
 type configStorer interface {
 	dbStorer
 	createConfigStore() *ConfigStore
+	createCasbinAdapter() *gormadapter.Adapter
 }
 
 type dataStorer interface {
@@ -30,9 +34,10 @@ type cacheStorer interface {
 }
 
 type ConfigStore struct {
-	Store    configStorer
-	APIRepo  api.Repository
-	UserRepo user.Repository
+	Store          configStorer
+	CasbinEnforcer *casbin.Enforcer
+	APIRepo        api.Repository
+	UserRepo       user.Repository
 }
 
 type DataStore struct {
@@ -80,8 +85,8 @@ func configStoreFactory(connectionSettings map[string]any) (*ConfigStore, error)
 	}
 
 	switch strings.ToLower(fmt.Sprint(dbName)) {
-	case scyllaDb:
-		storer = &scyllaStore{}
+	// case scyllaDb:
+	// 	storer = &scyllaStore{}
 	case postgresDb:
 		storer = &postgresStore{}
 	default:
@@ -91,8 +96,19 @@ func configStoreFactory(connectionSettings map[string]any) (*ConfigStore, error)
 	if err := storer.init(connectionSettings); err != nil {
 		return nil, fmt.Errorf("method configStoreFactory: could not init config store: %s", err)
 	}
+	configStore := storer.createConfigStore()
 
-	return storer.createConfigStore(), nil
+	casbinAdapter := storer.createCasbinAdapter()
+	casbinEnforcer, err := casbin.NewEnforcer("./application/config/casbin_model.conf", casbinAdapter)
+	if err != nil {
+		return nil, fmt.Errorf("method configStoreFactory: could not create casbin enforcer: %s", err)
+	}
+	if err := casbinEnforcer.LoadPolicy(); err != nil {
+		return nil, fmt.Errorf("method configStoreFactory: could not load casbin policy: %s", err)
+	}
+	configStore.CasbinEnforcer = casbinEnforcer
+
+	return configStore, nil
 }
 
 func dataStoreFactory(connectionSettings map[string]any) (*DataStore, error) {
