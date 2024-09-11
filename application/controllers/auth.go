@@ -1,12 +1,12 @@
 package controllers
 
 import (
-	"encoding/hex"
 	"fmt"
 	"ifttt/manager/application/core"
 	"ifttt/manager/application/middlewares"
 	"ifttt/manager/common"
 	"ifttt/manager/domain/user"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -35,21 +35,28 @@ func (a *authController) Login(c *gin.Context) {
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
-	}
-
-	hashBytes, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), bcrypt.DefaultCost)
-	if err != nil {
-		common.HandleErrorResponse(c, err)
+	} else if user == nil {
+		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["WrongCredentials"]})
 		return
 	}
-	hashStr := hex.EncodeToString(hashBytes)
-	if user == nil || user.Password != hashStr {
+
+	if pwErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(reqBody.Password)); pwErr != nil {
 		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["WrongCredentials"]})
 		return
 	}
 
 	tokenPair, err := a.serverCore.TokenService.NewTokenPair(reqBody.Email)
 	if err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	}
+
+	ctx := c.Request.Context()
+	if err := a.serverCore.CacheStore.TokenRepo.DeleteTokenPair(reqBody.Email, ctx); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	}
+	if err := a.serverCore.CacheStore.TokenRepo.StoreTokenPair(reqBody.Email, tokenPair, ctx); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}
@@ -63,7 +70,9 @@ func (a *authController) Logout(c *gin.Context) {
 		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["UserNotFound"]})
 		return
 	}
-	if err := a.serverCore.CacheStore.TokenRepo.DeleteTokenPair(user.Email); err != nil {
+
+	ctx := c.Request.Context()
+	if err := a.serverCore.CacheStore.TokenRepo.DeleteTokenPair(user.Email, ctx); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}
@@ -71,23 +80,34 @@ func (a *authController) Logout(c *gin.Context) {
 }
 
 func (a *authController) RefreshToken(c *gin.Context) {
-	tokenDetails, err := a.serverCore.TokenService.VerifyToken(c.GetHeader("refresh_token"))
+	refreshHeader := c.GetHeader("refresh_token")
+	tokenDetails, err := a.serverCore.TokenService.VerifyToken(refreshHeader)
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else if tokenDetails == nil {
-		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["Unauthorized"]})
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	if float64(time.Now().Unix()) > float64(tokenDetails.Expiry) {
-		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["Unauthorized"]})
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
-	user, err := a.serverCore.ConfigStore.UserRepo.GetUser(
-		fmt.Sprint(tokenDetails.Claims["email"]), user.DecodeUser,
-	)
+	ctx := c.Request.Context()
+	userEmail := fmt.Sprint(tokenDetails.Claims["email"])
+
+	cacheExists, err := a.serverCore.CacheStore.TokenRepo.GetTokenPair(userEmail, ctx)
+	if err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	} else if cacheExists == nil || !cacheExists.RefreshToken.IsSameToken(refreshHeader) {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	user, err := a.serverCore.ConfigStore.UserRepo.GetUser(userEmail, user.DecodeUser)
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
@@ -96,13 +116,16 @@ func (a *authController) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	if err := a.serverCore.CacheStore.TokenRepo.DeleteTokenPair(user.Email); err != nil {
+	if err := a.serverCore.CacheStore.TokenRepo.DeleteTokenPair(user.Email, ctx); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}
-
 	tokenPair, err := a.serverCore.TokenService.NewTokenPair(user.Email)
 	if err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	}
+	if err := a.serverCore.CacheStore.TokenRepo.StoreTokenPair(user.Email, tokenPair, ctx); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}

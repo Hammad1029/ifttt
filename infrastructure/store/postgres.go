@@ -4,8 +4,8 @@ import (
 	"fmt"
 	postgresInfra "ifttt/manager/infrastructure/postgres"
 
-	gormadapter "github.com/casbin/gorm-adapter"
-	"github.com/mitchellh/mapstructure"
+	gormadapter "github.com/casbin/gorm-adapter/v3"
+	"github.com/go-viper/mapstructure/v2"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -18,11 +18,12 @@ type postgresStore struct {
 }
 
 type postgresConfig struct {
-	Host     string `json:"host" mapstructure:"host"`
-	Port     string `json:"port" mapstructure:"port"`
-	Database string `json:"database" mapstructure:"database"`
-	Username string `json:"username" mapstructure:"username"`
-	Password string `json:"password" mapstructure:"password"`
+	Host             string `json:"host" mapstructure:"host"`
+	Port             string `json:"port" mapstructure:"port"`
+	Database         string `json:"database" mapstructure:"database"`
+	Username         string `json:"username" mapstructure:"username"`
+	Password         string `json:"password" mapstructure:"password"`
+	ConnectionString string `json:"connectionString" mapstructure:"connectionString"`
 }
 
 func (p *postgresStore) init(config map[string]any) error {
@@ -31,11 +32,11 @@ func (p *postgresStore) init(config map[string]any) error {
 			"method: *PostgresStore.Init: could not decode scylla configuration from env: %s", err,
 		)
 	}
-	connectionString := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Karachi",
+	p.config.ConnectionString = fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		p.config.Host, p.config.Username, p.config.Password, p.config.Database, p.config.Port,
 	)
-	if db, err := gorm.Open(postgres.Open(connectionString), &gorm.Config{}); err != nil {
+	if db, err := gorm.Open(postgres.Open(p.config.ConnectionString), &gorm.Config{}); err != nil {
 		return err
 	} else {
 		p.store = db
@@ -44,7 +45,7 @@ func (p *postgresStore) init(config map[string]any) error {
 }
 
 func (p *postgresStore) createConfigStore() *ConfigStore {
-	postgresBase := postgresInfra.NewPostgresBaseRepository(p.store)
+	postgresBase := postgresInfra.NewPostgresBaseRepository(p.store, true)
 	return &ConfigStore{
 		Store:    p,
 		APIRepo:  postgresInfra.NewPostgresAPIRepository(postgresBase),
@@ -52,14 +53,12 @@ func (p *postgresStore) createConfigStore() *ConfigStore {
 	}
 }
 
-func (p *postgresStore) createCasbinAdapter() *gormadapter.Adapter {
-	connectionString := fmt.Sprintf("%s:%s@%s:%s/",
-		p.config.Username, p.config.Password, p.config.Host, p.config.Port)
-	return gormadapter.NewAdapter("postgres", connectionString)
+func (p *postgresStore) createCasbinAdapter() (*gormadapter.Adapter, error) {
+	return gormadapter.NewAdapterByDB(p.store)
 }
 
 func (p *postgresStore) createDataStore() *DataStore {
-	postgresBase := postgresInfra.NewPostgresBaseRepository(p.store)
+	postgresBase := postgresInfra.NewPostgresBaseRepository(p.store, false)
 	return &DataStore{
 		Store:      p,
 		SchemaRepo: postgresInfra.NewPostgresSchemaRepository(postgresBase),

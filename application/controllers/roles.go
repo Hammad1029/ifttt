@@ -8,6 +8,7 @@ import (
 	"ifttt/manager/domain/user"
 
 	"github.com/gin-gonic/gin"
+	"github.com/samber/lo"
 )
 
 type roleController struct {
@@ -21,8 +22,7 @@ func newRoleController(serverCore *core.ServerCore) *roleController {
 }
 
 func (r *roleController) GetAllPermissions(c *gin.Context) {
-	routeDefinitions := common.RouteDefinitions
-	common.ResponseHandler(c, common.ResponseConfig{Data: routeDefinitions})
+	common.ResponseHandler(c, common.ResponseConfig{Data: *r.serverCore.Routes})
 }
 
 func (r *roleController) UpdateUserRoles(c *gin.Context) {
@@ -50,7 +50,15 @@ func (r *roleController) UpdateUserRoles(c *gin.Context) {
 		return
 	}
 
-	r.serverCore.ConfigStore.CasbinEnforcer.SavePolicy()
+	if err := r.serverCore.ConfigStore.CasbinEnforcer.SavePolicy(); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	}
+	if err := r.serverCore.ConfigStore.CasbinEnforcer.LoadPolicy(); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	}
+
 	common.ResponseHandler(c, common.ResponseConfig{})
 }
 
@@ -78,20 +86,31 @@ func (r *roleController) AddUpdateRole(c *gin.Context) {
 	}
 
 	for _, perm := range reqBody.Permissions {
-		route := perm.GetRouteByPathAndMethod()
-		if route == nil {
+		permString := CreatePermission(perm.Path, perm.Method)
+		if _, found := lo.Find(*r.serverCore.Permissions, func(p string) bool {
+			return p == permString
+		}); !found {
 			common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["PermissionNotFound"]})
 			return
 		}
 
 		if _, err := r.serverCore.ConfigStore.CasbinEnforcer.AddPolicy(
-			reqBody.RoleName, route.Path, route.Method,
+			reqBody.RoleName, perm.Path, perm.Method,
 		); err != nil {
 			common.HandleErrorResponse(c, err)
 			return
 		}
 	}
 
-	r.serverCore.ConfigStore.CasbinEnforcer.SavePolicy()
+	if err := r.serverCore.ConfigStore.CasbinEnforcer.SavePolicy(); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	}
+	r.serverCore.ConfigStore.CasbinEnforcer.ClearPolicy()
+	if err := r.serverCore.ConfigStore.CasbinEnforcer.LoadPolicy(); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	}
+
 	common.ResponseHandler(c, common.ResponseConfig{})
 }

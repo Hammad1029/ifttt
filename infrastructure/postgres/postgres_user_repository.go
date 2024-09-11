@@ -4,18 +4,9 @@ import (
 	"fmt"
 	"ifttt/manager/domain/user"
 
+	"github.com/mitchellh/mapstructure"
 	"gorm.io/gorm"
 )
-
-type postgresUser struct {
-	gorm.Model
-	Email    string `gorm:"type:varchar(50);unique" mapstructure:"username"`
-	Password string `gorm:"type:varchar(50)" mapstructure:"username"`
-}
-
-func (p postgresUser) TableName() string {
-	return "users"
-}
 
 type PostgresUserRepository struct {
 	*PostgresBaseRepository
@@ -32,9 +23,8 @@ func (p *PostgresUserRepository) GetUser(
 	if err := p.client.Where(&postgresUser{Email: email}).First(&pgUser).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
-		} else {
-			return nil, fmt.Errorf("method *PostgresUserRepository.ValidateCredentials: could not query user: %s", err)
 		}
+		return nil, fmt.Errorf("method *PostgresUserRepository.ValidateCredentials: could not query user: %s", err)
 	}
 
 	return decodeFunc(pgUser)
@@ -45,4 +35,18 @@ func (p *PostgresUserRepository) CreateUser(user user.User) error {
 		return fmt.Errorf("method *PostgresUserRepository.CreateUser: could not create user: %s", err)
 	}
 	return nil
+}
+
+func (p *PostgresUserRepository) GetAllUsers() (*[]user.User, error) {
+	var pgUsers []postgresUser
+	if err := p.client.Find(&pgUsers).Error; err != nil {
+		return nil, fmt.Errorf("method *PostgresUserRepository.GetUsers: could not get users: %s", err)
+	}
+
+	var users []user.User
+	if err := mapstructure.Decode(pgUsers, &users); err != nil {
+		return nil, fmt.Errorf("method *PostgresUserRepository.GetUsers: could not decode users: %s", err)
+	}
+
+	return &users, nil
 }

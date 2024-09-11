@@ -1,12 +1,13 @@
 package store
 
 import (
+	"context"
 	"fmt"
 	redisInfra "ifttt/manager/infrastructure/redis"
 	"strconv"
 
-	"github.com/go-redis/redis"
-	"github.com/mitchellh/mapstructure"
+	"github.com/go-viper/mapstructure/v2"
+	"github.com/redis/go-redis/v9"
 )
 
 const redisCache = "redis"
@@ -34,6 +35,9 @@ func (r *RedisStore) init(config map[string]any) error {
 		Password: r.config.Password,
 		DB:       dbIndex,
 	})
+	if err := r.client.Ping(context.Background()).Err(); err != nil {
+		return fmt.Errorf("method: *RedisStore.Init: could not connect to redis: %s", err)
+	}
 	return nil
 }
 

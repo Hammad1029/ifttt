@@ -19,7 +19,7 @@ func Init() error {
 
 	port := config.GetConfigProp("app.port")
 	router := gin.New()
-	plugRoutes(router, serverCore)
+	initRouter(router, serverCore)
 
 	if err := router.Run(fmt.Sprintf(":%s", port)); err != nil {
 		return fmt.Errorf("method Init: error in running gin router: %s", err)

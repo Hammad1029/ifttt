@@ -39,11 +39,10 @@ type alterColumn struct {
 }
 
 type addColumn struct {
-	OrdinalPosition int    `mapstructure:"ordinalPosition" json:"ordinalPosition"`
-	ColumnName      string `mapstructure:"columnName" json:"columnName"`
-	DataType        string `mapstructure:"dataType" json:"dataType"`
-	Nullable        bool   `mapstructure:"nullable" json:"nullable"`
-	DefaultValue    string `mapstructure:"columnDefault" json:"columnDefault"`
+	ColumnName   string `mapstructure:"columnName" json:"columnName"`
+	DataType     string `mapstructure:"dataType" json:"dataType"`
+	Nullable     bool   `mapstructure:"nullable" json:"nullable"`
+	DefaultValue string `mapstructure:"defaultValue" json:"defaultValue"`
 }
 
 type removeColumn struct {

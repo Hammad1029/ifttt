@@ -4,34 +4,37 @@ import (
 	"fmt"
 	"ifttt/manager/common"
 	"ifttt/manager/domain/user"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-func (a *allMiddlewares) Authenticator(c *gin.Context) {
-	tokenDetails, err := a.serverCore.TokenService.VerifyToken(c.GetHeader("Authorization"))
+func (a *AllMiddlewares) Authenticator(c *gin.Context) {
+	authHeader := c.GetHeader("Authorization")
+	tokenDetails, err := a.serverCore.TokenService.VerifyToken(authHeader)
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else if tokenDetails == nil {
-		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["Unauthorized"]})
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	if float64(time.Now().Unix()) > float64(tokenDetails.Expiry) {
-		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["Unauthorized"]})
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	userEmail := fmt.Sprint(tokenDetails.Claims["email"])
 
-	cacheExists, err := a.serverCore.CacheStore.TokenRepo.GetTokenPair(userEmail)
-	if cacheExists == nil {
-		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["Unauthorized"]})
-		return
-	} else if err != nil {
+	ctx := c.Request.Context()
+	cacheExists, err := a.serverCore.CacheStore.TokenRepo.GetTokenPair(userEmail, ctx)
+	if err != nil {
 		common.HandleErrorResponse(c, err)
+		return
+	} else if cacheExists == nil || !cacheExists.AccessToken.IsSameToken(authHeader) {
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
@@ -40,10 +43,11 @@ func (a *allMiddlewares) Authenticator(c *gin.Context) {
 		common.HandleErrorResponse(c, err)
 		return
 	} else if user == nil {
-		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["UserNotFound"]})
+		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	c.Set("user", user)
+	c.Set("subject", user.Email)
 	c.Next()
 }

@@ -14,13 +14,18 @@ func (t *TokenDetails) createToken(expiry int, email string, secret string) erro
 		"email": email,
 		"exp":   t.Expiry,
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, t.Claims)
-	tokenSigned, err := token.SignedString(secret)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, t.Claims)
+	tokenSigned, err := token.SignedString([]byte(secret))
 	if err != nil {
 		return fmt.Errorf("method *tokenDetails.createToken: could not sign access token: %s", err)
 	}
 	t.Token = tokenSigned
 	return nil
+}
+
+func (t *TokenDetails) IsSameToken(header string) bool {
+	bearerToken := extractToken(header)
+	return bearerToken == t.Token
 }
 
 func extractToken(header string) string {

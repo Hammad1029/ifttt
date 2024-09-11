@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"ifttt/manager/common"
 	"ifttt/manager/domain/token"
 	"ifttt/manager/infrastructure/store"
 )
@@ -11,6 +12,8 @@ type ServerCore struct {
 	DataStore    *store.DataStore
 	CacheStore   *store.CacheStore
 	TokenService *token.TokenService
+	Routes       *[]common.RouteDefinition
+	Permissions  *[]string
 }
 
 func NewServerCore() (*ServerCore, error) {

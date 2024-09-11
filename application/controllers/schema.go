@@ -72,6 +72,18 @@ func (s *schemaController) CreateTable(c *gin.Context) {
 	}
 	reqBody := reqBodyAny.(*schema.CreateTableRequest)
 
+	if existingTables, err := s.serverCore.DataStore.SchemaRepo.GetTableNames(); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	} else {
+		if _, exists := lo.Find(existingTables, func(tName string) bool {
+			return tName == reqBody.TableName
+		}); exists {
+			common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["TableAlreadyExists"]})
+			return
+		}
+	}
+
 	if err := s.serverCore.DataStore.SchemaRepo.CreateTable(reqBody); err != nil {
 		common.HandleErrorResponse(c, err)
 		return

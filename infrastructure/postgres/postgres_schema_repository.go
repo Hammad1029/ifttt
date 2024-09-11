@@ -3,7 +3,6 @@ package postgres
 import (
 	"fmt"
 	"ifttt/manager/domain/schema"
-	"sort"
 	"strings"
 
 	"gorm.io/gorm"
@@ -59,9 +58,6 @@ func (p *PostgresSchemaRepository) GetAllConstraints(tables []string) (*[]schema
 
 func (p *PostgresSchemaRepository) CreateTable(newSchema *schema.CreateTableRequest) error {
 	var columnDefs []string
-	sort.Slice(newSchema.Columns, func(i, j int) bool {
-		return newSchema.Columns[i].OrdinalPosition < newSchema.Columns[j].OrdinalPosition
-	})
 	for _, col := range newSchema.Columns {
 		colDef := fmt.Sprintf("%s %s", col.ColumnName, col.DataType)
 		if col.DefaultValue != "" {

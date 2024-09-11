@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/casbin/casbin/v2"
-	gormadapter "github.com/casbin/gorm-adapter"
+	gormadapter "github.com/casbin/gorm-adapter/v3"
 )
 
 type dbStorer interface {
@@ -20,7 +20,7 @@ type dbStorer interface {
 type configStorer interface {
 	dbStorer
 	createConfigStore() *ConfigStore
-	createCasbinAdapter() *gormadapter.Adapter
+	createCasbinAdapter() (*gormadapter.Adapter, error)
 }
 
 type dataStorer interface {
@@ -98,15 +98,9 @@ func configStoreFactory(connectionSettings map[string]any) (*ConfigStore, error)
 	}
 	configStore := storer.createConfigStore()
 
-	casbinAdapter := storer.createCasbinAdapter()
-	casbinEnforcer, err := casbin.NewEnforcer("./application/config/casbin_model.conf", casbinAdapter)
-	if err != nil {
-		return nil, fmt.Errorf("method configStoreFactory: could not create casbin enforcer: %s", err)
+	if err := casbinFactory(storer, configStore); err != nil {
+		return nil, fmt.Errorf("method configStoreFactory: could not init casbin: %s", err)
 	}
-	if err := casbinEnforcer.LoadPolicy(); err != nil {
-		return nil, fmt.Errorf("method configStoreFactory: could not load casbin policy: %s", err)
-	}
-	configStore.CasbinEnforcer = casbinEnforcer
 
 	return configStore, nil
 }
@@ -152,4 +146,29 @@ func cacheStoreFactory(connectionSettings map[string]any) (*CacheStore, error) {
 	}
 
 	return storer.createCacheStore(), nil
+}
+
+func casbinFactory(storer configStorer, store *ConfigStore) error {
+	casbinAdapter, err := storer.createCasbinAdapter()
+	if err != nil {
+		return fmt.Errorf("method casbinFactory: could not create casbin adapter: %s", err)
+	}
+
+	casbinEnforcer, err := casbin.NewEnforcer("./application/config/casbin_model.conf", casbinAdapter)
+	if err != nil {
+		return fmt.Errorf("method casbinFactory: could not create casbin enforcer: %s", err)
+	}
+	if err := casbinEnforcer.LoadPolicy(); err != nil {
+		return fmt.Errorf("method casbinFactory: could not load casbin policy: %s", err)
+	}
+	store.CasbinEnforcer = casbinEnforcer
+
+	// if auth, err := gcasbin.NewCasbinMiddleware(
+	// 	"./application/config/casbin_model.conf", casbinAdapter, user.GetEmailFromContext); err != nil {
+	// 	return fmt.Errorf("method casbinFactory: could not create casbin enforcer: %s", err)
+	// } else {
+	// 	store.CasbinMiddleware = auth
+	// }
+
+	return nil
 }

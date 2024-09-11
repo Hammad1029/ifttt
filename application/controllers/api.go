@@ -7,7 +7,7 @@ import (
 	"ifttt/manager/domain/api"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mitchellh/mapstructure"
+	"github.com/go-viper/mapstructure/v2"
 )
 
 type apiController struct {

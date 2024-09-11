@@ -54,7 +54,7 @@ func (t *TokenService) NewTokenPair(email string) (*TokenPair, error) {
 		return nil, fmt.Errorf("method *TokenService.NewTokenPair: could not create access token: %s", err)
 	}
 	refreshToken := TokenDetails{}
-	if err := accessToken.createToken(t.RefreshExpiry, email, t.Secret); err != nil {
+	if err := refreshToken.createToken(t.RefreshExpiry, email, t.Secret); err != nil {
 		return nil, fmt.Errorf("method *TokenService.NewTokenPair: could not create refresh token: %s", err)
 	}
 
@@ -84,10 +84,10 @@ func (t *TokenService) VerifyToken(header string) (*TokenDetails, error) {
 	if !ok {
 		return nil, fmt.Errorf("method VerifyToken: could not cast claims")
 	}
-	expiry, ok := claims["exp"].(int64)
+	expiry, ok := claims["exp"].(float64)
 	if !ok {
 		return nil, fmt.Errorf("method VerifyToken: could not cast expiry")
 	}
 
-	return &TokenDetails{Expiry: expiry, Token: bearerToken, Claims: claims}, nil
+	return &TokenDetails{Expiry: int64(expiry), Token: bearerToken, Claims: claims}, nil
 }

@@ -38,7 +38,18 @@ func (u *userController) CreateUser(c *gin.Context) {
 	newUser := user.User{Email: reqBody.Email, Password: reqBody.Password}
 	if err := u.serverCore.ConfigStore.UserRepo.CreateUser(newUser); err != nil {
 		common.HandleErrorResponse(c, err)
+		return
 	}
 
 	common.ResponseHandler(c, common.ResponseConfig{})
+}
+
+func (u *userController) GetAllUsers(c *gin.Context) {
+	users, err := u.serverCore.ConfigStore.UserRepo.GetAllUsers()
+	if err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	}
+
+	common.ResponseHandler(c, common.ResponseConfig{Data: users})
 }
