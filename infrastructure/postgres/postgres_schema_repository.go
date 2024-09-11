@@ -114,12 +114,10 @@ func (p *PostgresSchemaRepository) UpdateTable(updates *schema.UpdateTableReques
 			}
 		case "alterColumn":
 			{
-				if update.AlterColumn.DataType != "" {
-					transactionQueries = append(transactionQueries,
-						baseAlterQuery+fmt.Sprintf(
-							"ALTER COLUMN %s SET DATA TYPE %s;",
-							update.AlterColumn.ColumnName, update.AlterColumn.DataType))
-				}
+				transactionQueries = append(transactionQueries,
+					baseAlterQuery+fmt.Sprintf(
+						"ALTER COLUMN %s SET DATA TYPE %s;",
+						update.AlterColumn.ColumnName, update.AlterColumn.DataType))
 				if update.AlterColumn.Nullable {
 					transactionQueries = append(transactionQueries,
 						baseAlterQuery+fmt.Sprintf(
@@ -128,6 +126,15 @@ func (p *PostgresSchemaRepository) UpdateTable(updates *schema.UpdateTableReques
 					transactionQueries = append(transactionQueries,
 						baseAlterQuery+fmt.Sprintf(
 							"ALTER COLUMN %s SET NOT NULL;", update.AlterColumn.ColumnName))
+				}
+				if update.AlterColumn.DefaultValue == "" {
+					transactionQueries = append(transactionQueries,
+						baseAlterQuery+fmt.Sprintf(
+							"ALTER COLUMN %s DROP DEFAULT;", update.AlterColumn.ColumnName))
+				} else {
+					transactionQueries = append(transactionQueries,
+						baseAlterQuery+fmt.Sprintf("ALTER COLUMN %s SET DEFAULT %s;",
+							update.AlterColumn.ColumnName, update.AlterColumn.DefaultValue))
 				}
 			}
 		case "addColumn":
@@ -139,7 +146,7 @@ func (p *PostgresSchemaRepository) UpdateTable(updates *schema.UpdateTableReques
 				transactionQueries = append(transactionQueries,
 					baseAlterQuery+fmt.Sprintf(
 						"ADD COLUMN %s %s %s;", update.AddColumn.ColumnName,
-						update.AlterColumn.DataType, defaultValueQuery))
+						update.AddColumn.DataType, defaultValueQuery))
 			}
 		case "removeColumn":
 			{
@@ -169,7 +176,7 @@ func (p *PostgresSchemaRepository) UpdateTable(updates *schema.UpdateTableReques
 
 	if err := p.client.Transaction(func(tx *gorm.DB) error {
 		for _, query := range transactionQueries {
-			if err := tx.Raw(query).Error; err != nil {
+			if err := tx.Exec(query).Error; err != nil {
 				return fmt.Errorf("query failed: %s", err)
 			}
 		}

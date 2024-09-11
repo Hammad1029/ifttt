@@ -18,7 +18,7 @@ type tableUpdate struct {
 	AlterColumn      *alterColumn      `mapstructure:"alterColumn" json:"alterColumn"`
 	AddColumn        *addColumn        `mapstructure:"addColumn" json:"addColumn"`
 	RemoveColumn     *removeColumn     `mapstructure:"removeColumn" json:"removeColumn"`
-	AddConstraint    *addConstraint    `mapstructure:"constraint" json:"constraint"`
+	AddConstraint    *addConstraint    `mapstructure:"addConstraint" json:"addConstraint"`
 	RemoveConstraint *removeConstraint `mapstructure:"removeConstraint" json:"removeConstraint"`
 }
 
@@ -35,7 +35,7 @@ type alterColumn struct {
 	ColumnName   string `mapstructure:"columnName" json:"columnName"`
 	DataType     string `mapstructure:"dataType" json:"dataType"`
 	Nullable     bool   `mapstructure:"nullable" json:"nullable"`
-	DefaultValue string `mapstructure:"columnDefault" json:"columnDefault"`
+	DefaultValue string `mapstructure:"defaultValue" json:"defaultValue"`
 }
 
 type addColumn struct {

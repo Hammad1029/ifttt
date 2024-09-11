@@ -100,6 +100,18 @@ func (s *schemaController) UpdateTable(c *gin.Context) {
 	}
 	reqBody := reqBodyAny.(*schema.UpdateTableRequest)
 
+	if existingTables, err := s.serverCore.DataStore.SchemaRepo.GetTableNames(); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	} else {
+		if _, exists := lo.Find(existingTables, func(tName string) bool {
+			return tName == reqBody.TableName
+		}); !exists {
+			common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["TableNotFound"]})
+			return
+		}
+	}
+
 	if err := s.serverCore.DataStore.SchemaRepo.UpdateTable(reqBody); err != nil {
 		common.HandleErrorResponse(c, err)
 		return

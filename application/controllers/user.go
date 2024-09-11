@@ -7,6 +7,7 @@ import (
 	"ifttt/manager/domain/user"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type userController struct {
@@ -35,7 +36,13 @@ func (u *userController) CreateUser(c *gin.Context) {
 		return
 	}
 
-	newUser := user.User{Email: reqBody.Email, Password: reqBody.Password}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), bcrypt.DefaultCost)
+	if err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	}
+
+	newUser := user.User{Email: reqBody.Email, Password: string(hashedPassword)}
 	if err := u.serverCore.ConfigStore.UserRepo.CreateUser(newUser); err != nil {
 		common.HandleErrorResponse(c, err)
 		return

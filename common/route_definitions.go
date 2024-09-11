@@ -6,8 +6,8 @@ type RouteDefinition struct {
 	Path          string            `mapstructure:"path" json:"path"`
 	Method        string            `mapstructure:"method" json:"method"`
 	Description   string            `mapstructure:"description" json:"description"`
-	Children      []RouteDefinition `mapstructure:"group" json:"group"`
+	Children      []RouteDefinition `mapstructure:"children" json:"children"`
 	Authenticated bool              `mapstructure:"authenticated" json:"authenticated"`
 	Authorized    bool              `mapstructure:"authorized" json:"authorized"`
-	HandlerFunc   gin.HandlerFunc
+	HandlerFunc   gin.HandlerFunc   `mapstructure:"-" json:"-"`
 }
