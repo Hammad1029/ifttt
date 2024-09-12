@@ -11,8 +11,8 @@ type CreateUserRequest struct {
 }
 
 func (c *CreateUserRequest) Validate() error {
-	return validation.ValidateStruct(&c,
-		validation.Field(&c.Email, validation.Required, validation.Length(5, 50), is.Email),
+	return validation.ValidateStruct(c,
+		validation.Field(&c.Email, validation.Required, is.Email),
 		validation.Field(&c.Password, validation.Required, validation.Length(5, 50)),
 	)
 }

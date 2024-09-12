@@ -1,14 +1,63 @@
 package schema
 
+import (
+	"context"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+)
+
+const (
+	RenameTableKey      = "renameTable"
+	RenameColumnKey     = "renameColumn"
+	AlterColumnKey      = "alterColumn"
+	AddColumnKey        = "addColumn"
+	RemoveColumnKey     = "removeColumn"
+	AddConstraintKey    = "addConstraint"
+	RemoveConstraintKey = "removeConstraint"
+)
+
+const (
+	PrimaryKeyConstraintKey = "PRIMARY KEY"
+	ForeignKeyConstraintKey = "FOREIGN KEY"
+	UniqueConstraintKey     = "UNIQUE"
+)
+
 type CreateTableRequest struct {
 	TableName   string          `mapstructure:"tableName" json:"tableName"`
 	Columns     []addColumn     `mapstructure:"columns" json:"columns"`
 	Constraints []addConstraint `mapstructure:"constraints" json:"constraints"`
 }
 
+func (c *CreateTableRequest) Validate() error {
+	return validation.ValidateStruct(c,
+		validation.Field(&c.TableName, validation.Required),
+		validation.Field(&c.Columns, validation.Required, validation.Length(1, 0),
+			validation.Each(validation.WithContext(func(ctx context.Context, value interface{}) error {
+				col := value.(*addColumn)
+				return col.Validate()
+			}))),
+		validation.Field(&c.Constraints, validation.Required, validation.Length(1, 0),
+			validation.Each(validation.WithContext(func(ctx context.Context, value interface{}) error {
+				constraint := value.(*addConstraint)
+				return constraint.Validate()
+			}))),
+	)
+}
+
 type UpdateTableRequest struct {
-	TableName string         `mapstructure:"tableName" json:"tableName"`
-	Updates   *[]tableUpdate `mapstructure:"updates" json:"updates"`
+	TableName string        `mapstructure:"tableName" json:"tableName"`
+	Updates   []tableUpdate `mapstructure:"updates" json:"updates"`
+}
+
+func (u *UpdateTableRequest) Validate() error {
+	return validation.ValidateStruct(u,
+		validation.Field(&u.TableName, validation.Required),
+		validation.Field(&u.Updates, validation.Required, validation.Length(1, 0),
+			validation.Each(validation.WithContext(func(ctx context.Context, value interface{}) error {
+				update := value.(tableUpdate)
+				return update.Validate()
+			}))),
+	)
 }
 
 type tableUpdate struct {
@@ -22,13 +71,75 @@ type tableUpdate struct {
 	RemoveConstraint *removeConstraint `mapstructure:"removeConstraint" json:"removeConstraint"`
 }
 
+func (t *tableUpdate) Validate() error {
+	return validation.ValidateStruct(t,
+		validation.Field(&t.UpdateType, validation.Required, validation.In(
+			RenameTableKey, RenameColumnKey, AlterColumnKey, AddColumnKey, RemoveColumnKey, AddConstraintKey, RemoveConstraintKey)),
+		validation.Field(&t.RenameTable, validation.When(t.UpdateType == RenameTableKey,
+			validation.Required, validation.WithContext(
+				func(ctx context.Context, value interface{}) error {
+					rename := value.(*renameTable)
+					return rename.Validate()
+				})).Else(validation.Nil)),
+		validation.Field(&t.RenameColumn, validation.When(t.UpdateType == RenameColumnKey,
+			validation.Required, validation.WithContext(
+				func(ctx context.Context, value interface{}) error {
+					rename := value.(*renameColumn)
+					return rename.Validate()
+				})).Else(validation.Nil)),
+		validation.Field(&t.AlterColumn, validation.When(t.UpdateType == AlterColumnKey,
+			validation.Required, validation.WithContext(
+				func(ctx context.Context, value interface{}) error {
+					alter := value.(*alterColumn)
+					return alter.Validate()
+				})).Else(validation.Nil)),
+		validation.Field(&t.AddColumn, validation.When(t.UpdateType == AddColumnKey,
+			validation.Required, validation.WithContext(
+				func(ctx context.Context, value interface{}) error {
+					add := value.(*addColumn)
+					return add.Validate()
+				})).Else(validation.Nil)),
+		validation.Field(&t.RemoveColumn, validation.When(t.UpdateType == RemoveColumnKey,
+			validation.Required, validation.WithContext(
+				func(ctx context.Context, value interface{}) error {
+					remove := value.(*removeColumn)
+					return remove.Validate()
+				})).Else(validation.Nil)),
+		validation.Field(&t.AddConstraint, validation.When(t.UpdateType == AddConstraintKey,
+			validation.Required, validation.WithContext(
+				func(ctx context.Context, value interface{}) error {
+					add := value.(*addConstraint)
+					return add.Validate()
+				})).Else(validation.Nil)),
+		validation.Field(&t.RemoveConstraint, validation.When(t.UpdateType == RemoveConstraintKey,
+			validation.Required, validation.WithContext(
+				func(ctx context.Context, value interface{}) error {
+					remove := value.(*removeConstraint)
+					return remove.Validate()
+				})).Else(validation.Nil)),
+	)
+}
+
 type renameTable struct {
 	Name string `mapstructure:"name" json:"name"`
+}
+
+func (a *renameTable) Validate() error {
+	return validation.ValidateStruct(a,
+		validation.Field(&a.Name, validation.Required),
+	)
 }
 
 type renameColumn struct {
 	OldName string `mapstructure:"oldName" json:"oldName"`
 	NewName string `mapstructure:"newName" json:"newName"`
+}
+
+func (a *renameColumn) Validate() error {
+	return validation.ValidateStruct(a,
+		validation.Field(&a.OldName, validation.Required),
+		validation.Field(&a.NewName, validation.Required, validation.NotIn(a.OldName)),
+	)
 }
 
 type alterColumn struct {
@@ -38,6 +149,15 @@ type alterColumn struct {
 	DefaultValue string `mapstructure:"defaultValue" json:"defaultValue"`
 }
 
+func (a *alterColumn) Validate() error {
+	return validation.ValidateStruct(a,
+		validation.Field(&a.ColumnName, validation.Required),
+		validation.Field(&a.DataType, validation.Required),
+		validation.Field(&a.Nullable),
+		validation.Field(&a.DefaultValue),
+	)
+}
+
 type addColumn struct {
 	ColumnName   string `mapstructure:"columnName" json:"columnName"`
 	DataType     string `mapstructure:"dataType" json:"dataType"`
@@ -45,8 +165,23 @@ type addColumn struct {
 	DefaultValue string `mapstructure:"defaultValue" json:"defaultValue"`
 }
 
+func (a *addColumn) Validate() error {
+	return validation.ValidateStruct(a,
+		validation.Field(&a.ColumnName, validation.Required),
+		validation.Field(&a.DataType, validation.Required),
+		validation.Field(&a.Nullable),
+		validation.Field(&a.DefaultValue),
+	)
+}
+
 type removeColumn struct {
 	ColumnName string `mapstructure:"columnName" json:"columnName"`
+}
+
+func (r *removeColumn) Validate() error {
+	return validation.ValidateStruct(r,
+		validation.Field(&r.ColumnName, validation.Required),
+	)
 }
 
 type addConstraint struct {
@@ -56,6 +191,22 @@ type addConstraint struct {
 	ReferencesField string `mapstructure:"referencesField" json:"referencesField"`
 }
 
+func (a *addConstraint) Validate() error {
+	return validation.ValidateStruct(a,
+		validation.Field(&a.ConstraintType, validation.Required, validation.In(
+			PrimaryKeyConstraintKey, ForeignKeyConstraintKey, UniqueConstraintKey)),
+		validation.Field(&a.ColumnName, validation.Required),
+		validation.Field(&a.ReferencesTable),
+		validation.Field(&a.ReferencesField),
+	)
+}
+
 type removeConstraint struct {
 	ConstraintName string `mapstructure:"constraintName" json:"constraintName"`
+}
+
+func (r *removeConstraint) Validate() error {
+	return validation.ValidateStruct(r,
+		validation.Field(&r.ConstraintName, validation.Required),
+	)
 }

@@ -21,7 +21,7 @@ func newApiController(serverCore *core.ServerCore) *apiController {
 
 func (a *apiController) CreateApi(c *gin.Context) {
 	var reqBody *api.CreateApiRequest
-	if ok := validateRequest(c, &reqBody); !ok {
+	if ok := validateAndBind(c, &reqBody); !ok {
 		return
 	}
 

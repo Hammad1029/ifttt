@@ -72,11 +72,11 @@ func (p *PostgresSchemaRepository) CreateTable(newSchema *schema.CreateTableRequ
 	var constraintDefs []string
 	for _, constr := range newSchema.Constraints {
 		switch constr.ConstraintType {
-		case "PRIMARY KEY":
+		case schema.PrimaryKeyConstraintKey:
 			constraintDefs = append(constraintDefs, fmt.Sprintf("PRIMARY KEY (%s)", constr.ColumnName))
-		case "UNIQUE":
+		case schema.UniqueConstraintKey:
 			constraintDefs = append(constraintDefs, fmt.Sprintf("UNIQUE (%s)", constr.ColumnName))
-		case "FOREIGN KEY":
+		case schema.ForeignKeyConstraintKey:
 			constraintDefs = append(constraintDefs, fmt.Sprintf("FOREIGN KEY (%s) REFERENCES %s(%s)",
 				constr.ColumnName, constr.ReferencesTable, constr.ReferencesField))
 		default:
@@ -100,19 +100,19 @@ func (p *PostgresSchemaRepository) UpdateTable(updates *schema.UpdateTableReques
 	var transactionQueries []string
 	baseAlterQuery := fmt.Sprintf("ALTER TABLE %s ", updates.TableName)
 
-	for _, update := range *updates.Updates {
+	for _, update := range updates.Updates {
 		switch update.UpdateType {
-		case "renameTable":
+		case schema.RenameTableKey:
 			{
 				transactionQueries = append(transactionQueries,
 					baseAlterQuery+fmt.Sprintf("RENAME TO %s;", update.RenameTable.Name))
 			}
-		case "renameColumn":
+		case schema.RenameColumnKey:
 			{
 				transactionQueries = append(transactionQueries,
 					baseAlterQuery+fmt.Sprintf("RENAME COLUMN %s TO %s;", update.RenameColumn.OldName, update.RenameColumn.NewName))
 			}
-		case "alterColumn":
+		case schema.AlterColumnKey:
 			{
 				transactionQueries = append(transactionQueries,
 					baseAlterQuery+fmt.Sprintf(
@@ -137,7 +137,7 @@ func (p *PostgresSchemaRepository) UpdateTable(updates *schema.UpdateTableReques
 							update.AlterColumn.ColumnName, update.AlterColumn.DefaultValue))
 				}
 			}
-		case "addColumn":
+		case schema.AddColumnKey:
 			{
 				var defaultValueQuery string
 				if update.AddColumn.DefaultValue != "" {
@@ -148,25 +148,25 @@ func (p *PostgresSchemaRepository) UpdateTable(updates *schema.UpdateTableReques
 						"ADD COLUMN %s %s %s;", update.AddColumn.ColumnName,
 						update.AddColumn.DataType, defaultValueQuery))
 			}
-		case "removeColumn":
+		case schema.RemoveColumnKey:
 			{
 				transactionQueries = append(transactionQueries,
 					baseAlterQuery+fmt.Sprintf("DROP COLUMN %s;", update.RemoveColumn.ColumnName))
 			}
-		case "addConstraint":
+		case schema.AddConstraintKey:
 			{
 				constraintQuery := baseAlterQuery + "ADD "
 				switch update.AddConstraint.ConstraintType {
-				case "FOREIGN KEY":
+				case schema.ForeignKeyConstraintKey:
 					constraintQuery += fmt.Sprintf("FOREIGN KEY (%s) REFERENCES %s(%s)",
 						update.AddConstraint.ColumnName, update.AddConstraint.ReferencesTable,
 						update.AddConstraint.ReferencesField)
-				case "UNIQUE":
+				case schema.UniqueConstraintKey:
 					constraintQuery += fmt.Sprintf("UNIQUE (%s)", update.AddConstraint.ColumnName)
 				}
 				transactionQueries = append(transactionQueries, fmt.Sprintf("%s;", constraintQuery))
 			}
-		case "removeConstraint":
+		case schema.RemoveConstraintKey:
 			{
 				transactionQueries = append(transactionQueries,
 					baseAlterQuery+fmt.Sprintf("DROP CONSTRAINT %s;", update.RemoveConstraint.ConstraintName))

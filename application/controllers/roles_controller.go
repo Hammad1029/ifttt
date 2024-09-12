@@ -29,8 +29,8 @@ func (r *roleController) GetAllPermissions(c *gin.Context) {
 }
 
 func (r *roleController) AddUpdateRole(c *gin.Context) {
-	var reqBody *roles.AddUpdateRoleRequest
-	if ok := validateRequest(c, &reqBody); !ok {
+	var reqBody roles.AddUpdateRoleRequest
+	if ok := validateAndBind(c, &reqBody); !ok {
 		return
 	}
 
@@ -65,18 +65,22 @@ func (r *roleController) AddUpdateRole(c *gin.Context) {
 		}
 	}
 
-	for _, u := range reqBody.AssignTo {
-		user, err := r.serverCore.ConfigStore.UserRepo.GetUser(u, user.DecodeUser)
-		if err != nil {
-			common.HandleErrorResponse(c, err)
-			return
-		} else if user == nil {
-			common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["UserNotFound"]})
-			return
-		}
-		if _, err := r.serverCore.ConfigStore.CasbinEnforcer.AddRoleForUser(u, reqBody.RoleName); err != nil {
-			common.HandleErrorResponse(c, err)
-			return
+	if len(reqBody.AssignTo) == 0 {
+		r.serverCore.ConfigStore.CasbinEnforcer.DeleteRole(reqBody.RoleName)
+	} else {
+		for _, u := range reqBody.AssignTo {
+			user, err := r.serverCore.ConfigStore.UserRepo.GetUser(u, user.DecodeUser)
+			if err != nil {
+				common.HandleErrorResponse(c, err)
+				return
+			} else if user == nil {
+				common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["UserNotFound"]})
+				return
+			}
+			if _, err := r.serverCore.ConfigStore.CasbinEnforcer.AddRoleForUser(u, reqBody.RoleName); err != nil {
+				common.HandleErrorResponse(c, err)
+				return
+			}
 		}
 	}
 

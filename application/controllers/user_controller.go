@@ -22,7 +22,7 @@ func newUserController(serverCore *core.ServerCore) *userController {
 
 func (uc *userController) CreateUser(c *gin.Context) {
 	var reqBody user.CreateUserRequest
-	if ok := validateRequest(c, &reqBody); !ok {
+	if ok := validateAndBind(c, &reqBody); !ok {
 		return
 	}
 

@@ -65,7 +65,7 @@ func (s *schemaController) GetSchema(c *gin.Context) {
 
 func (s *schemaController) CreateTable(c *gin.Context) {
 	var reqBody schema.CreateTableRequest
-	if ok := validateRequest(c, &reqBody); !ok {
+	if ok := validateAndBind(c, &reqBody); !ok {
 		return
 	}
 
@@ -91,7 +91,7 @@ func (s *schemaController) CreateTable(c *gin.Context) {
 
 func (s *schemaController) UpdateTable(c *gin.Context) {
 	var reqBody schema.UpdateTableRequest
-	if ok := validateRequest(c, &reqBody); !ok {
+	if ok := validateAndBind(c, &reqBody); !ok {
 		return
 	}
 

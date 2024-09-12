@@ -7,15 +7,16 @@ import (
 	"reflect"
 
 	"github.com/gin-gonic/gin"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 type validatorInterface interface {
 	Validate() error
 }
 
-func validateRequest(c *gin.Context, output any) bool {
+func validateAndBind(c *gin.Context, output any) bool {
 	if reflect.TypeOf(output).Kind() != reflect.Ptr {
-		common.HandleErrorResponse(c, fmt.Errorf("method validateRequest: output struct is not a pointer"))
+		common.HandleErrorResponse(c, fmt.Errorf("method validateAndBind: output struct is not a pointer"))
 		return false
 	}
 
@@ -24,12 +25,18 @@ func validateRequest(c *gin.Context, output any) bool {
 		return false
 	}
 
-	// if validator, ok := output.(validatorInterface); ok {
-	// if err := validator.Validate(); err != nil {
-	// 	c.AbortWithStatusJSON(http.StatusBadRequest, err)
-	// 	return false
-	// }
-	// }
+	if validator, ok := output.(validatorInterface); ok {
+		if err := validator.Validate(); err != nil {
+			if internalErr, ok := err.(validation.InternalError); ok {
+				common.HandleErrorResponse(c,
+					fmt.Errorf("method validateAndBind: could not validate: %s", internalErr))
+				return false
+			}
+
+			c.AbortWithStatusJSON(http.StatusBadRequest, err)
+			return false
+		}
+	}
 
 	return true
 }

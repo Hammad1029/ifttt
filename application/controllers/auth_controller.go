@@ -25,7 +25,7 @@ func newAuthController(serverCore *core.ServerCore) *authController {
 
 func (a *authController) Login(c *gin.Context) {
 	var reqBody auth.LoginRequest
-	if ok := validateRequest(c, &reqBody); !ok {
+	if ok := validateAndBind(c, &reqBody); !ok {
 		return
 	}
 
