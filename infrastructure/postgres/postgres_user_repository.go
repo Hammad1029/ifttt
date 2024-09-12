@@ -37,16 +37,16 @@ func (p *PostgresUserRepository) CreateUser(user user.User) error {
 	return nil
 }
 
-func (p *PostgresUserRepository) GetAllUsers() (*[]user.User, error) {
+func (p *PostgresUserRepository) GetAllUsers() ([]*user.User, error) {
 	var pgUsers []postgresUser
 	if err := p.client.Find(&pgUsers).Error; err != nil {
 		return nil, fmt.Errorf("method *PostgresUserRepository.GetUsers: could not get users: %s", err)
 	}
 
-	var users []user.User
+	var users []*user.User
 	if err := mapstructure.Decode(pgUsers, &users); err != nil {
 		return nil, fmt.Errorf("method *PostgresUserRepository.GetUsers: could not decode users: %s", err)
 	}
 
-	return &users, nil
+	return users, nil
 }

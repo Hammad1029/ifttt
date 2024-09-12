@@ -22,7 +22,11 @@ func newRoleController(serverCore *core.ServerCore) *roleController {
 }
 
 func (r *roleController) GetAllPermissions(c *gin.Context) {
-	common.ResponseHandler(c, common.ResponseConfig{Data: *r.serverCore.Routes})
+	filteredPermissions := lo.Filter(*r.serverCore.Routes, func(r common.RouteDefinition, _ int) bool {
+		return r.Authorized
+	})
+
+	common.ResponseHandler(c, common.ResponseConfig{Data: filteredPermissions})
 }
 
 func (r *roleController) UpdateUserRoles(c *gin.Context) {
@@ -86,7 +90,7 @@ func (r *roleController) AddUpdateRole(c *gin.Context) {
 	}
 
 	for _, perm := range reqBody.Permissions {
-		permString := CreatePermission(perm.Path, perm.Method)
+		permString := perm.CreatePermission()
 		if _, found := lo.Find(*r.serverCore.Permissions, func(p string) bool {
 			return p == permString
 		}); !found {
@@ -113,4 +117,29 @@ func (r *roleController) AddUpdateRole(c *gin.Context) {
 	}
 
 	common.ResponseHandler(c, common.ResponseConfig{})
+}
+
+func (rc *roleController) GetAllRoles(c *gin.Context) {
+	var domainRoles []roles.Role
+
+	allRoles, err := rc.serverCore.ConfigStore.CasbinEnforcer.GetAllRoles()
+	if err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	}
+
+	for _, r := range allRoles {
+		newRole := roles.Role{RoleName: r}
+		rolePermissions, err := rc.serverCore.ConfigStore.CasbinEnforcer.GetPermissionsForUser(r)
+		if err != nil {
+			common.HandleErrorResponse(c, err)
+			return
+		}
+		for _, p := range rolePermissions {
+			newRole.Permissions = append(newRole.Permissions, roles.PermissionVerbose{Path: p[1], Method: p[2]})
+		}
+		domainRoles = append(domainRoles, newRole)
+	}
+
+	common.ResponseHandler(c, common.ResponseConfig{Data: domainRoles})
 }

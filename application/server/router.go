@@ -5,6 +5,7 @@ import (
 	"ifttt/manager/application/core"
 	"ifttt/manager/application/middlewares"
 	"ifttt/manager/common"
+	"ifttt/manager/domain/roles"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +13,7 @@ import (
 
 func initRouter(router *gin.Engine, serverCore *core.ServerCore) {
 	controllers := controllers.NewAllController(serverCore)
-	serverCore.Routes = controllers.GetRoutes()
+	serverCore.Routes = getRouteDefinitions(controllers)
 	serverCore.Permissions = &[]string{}
 	middlewares := middlewares.NewAllMiddlewares(serverCore)
 
@@ -37,8 +38,8 @@ func createRoutes(
 			handlers = append(handlers, middlewares.Authenticator)
 		}
 		if r.Authorized {
-			newPermission := controllers.CreatePermission(routerGroup.BasePath()+r.Path, r.Method)
-			*permissions = append(*permissions, newPermission)
+			newPermission := roles.PermissionVerbose{Path: routerGroup.BasePath() + r.Path, Method: r.Method}
+			*permissions = append(*permissions, newPermission.CreatePermission())
 			handlers = append(handlers, middlewares.CasbinAuthorizer)
 		}
 		handlers = append(handlers, r.HandlerFunc)

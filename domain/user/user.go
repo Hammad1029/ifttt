@@ -2,14 +2,16 @@ package user
 
 import (
 	"fmt"
+	"ifttt/manager/domain/roles"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-viper/mapstructure/v2"
 )
 
 type User struct {
-	Email    string `mapstructure:"email"`
-	Password string `mapstructure:"password"`
+	Email    string       `mapstructure:"email" json:"email"`
+	Password string       `mapstructure:"password" json:"password"`
+	Roles    []roles.Role `mapstructure:"roles" json:"roles"`
 }
 
 func GetUserFromContext(c *gin.Context) *User {

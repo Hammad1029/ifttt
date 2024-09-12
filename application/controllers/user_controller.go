@@ -4,6 +4,7 @@ import (
 	"ifttt/manager/application/core"
 	"ifttt/manager/application/middlewares"
 	"ifttt/manager/common"
+	"ifttt/manager/domain/roles"
 	"ifttt/manager/domain/user"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +21,7 @@ func newUserController(serverCore *core.ServerCore) *userController {
 	}
 }
 
-func (u *userController) CreateUser(c *gin.Context) {
+func (uc *userController) CreateUser(c *gin.Context) {
 	err, reqBodyAny := middlewares.Validator(c, user.CreateUserRequest{})
 	if err != nil {
 		common.HandleErrorResponse(c, err)
@@ -28,7 +29,7 @@ func (u *userController) CreateUser(c *gin.Context) {
 	}
 	reqBody := reqBodyAny.(*user.CreateUserRequest)
 
-	if user, err := u.serverCore.ConfigStore.UserRepo.GetUser(reqBody.Email, user.DecodeUser); err != nil {
+	if user, err := uc.serverCore.ConfigStore.UserRepo.GetUser(reqBody.Email, user.DecodeUser); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else if user != nil {
@@ -43,7 +44,7 @@ func (u *userController) CreateUser(c *gin.Context) {
 	}
 
 	newUser := user.User{Email: reqBody.Email, Password: string(hashedPassword)}
-	if err := u.serverCore.ConfigStore.UserRepo.CreateUser(newUser); err != nil {
+	if err := uc.serverCore.ConfigStore.UserRepo.CreateUser(newUser); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}
@@ -51,11 +52,30 @@ func (u *userController) CreateUser(c *gin.Context) {
 	common.ResponseHandler(c, common.ResponseConfig{})
 }
 
-func (u *userController) GetAllUsers(c *gin.Context) {
-	users, err := u.serverCore.ConfigStore.UserRepo.GetAllUsers()
+func (uc *userController) GetAllUsers(c *gin.Context) {
+	users, err := uc.serverCore.ConfigStore.UserRepo.GetAllUsers()
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
+	}
+	for _, u := range users {
+		userRoles, err := uc.serverCore.ConfigStore.CasbinEnforcer.GetRolesForUser(u.Email)
+		if err != nil {
+			common.HandleErrorResponse(c, err)
+			return
+		}
+		for _, r := range userRoles {
+			newRole := roles.Role{RoleName: r}
+			rolePermissions, err := uc.serverCore.ConfigStore.CasbinEnforcer.GetPermissionsForUser(r)
+			if err != nil {
+				common.HandleErrorResponse(c, err)
+				return
+			}
+			for _, p := range rolePermissions {
+				newRole.Permissions = append(newRole.Permissions, roles.PermissionVerbose{Path: p[1], Method: p[2]})
+			}
+			u.Roles = append(u.Roles, newRole)
+		}
 	}
 
 	common.ResponseHandler(c, common.ResponseConfig{Data: users})

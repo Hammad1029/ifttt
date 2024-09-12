@@ -7,10 +7,5 @@ type UpdateUserRolesRequest struct {
 
 type UpdateRoleRequest struct {
 	RoleName    string              `mapstructure:"roleName" json:"roleName"`
-	Permissions []permissionRequest `mapstructure:"permissions" json:"permissions"`
-}
-
-type permissionRequest struct {
-	Path   string `mapstructure:"path" json:"path"`
-	Method string `mapstructure:"method" json:"method"`
+	Permissions []PermissionVerbose `mapstructure:"permissions" json:"permissions"`
 }

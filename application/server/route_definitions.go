@@ -1,36 +1,18 @@
-package controllers
+package server
 
 import (
-	"fmt"
-	"ifttt/manager/application/core"
+	"ifttt/manager/application/controllers"
 	"ifttt/manager/common"
 	"net/http"
 )
 
-type AllController struct {
-	ApiController    *apiController
-	SchemaController *schemaController
-	AuthController   *authController
-	UserController   *userController
-	RoleController   *roleController
-}
-
-func NewAllController(serverCore *core.ServerCore) *AllController {
-	return &AllController{
-		ApiController:    newApiController(serverCore),
-		SchemaController: newSchemaController(serverCore),
-		AuthController:   newAuthController(serverCore),
-		UserController:   newUserController(serverCore),
-		RoleController:   newRoleController(serverCore),
-	}
-}
-
-func (ac *AllController) GetRoutes() *[]common.RouteDefinition {
+func getRouteDefinitions(controllers *controllers.AllController) *[]common.RouteDefinition {
 	return &[]common.RouteDefinition{
 		{
 			Path:        "/auth",
 			Method:      "GROUP",
-			Description: "Authentication Group",
+			Description: "Authentication",
+			Authorized:  false,
 			Children: []common.RouteDefinition{
 				{
 					Path:          "/login",
@@ -38,7 +20,7 @@ func (ac *AllController) GetRoutes() *[]common.RouteDefinition {
 					Description:   "User Login",
 					Authenticated: false,
 					Authorized:    false,
-					HandlerFunc:   ac.AuthController.Login,
+					HandlerFunc:   controllers.AuthController.Login,
 				},
 				{
 					Path:          "/refresh",
@@ -46,7 +28,7 @@ func (ac *AllController) GetRoutes() *[]common.RouteDefinition {
 					Description:   "Refresh Token",
 					Authenticated: false,
 					Authorized:    false,
-					HandlerFunc:   ac.AuthController.RefreshToken,
+					HandlerFunc:   controllers.AuthController.RefreshToken,
 				},
 				{
 					Path:          "/logout",
@@ -54,14 +36,15 @@ func (ac *AllController) GetRoutes() *[]common.RouteDefinition {
 					Description:   "User Logout",
 					Authenticated: true,
 					Authorized:    false,
-					HandlerFunc:   ac.AuthController.Logout,
+					HandlerFunc:   controllers.AuthController.Logout,
 				},
 			},
 		},
 		{
 			Path:        "/apis",
 			Method:      "GROUP",
-			Description: "APIs Group",
+			Description: "API Management",
+			Authorized:  true,
 			Children: []common.RouteDefinition{
 				{
 					Path:          "/create",
@@ -69,14 +52,15 @@ func (ac *AllController) GetRoutes() *[]common.RouteDefinition {
 					Description:   "Create API",
 					Authenticated: true,
 					Authorized:    true,
-					HandlerFunc:   ac.ApiController.CreateApi,
+					HandlerFunc:   controllers.ApiController.CreateApi,
 				},
 			},
 		},
 		{
 			Path:        "/schemas",
 			Method:      "GROUP",
-			Description: "Schemas Group",
+			Description: "Schema Management",
+			Authorized:  true,
 			Children: []common.RouteDefinition{
 				{
 					Path:          "/getAll",
@@ -84,7 +68,7 @@ func (ac *AllController) GetRoutes() *[]common.RouteDefinition {
 					Description:   "Get Schema",
 					Authenticated: true,
 					Authorized:    true,
-					HandlerFunc:   ac.SchemaController.GetSchema,
+					HandlerFunc:   controllers.SchemaController.GetSchema,
 				},
 				{
 					Path:          "/create",
@@ -92,7 +76,7 @@ func (ac *AllController) GetRoutes() *[]common.RouteDefinition {
 					Description:   "Create Table",
 					Authenticated: true,
 					Authorized:    true,
-					HandlerFunc:   ac.SchemaController.CreateTable,
+					HandlerFunc:   controllers.SchemaController.CreateTable,
 				},
 				{
 					Path:          "/update",
@@ -100,14 +84,15 @@ func (ac *AllController) GetRoutes() *[]common.RouteDefinition {
 					Description:   "Update Table",
 					Authenticated: true,
 					Authorized:    true,
-					HandlerFunc:   ac.SchemaController.UpdateTable,
+					HandlerFunc:   controllers.SchemaController.UpdateTable,
 				},
 			},
 		},
 		{
 			Path:        "/users",
 			Method:      "GROUP",
-			Description: "User Group",
+			Description: "User Management",
+			Authorized:  true,
 			Children: []common.RouteDefinition{
 				{
 					Path:          "/get",
@@ -115,7 +100,7 @@ func (ac *AllController) GetRoutes() *[]common.RouteDefinition {
 					Description:   "Get all users",
 					Authenticated: true,
 					Authorized:    true,
-					HandlerFunc:   ac.UserController.GetAllUsers,
+					HandlerFunc:   controllers.UserController.GetAllUsers,
 				},
 				{
 					Path:          "/create",
@@ -123,22 +108,31 @@ func (ac *AllController) GetRoutes() *[]common.RouteDefinition {
 					Description:   "Create User",
 					Authenticated: true,
 					Authorized:    true,
-					HandlerFunc:   ac.UserController.CreateUser,
+					HandlerFunc:   controllers.UserController.CreateUser,
 				},
 			},
 		},
 		{
 			Path:        "/roles",
 			Method:      "GROUP",
-			Description: "Update Table",
+			Description: "Role Management",
+			Authorized:  true,
 			Children: []common.RouteDefinition{
+				{
+					Path:          "/getAllRoles",
+					Method:        http.MethodGet,
+					Description:   "Get All Roles",
+					Authenticated: true,
+					Authorized:    true,
+					HandlerFunc:   controllers.RoleController.GetAllRoles,
+				},
 				{
 					Path:          "/getAllPermissions",
 					Method:        http.MethodGet,
 					Description:   "Get All Permissions",
 					Authenticated: true,
 					Authorized:    true,
-					HandlerFunc:   ac.RoleController.GetAllPermissions,
+					HandlerFunc:   controllers.RoleController.GetAllPermissions,
 				},
 				{
 					Path:          "/updateUserRoles",
@@ -146,7 +140,7 @@ func (ac *AllController) GetRoutes() *[]common.RouteDefinition {
 					Description:   "Update User Roles",
 					Authenticated: true,
 					Authorized:    true,
-					HandlerFunc:   ac.RoleController.UpdateUserRoles,
+					HandlerFunc:   controllers.RoleController.UpdateUserRoles,
 				},
 				{
 					Path:          "/addUpdateRoles",
@@ -154,13 +148,9 @@ func (ac *AllController) GetRoutes() *[]common.RouteDefinition {
 					Description:   "Add/Update Roles",
 					Authenticated: true,
 					Authorized:    true,
-					HandlerFunc:   ac.RoleController.AddUpdateRole,
+					HandlerFunc:   controllers.RoleController.AddUpdateRole,
 				},
 			},
 		},
 	}
-}
-
-func CreatePermission(path string, method string) string {
-	return fmt.Sprintf("%s:%s", path, method)
 }
