@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"ifttt/manager/application/core"
-	"ifttt/manager/application/middlewares"
 	"ifttt/manager/common"
 	"ifttt/manager/domain/roles"
 	"ifttt/manager/domain/user"
@@ -22,12 +21,10 @@ func newUserController(serverCore *core.ServerCore) *userController {
 }
 
 func (uc *userController) CreateUser(c *gin.Context) {
-	err, reqBodyAny := middlewares.Validator(c, user.CreateUserRequest{})
-	if err != nil {
-		common.HandleErrorResponse(c, err)
+	var reqBody user.CreateUserRequest
+	if ok := validateRequest(c, &reqBody); !ok {
 		return
 	}
-	reqBody := reqBodyAny.(*user.CreateUserRequest)
 
 	if user, err := uc.serverCore.ConfigStore.UserRepo.GetUser(reqBody.Email, user.DecodeUser); err != nil {
 		common.HandleErrorResponse(c, err)

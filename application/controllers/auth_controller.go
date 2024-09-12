@@ -3,8 +3,8 @@ package controllers
 import (
 	"fmt"
 	"ifttt/manager/application/core"
-	"ifttt/manager/application/middlewares"
 	"ifttt/manager/common"
+	"ifttt/manager/domain/auth"
 	"ifttt/manager/domain/user"
 	"net/http"
 	"time"
@@ -24,12 +24,10 @@ func newAuthController(serverCore *core.ServerCore) *authController {
 }
 
 func (a *authController) Login(c *gin.Context) {
-	err, reqBodyAny := middlewares.Validator(c, user.LoginRequest{})
-	if err != nil {
-		common.HandleErrorResponse(c, err)
+	var reqBody auth.LoginRequest
+	if ok := validateRequest(c, &reqBody); !ok {
 		return
 	}
-	reqBody := reqBodyAny.(*user.LoginRequest)
 
 	user, err := a.serverCore.ConfigStore.UserRepo.GetUser(reqBody.Email, user.DecodeUser)
 	if err != nil {
@@ -52,11 +50,11 @@ func (a *authController) Login(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	if err := a.serverCore.CacheStore.TokenRepo.DeleteTokenPair(reqBody.Email, ctx); err != nil {
+	if err := a.serverCore.CacheStore.AuthRepo.DeleteTokenPair(reqBody.Email, ctx); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}
-	if err := a.serverCore.CacheStore.TokenRepo.StoreTokenPair(reqBody.Email, tokenPair, ctx); err != nil {
+	if err := a.serverCore.CacheStore.AuthRepo.StoreTokenPair(reqBody.Email, tokenPair, ctx); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}
@@ -72,7 +70,7 @@ func (a *authController) Logout(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	if err := a.serverCore.CacheStore.TokenRepo.DeleteTokenPair(user.Email, ctx); err != nil {
+	if err := a.serverCore.CacheStore.AuthRepo.DeleteTokenPair(user.Email, ctx); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}
@@ -98,7 +96,7 @@ func (a *authController) RefreshToken(c *gin.Context) {
 	ctx := c.Request.Context()
 	userEmail := fmt.Sprint(tokenDetails.Claims["email"])
 
-	cacheExists, err := a.serverCore.CacheStore.TokenRepo.GetTokenPair(userEmail, ctx)
+	cacheExists, err := a.serverCore.CacheStore.AuthRepo.GetTokenPair(userEmail, ctx)
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
@@ -116,7 +114,7 @@ func (a *authController) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	if err := a.serverCore.CacheStore.TokenRepo.DeleteTokenPair(user.Email, ctx); err != nil {
+	if err := a.serverCore.CacheStore.AuthRepo.DeleteTokenPair(user.Email, ctx); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}
@@ -125,7 +123,7 @@ func (a *authController) RefreshToken(c *gin.Context) {
 		common.HandleErrorResponse(c, err)
 		return
 	}
-	if err := a.serverCore.CacheStore.TokenRepo.StoreTokenPair(user.Email, tokenPair, ctx); err != nil {
+	if err := a.serverCore.CacheStore.AuthRepo.StoreTokenPair(user.Email, tokenPair, ctx); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}

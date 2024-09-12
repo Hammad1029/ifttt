@@ -6,6 +6,7 @@ require (
 	github.com/casbin/casbin/v2 v2.99.0
 	github.com/casbin/gorm-adapter/v3 v3.28.0
 	github.com/gin-gonic/gin v1.9.1
+	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/go-viper/mapstructure/v2 v2.1.0
 	github.com/gocql/gocql v1.6.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -18,6 +19,7 @@ require (
 )
 
 require (
+	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/casbin/govaluate v1.2.0 // indirect
@@ -58,7 +60,6 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect

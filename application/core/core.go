@@ -3,7 +3,7 @@ package core
 import (
 	"fmt"
 	"ifttt/manager/common"
-	"ifttt/manager/domain/token"
+	"ifttt/manager/domain/auth"
 	"ifttt/manager/infrastructure/store"
 )
 
@@ -11,7 +11,7 @@ type ServerCore struct {
 	ConfigStore  *store.ConfigStore
 	DataStore    *store.DataStore
 	CacheStore   *store.CacheStore
-	TokenService *token.TokenService
+	TokenService *auth.TokenService
 	Routes       *[]common.RouteDefinition
 	Permissions  *[]string
 }
@@ -34,7 +34,7 @@ func NewServerCore() (*ServerCore, error) {
 	} else {
 		serverCore.CacheStore = cacheStore
 	}
-	if tokenService, err := token.NewTokenService(); err != nil {
+	if tokenService, err := auth.NewTokenService(); err != nil {
 		return nil, fmt.Errorf("method NewServerCore: could not create token service: %s", err)
 	} else {
 		serverCore.TokenService = tokenService

@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (a *AllMiddlewares) CasbinAuthorizer(c *gin.Context) {
+func (a *AllMiddlewares) Authorizer(c *gin.Context) {
 	sub := user.GetUserFromContext(c).Email
 	obj := c.Request.URL.Path
 	act := c.Request.Method

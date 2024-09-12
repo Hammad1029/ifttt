@@ -44,7 +44,7 @@ func (r *RedisStore) init(config map[string]any) error {
 func (r *RedisStore) createCacheStore() *CacheStore {
 	redisBase := redisInfra.NewRedisBaseRepository(r.client)
 	return &CacheStore{
-		Store:     r,
-		TokenRepo: redisInfra.NewRedisTokenRepository(redisBase),
+		Store:    r,
+		AuthRepo: redisInfra.NewRedisTokenRepository(redisBase),
 	}
 }

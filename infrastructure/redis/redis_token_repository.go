@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"ifttt/manager/domain/token"
+	"ifttt/manager/domain/auth"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -23,7 +23,7 @@ const (
 	refreshTokenKey = "user-session-rt"
 )
 
-func (r *RedisTokenRepository) StoreTokenPair(email string, tokens *token.TokenPair, ctx context.Context) error {
+func (r *RedisTokenRepository) StoreTokenPair(email string, tokens *auth.TokenPair, ctx context.Context) error {
 	now := time.Now()
 	atMarshalled, err := json.Marshal(tokens.AccessToken)
 	if err != nil {
@@ -48,8 +48,8 @@ func (r *RedisTokenRepository) StoreTokenPair(email string, tokens *token.TokenP
 	return nil
 }
 
-func (r *RedisTokenRepository) GetTokenPair(email string, ctx context.Context) (*token.TokenPair, error) {
-	var pair token.TokenPair
+func (r *RedisTokenRepository) GetTokenPair(email string, ctx context.Context) (*auth.TokenPair, error) {
+	var pair auth.TokenPair
 
 	if accessToken, err := r.client.Get(ctx, fmt.Sprintf("%s:%s", accessTokenKey, email)).Result(); err != nil {
 		if err == redis.Nil {

@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"ifttt/manager/application/core"
-	"ifttt/manager/application/middlewares"
 	"ifttt/manager/common"
 	"ifttt/manager/domain/api"
 
@@ -21,12 +20,10 @@ func newApiController(serverCore *core.ServerCore) *apiController {
 }
 
 func (a *apiController) CreateApi(c *gin.Context) {
-	err, reqBodyAny := middlewares.Validator(c, api.CreateApiRequest{})
-	if err != nil {
-		common.HandleErrorResponse(c, err)
+	var reqBody *api.CreateApiRequest
+	if ok := validateRequest(c, &reqBody); !ok {
 		return
 	}
-	reqBody := reqBodyAny.(*api.CreateApiRequest)
 
 	// check if api of this name already exists
 	foundApis, err := a.serverCore.ConfigStore.APIRepo.GetApisByGroupAndName(reqBody.Group, reqBody.Name)

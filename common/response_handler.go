@@ -1,33 +1,11 @@
 package common
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
-
-func ResponseHandler(c *gin.Context, config ResponseConfig) {
-
-	if config.Response.Code == "" || config.Response.Description == "" {
-		config.Response = Responses["Success"]
-	}
-
-	if config.Error != nil {
-		HandleError(config.Error)
-		config.Response = Responses["ServerError"]
-	}
-
-	if config.Data == nil {
-		config.Data = make(map[string]any)
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"responseCode":        config.Response.Code,
-		"responseDescription": config.Response.Description,
-		"data":                config.Data,
-	})
-	c.Abort()
-}
 
 type Response struct {
 	Code        string
@@ -60,4 +38,34 @@ var Responses = map[string]Response{
 	"Unauthorized":       {"401", "Unauthorized"},
 	"NotFound":           {"404", "Not Found"},
 	"ServerError":        {"500", "Internal Server Error"},
+}
+
+func ResponseHandler(c *gin.Context, config ResponseConfig) {
+
+	if config.Response.Code == "" || config.Response.Description == "" {
+		config.Response = Responses["Success"]
+	}
+
+	if config.Error != nil {
+		HandleError(config.Error)
+		config.Response = Responses["ServerError"]
+	}
+
+	if config.Data == nil {
+		config.Data = make(map[string]any)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"responseCode":        config.Response.Code,
+		"responseDescription": config.Response.Description,
+		"data":                config.Data,
+	})
+	c.Abort()
+}
+
+func HandleErrorResponse(c *gin.Context, e any, msg ...string) {
+	if e != nil {
+		fmt.Print(e)
+		ResponseHandler(c, ResponseConfig{Response: Responses["ServerError"]})
+	}
 }

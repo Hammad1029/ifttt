@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"ifttt/manager/application/core"
-	"ifttt/manager/application/middlewares"
 	"ifttt/manager/common"
 	"ifttt/manager/domain/schema"
 
@@ -65,12 +64,10 @@ func (s *schemaController) GetSchema(c *gin.Context) {
 }
 
 func (s *schemaController) CreateTable(c *gin.Context) {
-	err, reqBodyAny := middlewares.Validator(c, schema.CreateTableRequest{})
-	if err != nil {
-		common.HandleErrorResponse(c, err)
+	var reqBody schema.CreateTableRequest
+	if ok := validateRequest(c, &reqBody); !ok {
 		return
 	}
-	reqBody := reqBodyAny.(*schema.CreateTableRequest)
 
 	if existingTables, err := s.serverCore.DataStore.SchemaRepo.GetTableNames(); err != nil {
 		common.HandleErrorResponse(c, err)
@@ -84,7 +81,7 @@ func (s *schemaController) CreateTable(c *gin.Context) {
 		}
 	}
 
-	if err := s.serverCore.DataStore.SchemaRepo.CreateTable(reqBody); err != nil {
+	if err := s.serverCore.DataStore.SchemaRepo.CreateTable(&reqBody); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}
@@ -93,12 +90,10 @@ func (s *schemaController) CreateTable(c *gin.Context) {
 }
 
 func (s *schemaController) UpdateTable(c *gin.Context) {
-	err, reqBodyAny := middlewares.Validator(c, schema.UpdateTableRequest{})
-	if err != nil {
-		common.HandleErrorResponse(c, err)
+	var reqBody schema.UpdateTableRequest
+	if ok := validateRequest(c, &reqBody); !ok {
 		return
 	}
-	reqBody := reqBodyAny.(*schema.UpdateTableRequest)
 
 	if existingTables, err := s.serverCore.DataStore.SchemaRepo.GetTableNames(); err != nil {
 		common.HandleErrorResponse(c, err)
@@ -112,7 +107,7 @@ func (s *schemaController) UpdateTable(c *gin.Context) {
 		}
 	}
 
-	if err := s.serverCore.DataStore.SchemaRepo.UpdateTable(reqBody); err != nil {
+	if err := s.serverCore.DataStore.SchemaRepo.UpdateTable(&reqBody); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}

@@ -31,7 +31,12 @@ func (p *PostgresUserRepository) GetUser(
 }
 
 func (p *PostgresUserRepository) CreateUser(user user.User) error {
-	if err := p.client.Create(user).Error; err != nil {
+	var pgUser postgresUser
+	if err := mapstructure.Decode(user, &pgUser); err != nil {
+		return fmt.Errorf("method *PostgresUserRepository.CreateUser: could not decode user: %s", err)
+	}
+
+	if err := p.client.Create(&pgUser).Error; err != nil {
 		return fmt.Errorf("method *PostgresUserRepository.CreateUser: could not create user: %s", err)
 	}
 	return nil

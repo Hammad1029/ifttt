@@ -40,7 +40,7 @@ func createRoutes(
 		if r.Authorized {
 			newPermission := roles.PermissionVerbose{Path: routerGroup.BasePath() + r.Path, Method: r.Method}
 			*permissions = append(*permissions, newPermission.CreatePermission())
-			handlers = append(handlers, middlewares.CasbinAuthorizer)
+			handlers = append(handlers, middlewares.Authorizer)
 		}
 		handlers = append(handlers, r.HandlerFunc)
 

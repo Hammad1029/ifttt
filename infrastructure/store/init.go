@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"ifttt/manager/application/config"
 	"ifttt/manager/domain/api"
+	"ifttt/manager/domain/auth"
 	"ifttt/manager/domain/schema"
-	"ifttt/manager/domain/token"
 	"ifttt/manager/domain/user"
 	"strings"
 
@@ -46,8 +46,8 @@ type DataStore struct {
 }
 
 type CacheStore struct {
-	Store     cacheStorer
-	TokenRepo token.Repository
+	Store    cacheStorer
+	AuthRepo auth.Repository
 }
 
 func NewConfigStore() (*ConfigStore, error) {

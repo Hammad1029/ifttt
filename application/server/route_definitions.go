@@ -135,14 +135,6 @@ func getRouteDefinitions(controllers *controllers.AllController) *[]common.Route
 					HandlerFunc:   controllers.RoleController.GetAllPermissions,
 				},
 				{
-					Path:          "/updateUserRoles",
-					Method:        http.MethodPost,
-					Description:   "Update User Roles",
-					Authenticated: true,
-					Authorized:    true,
-					HandlerFunc:   controllers.RoleController.UpdateUserRoles,
-				},
-				{
 					Path:          "/addUpdateRoles",
 					Method:        http.MethodPost,
 					Description:   "Add/Update Roles",

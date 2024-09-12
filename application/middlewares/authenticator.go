@@ -29,7 +29,7 @@ func (a *AllMiddlewares) Authenticator(c *gin.Context) {
 	userEmail := fmt.Sprint(tokenDetails.Claims["email"])
 
 	ctx := c.Request.Context()
-	cacheExists, err := a.serverCore.CacheStore.TokenRepo.GetTokenPair(userEmail, ctx)
+	cacheExists, err := a.serverCore.CacheStore.AuthRepo.GetTokenPair(userEmail, ctx)
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return

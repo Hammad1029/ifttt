@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"ifttt/manager/application/core"
-	"ifttt/manager/application/middlewares"
 	"ifttt/manager/common"
 	"ifttt/manager/domain/roles"
 	"ifttt/manager/domain/user"
@@ -29,66 +28,13 @@ func (r *roleController) GetAllPermissions(c *gin.Context) {
 	common.ResponseHandler(c, common.ResponseConfig{Data: filteredPermissions})
 }
 
-func (r *roleController) UpdateUserRoles(c *gin.Context) {
-	err, reqBodyAny := middlewares.Validator(c, roles.UpdateUserRolesRequest{})
-	if err != nil {
-		common.HandleErrorResponse(c, err)
-		return
-	}
-	reqBody := reqBodyAny.(*roles.UpdateUserRolesRequest)
-
-	if user, err := r.serverCore.ConfigStore.UserRepo.GetUser(reqBody.Email, user.DecodeUser); err != nil {
-		common.HandleErrorResponse(c, err)
-		return
-	} else if user == nil {
-		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["UserNotFound"]})
-		return
-	}
-
-	if _, err := r.serverCore.ConfigStore.CasbinEnforcer.DeleteRolesForUser(reqBody.Email); err != nil {
-		common.HandleErrorResponse(c, err)
-		return
-	}
-	if _, err := r.serverCore.ConfigStore.CasbinEnforcer.AddRolesForUser(reqBody.Email, reqBody.Roles); err != nil {
-		common.HandleErrorResponse(c, err)
-		return
-	}
-
-	if err := r.serverCore.ConfigStore.CasbinEnforcer.SavePolicy(); err != nil {
-		common.HandleErrorResponse(c, err)
-		return
-	}
-	if err := r.serverCore.ConfigStore.CasbinEnforcer.LoadPolicy(); err != nil {
-		common.HandleErrorResponse(c, err)
-		return
-	}
-
-	common.ResponseHandler(c, common.ResponseConfig{})
-}
-
 func (r *roleController) AddUpdateRole(c *gin.Context) {
-	err, reqBodyAny := middlewares.Validator(c, roles.UpdateRoleRequest{})
-	if err != nil {
-		common.HandleErrorResponse(c, err)
+	var reqBody *roles.AddUpdateRoleRequest
+	if ok := validateRequest(c, &reqBody); !ok {
 		return
 	}
-	reqBody := reqBodyAny.(*roles.UpdateRoleRequest)
 
-	policies, err := r.serverCore.ConfigStore.CasbinEnforcer.GetPolicy()
-	if err != nil {
-		common.HandleErrorResponse(c, err)
-		return
-	}
-	for _, policy := range policies {
-		if policy[0] == reqBody.RoleName {
-			_, err := r.serverCore.ConfigStore.CasbinEnforcer.RemovePolicy(common.ConvertStringToInterfaceArray(policy)...)
-			if err != nil {
-				common.HandleErrorResponse(c, err)
-				return
-			}
-		}
-	}
-
+	var permissions [][]string
 	for _, perm := range reqBody.Permissions {
 		permString := perm.CreatePermission()
 		if _, found := lo.Find(*r.serverCore.Permissions, func(p string) bool {
@@ -97,10 +43,38 @@ func (r *roleController) AddUpdateRole(c *gin.Context) {
 			common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["PermissionNotFound"]})
 			return
 		}
+		permissions = append(permissions, []string{perm.Path, perm.Method})
+	}
 
-		if _, err := r.serverCore.ConfigStore.CasbinEnforcer.AddPolicy(
-			reqBody.RoleName, perm.Path, perm.Method,
-		); err != nil {
+	if _, err := r.serverCore.ConfigStore.CasbinEnforcer.AddPermissionsForUser(
+		reqBody.RoleName, permissions...,
+	); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	}
+
+	if users, err := r.serverCore.ConfigStore.CasbinEnforcer.GetUsersForRole(reqBody.RoleName); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	} else {
+		for _, u := range users {
+			if _, err := r.serverCore.ConfigStore.CasbinEnforcer.DeleteRoleForUser(u, reqBody.RoleName); err != nil {
+				common.HandleErrorResponse(c, err)
+				return
+			}
+		}
+	}
+
+	for _, u := range reqBody.AssignTo {
+		user, err := r.serverCore.ConfigStore.UserRepo.GetUser(u, user.DecodeUser)
+		if err != nil {
+			common.HandleErrorResponse(c, err)
+			return
+		} else if user == nil {
+			common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["UserNotFound"]})
+			return
+		}
+		if _, err := r.serverCore.ConfigStore.CasbinEnforcer.AddRoleForUser(u, reqBody.RoleName); err != nil {
 			common.HandleErrorResponse(c, err)
 			return
 		}
