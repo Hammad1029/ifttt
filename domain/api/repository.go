@@ -1,9 +1,10 @@
 package api
 
 type Repository interface {
-	ToLocal(input *Api, output any) error
-	ToGlobal(input any) (*Api, error)
 	GetAllApis() (*[]Api, error)
-	GetApisByGroupAndName(group string, name string) (*[]Api, error)
-	InsertApi(newApi *Api) error
+	GetApiByNameOrPath(name string, path string) (*Api, error)
+	GetApiDetailsByNameAndPath(name string, path string) (*Api, error)
+	InsertApi(apiReq *CreateApiRequest) error
+	FromDomain(domainApi *Api) (any, error)
+	ToDomain(repoApi any) (*Api, error)
 }

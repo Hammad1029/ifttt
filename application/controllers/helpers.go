@@ -10,10 +10,6 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
-type validatorInterface interface {
-	Validate() error
-}
-
 func validateAndBind(c *gin.Context, output any) bool {
 	if reflect.TypeOf(output).Kind() != reflect.Ptr {
 		common.HandleErrorResponse(c, fmt.Errorf("method validateAndBind: output struct is not a pointer"))
@@ -25,7 +21,7 @@ func validateAndBind(c *gin.Context, output any) bool {
 		return false
 	}
 
-	if validator, ok := output.(validatorInterface); ok {
+	if validator, ok := output.(common.ValidatorInterface); ok {
 		if err := validator.Validate(); err != nil {
 			if internalErr, ok := err.(validation.InternalError); ok {
 				common.HandleErrorResponse(c,

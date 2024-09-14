@@ -5,7 +5,9 @@ import (
 	"ifttt/manager/application/config"
 	"ifttt/manager/domain/api"
 	"ifttt/manager/domain/auth"
+	"ifttt/manager/domain/rule"
 	"ifttt/manager/domain/schema"
+	triggerflow "ifttt/manager/domain/trigger_flow"
 	"ifttt/manager/domain/user"
 	"strings"
 
@@ -34,10 +36,12 @@ type cacheStorer interface {
 }
 
 type ConfigStore struct {
-	Store          configStorer
-	CasbinEnforcer *casbin.Enforcer
-	APIRepo        api.Repository
-	UserRepo       user.Repository
+	Store           configStorer
+	CasbinEnforcer  *casbin.Enforcer
+	APIRepo         api.Repository
+	RuleRepo        rule.Repository
+	TriggerFlowRepo triggerflow.Repository
+	UserRepo        user.Repository
 }
 
 type DataStore struct {

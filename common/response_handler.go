@@ -28,6 +28,9 @@ var Responses = map[string]Response{
 	"TableAlreadyExists": {"25", "Table Already Exists"},
 	"IndexNotPossible":   {"25", "Index Not Possible"},
 	"IndexNotFound":      {"30", "Index Not Found"},
+	"RuleAlreadyExists":  {"30", "Rule Already Exists"},
+	"APIAlreadyExists":   {"30", "API Already Exists"},
+	"FlowAlreadyExists":  {"30", "Trigger Flow Already Exists"},
 
 	"WrongCredentials":   {"35", "Wrong login credentials"},
 	"UserNotFound":       {"40", "User not found"},

@@ -5,19 +5,23 @@ import (
 )
 
 type AllController struct {
-	ApiController    *apiController
-	SchemaController *schemaController
-	AuthController   *authController
-	UserController   *userController
-	RoleController   *roleController
+	ApiController          *apiController
+	TriggerFlowsController *triggerFlowsController
+	RulesController        *rulesController
+	SchemaController       *schemaController
+	AuthController         *authController
+	UserController         *userController
+	RoleController         *roleController
 }
 
 func NewAllController(serverCore *core.ServerCore) *AllController {
 	return &AllController{
-		ApiController:    newApiController(serverCore),
-		SchemaController: newSchemaController(serverCore),
-		AuthController:   newAuthController(serverCore),
-		UserController:   newUserController(serverCore),
-		RoleController:   newRoleController(serverCore),
+		ApiController:          newApiController(serverCore),
+		TriggerFlowsController: newTriggerFlowsController(serverCore),
+		RulesController:        newRulesController(serverCore),
+		SchemaController:       newSchemaController(serverCore),
+		AuthController:         newAuthController(serverCore),
+		UserController:         newUserController(serverCore),
+		RoleController:         newRoleController(serverCore),
 	}
 }

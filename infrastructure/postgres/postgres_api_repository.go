@@ -1,11 +1,12 @@
 package postgres
 
 import (
+	"encoding/json"
 	"fmt"
 	"ifttt/manager/domain/api"
-	"reflect"
 
-	"github.com/go-viper/mapstructure/v2"
+	"github.com/jackc/pgtype"
+	"gorm.io/gorm"
 )
 
 type PostgresAPIRepository struct {
@@ -16,77 +17,133 @@ func NewPostgresAPIRepository(base *PostgresBaseRepository) *PostgresAPIReposito
 	return &PostgresAPIRepository{PostgresBaseRepository: base}
 }
 
-func (p *PostgresAPIRepository) ToLocal(input *api.Api, output any) error {
-	if reflect.ValueOf(output).Kind() != reflect.Ptr {
-		return fmt.Errorf("method *ScyllaApiRepository: output not pointer")
-	}
-
-	var postgres postgresAPI
-	if err := mapstructure.Decode((*input), &postgres); err != nil {
-		return fmt.Errorf("method *PostgresAPIRepository.toLocal: could not decode to postgres: %s", err)
-	}
-	output = &postgres
-
-	return nil
-}
-
-func (p *PostgresAPIRepository) ToGlobal(input any) (*api.Api, error) {
-	postgresAPI, ok := input.(postgresAPI)
-	if !ok {
-		return nil, fmt.Errorf("method *PostgresAPIRepository.toGlobal: could not convert api to postgres type")
-	}
-
-	var globalApi api.Api
-	if err := mapstructure.Decode(postgresAPI, &globalApi); err != nil {
-		return nil, fmt.Errorf("method *PostgresAPIRepository.toGlobal: could not decode api: %s", err)
-	}
-
-	return &globalApi, nil
-}
-
 func (p *PostgresAPIRepository) GetAllApis() (*[]api.Api, error) {
-	var globalApis []api.Api
-	var postgresApis []postgresAPI
-	if err := p.client.Find(&postgresApis).Error; err != nil {
-		return nil, fmt.Errorf("method *PostgresAPIRepository.GetAllApis: error in querying apis: %s", err)
+	var pgApis []apis
+	if err := p.client.Find(&pgApis).Error; err != nil {
+		return nil, fmt.Errorf("method *PostgresAPIRepository.GetAllApis: could not query apis: %s", err)
 	}
 
-	for _, postgresApi := range postgresApis {
-		if global, err := p.ToGlobal(postgresApi); err != nil {
-			return nil, fmt.Errorf("method *PostgresAPIRepository.GetAllApis: could not get global api: %s", err)
+	var domainApis []api.Api
+	for _, a := range pgApis {
+		if dApi, err := p.ToDomain(&a); err != nil {
+			return nil,
+				fmt.Errorf("method *PostgresAPIRepository.GetAllApis: could not convert to domain api: %s", err)
 		} else {
-			globalApis = append(globalApis, *global)
+			domainApis = append(domainApis, *dApi)
 		}
 	}
 
-	return &globalApis, nil
+	return &domainApis, nil
 }
 
-func (p *PostgresAPIRepository) GetApisByGroupAndName(group string, name string) (*[]api.Api, error) {
-	var globalApis []api.Api
-	var postgresApis []postgresAPI
-	if err := p.client.Where(&postgresAPI{Group: group, Name: name}).Find(&postgresApis).Error; err != nil {
-		return nil, fmt.Errorf("method *PostgresAPIRepository.GetAllApis: error in querying apis: %s", err)
+func (p *PostgresAPIRepository) GetApiByNameOrPath(name string, path string) (*api.Api, error) {
+	var pgApi apis
+	if err := p.client.First(&pgApi, "name = ? or path = ?", name, path).Error; err != nil {
+		return nil, fmt.Errorf("method *PostgresAPIRepository.GetApisByNameOrPath: could not query apis: %s", err)
 	}
 
-	for _, postgresApi := range postgresApis {
-		if global, err := p.ToGlobal(postgresApi); err != nil {
-			return nil, fmt.Errorf("method *PostgresAPIRepository.GetAllApis: could not get global api: %s", err)
-		} else {
-			globalApis = append(globalApis, *global)
-		}
+	var domainApi api.Api
+	if dApi, err := p.ToDomain(&pgApi); err != nil {
+		return nil,
+			fmt.Errorf("method *PostgresAPIRepository.GetAllApis: could not convert to domain api: %s", err)
+	} else {
+		domainApi = *dApi
 	}
 
-	return &globalApis, nil
+	return &domainApi, nil
 }
-func (p *PostgresAPIRepository) InsertApi(newApi *api.Api) error {
-	var postgresAPI postgresAPI
-	if err := p.ToLocal(newApi, &postgresAPI); err != nil {
-		return fmt.Errorf("method *PostgresAPIRepository.InsertApi: could not get postgres api: %s", err)
-	}
-	if err := p.client.Create(&postgresAPI).Error; err != nil {
-		return fmt.Errorf("method *PostgresAPIRepository.InsertApi: could not insert api: %s", err)
+
+func (p *PostgresAPIRepository) GetApiDetailsByNameAndPath(name string, path string) (*api.Api, error) {
+	var pgApi apis
+	if err := p.client.
+		Preload("Triggerflows").Preload("Triggerflows.StartRules").Preload("Triggerflows.AllRules").
+		First(&pgApi, "name = ? and path = ?", name, path).Error; err != nil {
+		return nil, fmt.Errorf("method*PostgresApiRepository.GetApiDetails: could not query apis: %s", err)
 	}
 
+	var domainApi api.Api
+	if dApi, err := p.ToDomain(&pgApi); err != nil {
+		return nil,
+			fmt.Errorf("method *PostgresAPIRepository.GetAllApis: could not convert to domain api: %s", err)
+	} else {
+		domainApi = *dApi
+	}
+
+	return &domainApi, nil
+}
+
+func (p *PostgresAPIRepository) InsertApi(apiReq *api.CreateApiRequest) error {
+	newApi := api.Api{
+		Name:        apiReq.Name,
+		Path:        apiReq.Path,
+		Method:      apiReq.Method,
+		Description: apiReq.Name,
+	}
+
+	pgApi, err := p.FromDomain(&newApi)
+	if err != nil {
+		return fmt.Errorf("method *PostgresAPIRepository.GetAllApis: could not convert from domain api: %s", err)
+	}
+	pgApiCasted, ok := pgApi.(*apis)
+	if !ok {
+		return fmt.Errorf("method *PostgresAPIRepository.GetAllApis: could not cast pg api")
+	}
+
+	for _, a := range apiReq.TriggerFlows {
+		pgApiCasted.Triggerflows = append(pgApiCasted.Triggerflows, trigger_flows{Model: gorm.Model{ID: a}})
+	}
+
+	if err := p.client.Create(pgApiCasted).Error; err != nil {
+		return fmt.Errorf("method *PostgresApiRepository.InsertApi: could not insert api: %s", err)
+	}
 	return nil
+}
+
+func (p *PostgresAPIRepository) FromDomain(domainApi *api.Api) (any, error) {
+	pgApi := apis{
+		Name:        domainApi.Name,
+		Path:        domainApi.Path,
+		Method:      domainApi.Method,
+		Description: domainApi.Description,
+	}
+
+	if reqMarshalled, err := json.Marshal(domainApi.Request); err != nil {
+		return nil, fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal request")
+	} else {
+		pgApi.Request = pgtype.JSONB{Bytes: reqMarshalled}
+	}
+
+	if preConfigMarshalled, err := json.Marshal(domainApi.PreConfig); err != nil {
+		return nil, fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal pre config")
+	} else {
+		pgApi.Request = pgtype.JSONB{Bytes: preConfigMarshalled}
+	}
+
+	return &pgApi, nil
+}
+
+func (p *PostgresAPIRepository) ToDomain(repoApi any) (*api.Api, error) {
+	pgApi, ok := repoApi.(*apis)
+	if !ok {
+		return nil, fmt.Errorf("method *PostgresAPIRepository.ToDomain: could not cast pgApi")
+	}
+
+	domainApi := api.Api{
+		Name:        pgApi.Name,
+		Path:        pgApi.Path,
+		Method:      pgApi.Method,
+		Description: pgApi.Description,
+	}
+
+	if err := json.Unmarshal(pgApi.Request.Bytes, &domainApi.Request); err != nil {
+		return nil,
+			fmt.Errorf("method *PostgresAPIRepository.ToDomain: could not cast pgApi: %s", err)
+	}
+
+	if err := json.Unmarshal(pgApi.PreConfig.Bytes, &domainApi.PreConfig); err != nil {
+		return nil,
+			fmt.Errorf("method *PostgresAPIRepository.ToDomain: could not cast pgApi: %s", err)
+	}
+
+	return &domainApi, nil
 }

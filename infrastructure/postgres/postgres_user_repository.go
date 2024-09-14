@@ -19,8 +19,8 @@ func NewPostgresUserRepository(base *PostgresBaseRepository) *PostgresUserReposi
 func (p *PostgresUserRepository) GetUser(
 	email string, decodeFunc func(input any) (*user.User, error)) (*user.User, error) {
 
-	var pgUser postgresUser
-	if err := p.client.Where(&postgresUser{Email: email}).First(&pgUser).Error; err != nil {
+	var pgUser users
+	if err := p.client.Where(&users{Email: email}).First(&pgUser).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
@@ -31,7 +31,7 @@ func (p *PostgresUserRepository) GetUser(
 }
 
 func (p *PostgresUserRepository) CreateUser(user user.User) error {
-	var pgUser postgresUser
+	var pgUser users
 	if err := mapstructure.Decode(user, &pgUser); err != nil {
 		return fmt.Errorf("method *PostgresUserRepository.CreateUser: could not decode user: %s", err)
 	}
@@ -43,7 +43,7 @@ func (p *PostgresUserRepository) CreateUser(user user.User) error {
 }
 
 func (p *PostgresUserRepository) GetAllUsers() ([]*user.User, error) {
-	var pgUsers []postgresUser
+	var pgUsers []users
 	if err := p.client.Find(&pgUsers).Error; err != nil {
 		return nil, fmt.Errorf("method *PostgresUserRepository.GetUsers: could not get users: %s", err)
 	}

@@ -1,9 +1,9 @@
-package api
+package rule
 
 import "ifttt/manager/domain/resolvable"
 
 type Rule struct {
-	Id          string                  `json:"id" mapstructure:"id"`
+	Name        string                  `json:"name" mapstructure:"name"`
 	Description string                  `json:"description" mapstructure:"description"`
 	Conditions  Condition               `json:"conditions" mapstructure:"conditions"`
 	Then        []resolvable.Resolvable `json:"then" mapstructure:"then"`

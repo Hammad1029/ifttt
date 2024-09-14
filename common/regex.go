@@ -1,9 +1,9 @@
 package common
 
-var Regex = struct {
-	Endpoint string
-	UUID     string
-}{
-	Endpoint: "^(?=.*?-).+$",
-	UUID:     "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
-}
+import "regexp"
+
+var (
+	RegexPositionalParameters = regexp.MustCompile(`=\?`)
+	RegexNamedParameters      = regexp.MustCompile(`@\w+`)
+	RegexEndpoint             = regexp.MustCompile(`^\/([a-zA-Z0-9-_]+\/?)*$`)
+)

@@ -32,12 +32,12 @@ func (c *CreateTableRequest) Validate() error {
 	return validation.ValidateStruct(c,
 		validation.Field(&c.TableName, validation.Required),
 		validation.Field(&c.Columns, validation.Required, validation.Length(1, 0),
-			validation.Each(validation.WithContext(func(ctx context.Context, value interface{}) error {
+			validation.Each(validation.By(func(value interface{}) error {
 				col := value.(*addColumn)
 				return col.Validate()
 			}))),
 		validation.Field(&c.Constraints, validation.Required, validation.Length(1, 0),
-			validation.Each(validation.WithContext(func(ctx context.Context, value interface{}) error {
+			validation.Each(validation.By(func(value interface{}) error {
 				constraint := value.(*addConstraint)
 				return constraint.Validate()
 			}))),
@@ -53,7 +53,7 @@ func (u *UpdateTableRequest) Validate() error {
 	return validation.ValidateStruct(u,
 		validation.Field(&u.TableName, validation.Required),
 		validation.Field(&u.Updates, validation.Required, validation.Length(1, 0),
-			validation.Each(validation.WithContext(func(ctx context.Context, value interface{}) error {
+			validation.Each(validation.By(func(value interface{}) error {
 				update := value.(tableUpdate)
 				return update.Validate()
 			}))),
