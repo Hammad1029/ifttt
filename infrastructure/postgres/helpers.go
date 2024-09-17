@@ -107,13 +107,13 @@ func (a *apis) fromDomain(domainApi *api.CreateApiRequest) error {
 	if reqMarshalled, err := json.Marshal(domainApi.Request); err != nil {
 		return fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal request")
 	} else {
-		a.Request = pgtype.JSONB{Bytes: reqMarshalled}
+		a.Request = pgtype.JSONB{Bytes: reqMarshalled, Status: pgtype.Present}
 	}
 
 	if preConfigMarshalled, err := json.Marshal(domainApi.PreConfig); err != nil {
 		return fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal pre config")
 	} else {
-		a.Request = pgtype.JSONB{Bytes: preConfigMarshalled}
+		a.PreConfig = pgtype.JSONB{Bytes: preConfigMarshalled, Status: pgtype.Present}
 	}
 
 	for _, dtf := range domainApi.TriggerFlows {

@@ -30,7 +30,7 @@ func (ac *apiController) GetAll(c *gin.Context) {
 
 func (ac *apiController) GetDetails(c *gin.Context) {
 	var reqBody api.GetDetailsRequest
-	if ok := validateAndBind(c, &reqBody); ok {
+	if ok := validateAndBind(c, &reqBody); !ok {
 		return
 	}
 
@@ -45,7 +45,7 @@ func (ac *apiController) GetDetails(c *gin.Context) {
 
 func (ac *apiController) Create(c *gin.Context) {
 	var reqBody api.CreateApiRequest
-	if ok := validateAndBind(c, &reqBody); ok {
+	if ok := validateAndBind(c, &reqBody); !ok {
 		return
 	}
 
@@ -54,6 +54,15 @@ func (ac *apiController) Create(c *gin.Context) {
 		return
 	} else if api != nil {
 		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["APIAlreadyExists"]})
+		return
+	}
+
+	if requiredTFlows, err := ac.serverCore.ConfigStore.TriggerFlowRepo.GetTriggerFlowsByIds(reqBody.TriggerFlows); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	} else if len(*requiredTFlows) != len(reqBody.TriggerFlows) {
+		common.ResponseHandler(c,
+			common.ResponseConfig{Response: common.Responses["TriggerFlowNotFound"]})
 		return
 	}
 

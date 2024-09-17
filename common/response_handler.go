@@ -33,6 +33,7 @@ var Responses = map[string]Response{
 	"FlowAlreadyExists":             {"30", "Trigger Flow Already Exists"},
 	"TriggerFlowStartRulesNotFound": {"30", "Start rules not found"},
 	"TriggerFlowAllRulesNotFound":   {"30", "All rules not found"},
+	"TriggerFlowNotFound":           {"30", "Trigger flow not found"},
 
 	"WrongCredentials":   {"35", "Wrong login credentials"},
 	"UserNotFound":       {"40", "User not found"},
