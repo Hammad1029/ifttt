@@ -1,6 +1,8 @@
 package triggerflow
 
-import validation "github.com/go-ozzo/ozzo-validation/v4"
+import (
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+)
 
 type GetDetailsRequest struct {
 	Name string `json:"name" mapstructure:"name"`
@@ -19,11 +21,16 @@ type CreateTriggerFlowRequest struct {
 }
 
 func (c *CreateTriggerFlowRequest) Validate() error {
+	allRules := make([]any, len(c.AllRules))
+	for _, v := range c.AllRules {
+		allRules = append(allRules, v)
+	}
+
 	return validation.ValidateStruct(c,
 		validation.Field(&c.Name, validation.Required, validation.Length(3, 0)),
 		validation.Field(&c.Description, validation.Required, validation.Length(3, 0)),
 		validation.Field(&c.Class, validation.Required),
-		validation.Field(&c.StartRules, validation.Required, validation.Each(validation.In(c.AllRules))),
+		validation.Field(&c.StartRules, validation.Required, validation.Each(validation.In(allRules...))),
 		validation.Field(&c.AllRules, validation.Required),
 	)
 }

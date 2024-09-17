@@ -57,6 +57,24 @@ func (tfc *triggerFlowsController) Create(c *gin.Context) {
 		return
 	}
 
+	if requiredRules, err := tfc.serverCore.ConfigStore.RuleRepo.GetRulesByIds(reqBody.StartRules); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	} else if len(*requiredRules) != len(reqBody.StartRules) {
+		common.ResponseHandler(c,
+			common.ResponseConfig{Response: common.Responses["TriggerFlowStartRulesNotFound"]})
+		return
+	}
+
+	if requiredRules, err := tfc.serverCore.ConfigStore.RuleRepo.GetRulesByIds(reqBody.AllRules); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	} else if len(*requiredRules) != len(reqBody.AllRules) {
+		common.ResponseHandler(c,
+			common.ResponseConfig{Response: common.Responses["TriggerFlowAllRulesNotFound"]})
+		return
+	}
+
 	if err := tfc.serverCore.ConfigStore.TriggerFlowRepo.InsertTriggerFlow(&reqBody); err != nil {
 		common.HandleErrorResponse(c, err)
 		return

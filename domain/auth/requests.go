@@ -12,7 +12,7 @@ type LoginRequest struct {
 
 func (l *LoginRequest) Validate() error {
 	return validation.ValidateStruct(l,
-		validation.Field(&l.Email, validation.Required, is.Email),
+		validation.Field(&l.Email, validation.Required, is.EmailFormat),
 		validation.Field(&l.Password, validation.Required, validation.Length(5, 50)),
 	)
 }

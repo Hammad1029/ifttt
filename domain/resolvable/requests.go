@@ -52,8 +52,8 @@ func (r *Resolvable) Validate() error {
 	return validation.ValidateStruct(r,
 		validation.Field(&r.ResolveType, validation.Required,
 			validation.In(common.ConvertStringToInterfaceArray(resolveTypes)...)),
-		validation.Field(&r.ResolveData, validation.Required,
-			validation.By(func(value interface{}) error {
+		validation.Field(&r.ResolveData, validation.By(
+			func(value interface{}) error {
 				var resolver common.ValidatorInterface
 				switch r.ResolveType {
 				case accessorJqResolvable:
@@ -103,9 +103,7 @@ func (r *Resolvable) Validate() error {
 }
 
 func (c *callRuleResolvable) Validate() error {
-	return validation.ValidateStruct(c,
-		validation.Field(&c.RuleId, validation.Required, is.Int),
-	)
+	return validation.Validate(&c.RuleId, validation.Required)
 }
 
 func (c *apiCallResolvable) Validate() error {

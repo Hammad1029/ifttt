@@ -27,6 +27,6 @@ func (a *AddUpdateRoleRequest) Validate() error {
 				)
 			}),
 		)),
-		validation.Field(&a.AssignTo, validation.Each(validation.Required, is.Email)),
+		validation.Field(&a.AssignTo, validation.Each(validation.Required, is.EmailFormat)),
 	)
 }

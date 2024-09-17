@@ -49,19 +49,21 @@ func (c *Condition) Validate() error {
 				validation.Each(validation.By(func(value interface{}) error {
 					c := value.(Condition)
 					return c.Validate()
-				}))).Else(validation.Empty)),
+				}))).Else(validation.Nil)),
 		validation.Field(&c.Group),
-		validation.Field(&c.Operator1, validation.When(!c.Group, validation.Length(1, 0),
-			validation.Each(validation.By(func(value interface{}) error {
-				r := value.(resolvable.Resolvable)
+		validation.Field(&c.Operator1, validation.When(!c.Group, validation.By(
+			func(value interface{}) error {
+				r := value.(*resolvable.Resolvable)
 				return r.Validate()
-			}))).Else(validation.Empty)),
+			}),
+		).Else(validation.Nil)),
 		validation.Field(&c.Operand, validation.When(!c.Group, validation.In(
 			common.ConvertStringToInterfaceArray(operandTypes)...)).Else(validation.Empty)),
-		validation.Field(&c.Operator2, validation.When(!c.Group, validation.Length(1, 0),
-			validation.Each(validation.By(func(value interface{}) error {
-				r := value.(resolvable.Resolvable)
+		validation.Field(&c.Operator2, validation.When(!c.Group, validation.By(
+			func(value interface{}) error {
+				r := value.(*resolvable.Resolvable)
 				return r.Validate()
-			}))).Else(validation.Empty)),
+			}),
+		).Else(validation.Nil)),
 	)
 }

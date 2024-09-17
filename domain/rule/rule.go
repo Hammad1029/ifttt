@@ -11,10 +11,10 @@ type Rule struct {
 }
 
 type Condition struct {
-	ConditionType string                `json:"conditionType" mapstructure:"conditionType"`
-	Conditions    []Condition           `json:"conditions" mapstructure:"conditions"`
-	Group         bool                  `json:"group" mapstructure:"group"`
-	Operator1     resolvable.Resolvable `json:"op1" mapstructure:"op1"`
-	Operand       string                `json:"opnd" mapstructure:"opnd"`
-	Operator2     resolvable.Resolvable `json:"op2" mapstructure:"op2"`
+	ConditionType string                 `json:"conditionType" mapstructure:"conditionType"`
+	Conditions    []Condition            `json:"conditions" mapstructure:"conditions"`
+	Group         bool                   `json:"group" mapstructure:"group"`
+	Operator1     *resolvable.Resolvable `json:"op1" mapstructure:"op1"`
+	Operand       string                 `json:"opnd" mapstructure:"opnd"`
+	Operator2     *resolvable.Resolvable `json:"op2" mapstructure:"op2"`
 }
