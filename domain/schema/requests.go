@@ -33,12 +33,12 @@ func (c *CreateTableRequest) Validate() error {
 		validation.Field(&c.TableName, validation.Required),
 		validation.Field(&c.Columns, validation.Required, validation.Length(1, 0),
 			validation.Each(validation.By(func(value interface{}) error {
-				col := value.(*addColumn)
+				col := value.(addColumn)
 				return col.Validate()
 			}))),
 		validation.Field(&c.Constraints, validation.Required, validation.Length(1, 0),
 			validation.Each(validation.By(func(value interface{}) error {
-				constraint := value.(*addConstraint)
+				constraint := value.(addConstraint)
 				return constraint.Validate()
 			}))),
 	)
