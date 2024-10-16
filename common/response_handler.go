@@ -34,6 +34,8 @@ var Responses = map[string]Response{
 	"TriggerFlowStartRulesNotFound": {"30", "Start rules not found"},
 	"TriggerFlowAllRulesNotFound":   {"30", "All rules not found"},
 	"TriggerFlowNotFound":           {"30", "Trigger flow not found"},
+	"InvalidBranchFlow":             {"30", "Invalid Branch Flow"},
+	"InvalidTriggerConditions":      {"30", "Invalid Trigger Conditions"},
 
 	"WrongCredentials":   {"35", "Wrong login credentials"},
 	"UserNotFound":       {"40", "User not found"},

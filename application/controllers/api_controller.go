@@ -6,6 +6,7 @@ import (
 	"ifttt/manager/domain/api"
 
 	"github.com/gin-gonic/gin"
+	"github.com/samber/lo"
 )
 
 type apiController struct {
@@ -57,7 +58,11 @@ func (ac *apiController) Create(c *gin.Context) {
 		return
 	}
 
-	if requiredTFlows, err := ac.serverCore.ConfigStore.TriggerFlowRepo.GetTriggerFlowsByIds(reqBody.TriggerFlows); err != nil {
+	tIds := lo.Map(reqBody.TriggerFlows, func(t api.TriggerConditionRequest, _ int) uint {
+		return t.Trigger
+	})
+
+	if requiredTFlows, err := ac.serverCore.ConfigStore.TriggerFlowRepo.GetTriggerFlowsByIds(tIds); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else if len(*requiredTFlows) != len(reqBody.TriggerFlows) {

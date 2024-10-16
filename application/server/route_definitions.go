@@ -111,8 +111,8 @@ func getRouteDefinitions(controllers *controllers.AllController) *[]common.Route
 			Authorized:  true,
 			Children: []common.RouteDefinition{
 				{
-					Path:          "/getAll",
-					Method:        http.MethodGet,
+					Path:          "/getRules",
+					Method:        http.MethodPost,
 					Description:   "Get All Rules",
 					Authenticated: true,
 					Authorized:    true,

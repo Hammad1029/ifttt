@@ -19,7 +19,12 @@ func newRulesController(serverCore *core.ServerCore) *rulesController {
 }
 
 func (rc *rulesController) GetAll(c *gin.Context) {
-	rules, err := rc.serverCore.ConfigStore.RuleRepo.GetAllRules()
+	var reqBody rule.GetRulesRequest
+	if ok := validateAndBind(c, &reqBody); !ok {
+		return
+	}
+
+	rules, err := rc.serverCore.ConfigStore.RuleRepo.GetRulesLikeName(reqBody.Name)
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return

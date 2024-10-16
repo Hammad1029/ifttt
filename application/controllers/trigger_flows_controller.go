@@ -6,6 +6,7 @@ import (
 	triggerflow "ifttt/manager/domain/trigger_flow"
 
 	"github.com/gin-gonic/gin"
+	"github.com/samber/lo"
 )
 
 type triggerFlowsController struct {
@@ -72,6 +73,23 @@ func (tfc *triggerFlowsController) Create(c *gin.Context) {
 	} else if len(*requiredRules) != len(reqBody.AllRules) {
 		common.ResponseHandler(c,
 			common.ResponseConfig{Response: common.Responses["TriggerFlowAllRulesNotFound"]})
+		return
+	}
+
+	if len(lo.Intersect(reqBody.AllRules, lo.Keys(reqBody.BranchFlows))) != len(reqBody.AllRules) {
+		common.ResponseHandler(c,
+			common.ResponseConfig{Response: common.Responses["InvalidBranchFlow"]})
+		return
+	}
+
+	jumpIds := lo.FlatMap(lo.Values(reqBody.BranchFlows), func(bF []triggerflow.BranchFlow, _ int) []uint {
+		return lo.Map(bF, func(f triggerflow.BranchFlow, _ int) uint {
+			return f.Jump
+		})
+	})
+	if !lo.Every(reqBody.AllRules, jumpIds) {
+		common.ResponseHandler(c,
+			common.ResponseConfig{Response: common.Responses["InvalidBranchFlow"]})
 		return
 	}
 

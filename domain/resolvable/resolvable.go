@@ -33,7 +33,7 @@ type arithmetic struct {
 // 	Value any `json:"value" mapstructure:"value"`
 // }
 
-type preConfigResolvable map[string]any
+type preConfigResolvable map[string]Resolvable
 
 type jqResolvable struct {
 	Query Resolvable `json:"query" mapstructure:"query"`

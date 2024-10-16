@@ -2,6 +2,7 @@ package api
 
 import (
 	"ifttt/manager/common"
+	"ifttt/manager/domain/condition"
 	"ifttt/manager/domain/resolvable"
 	"net/http"
 
@@ -28,7 +29,12 @@ type CreateApiRequest struct {
 	Description  string                           `json:"description" mapstructure:"description"`
 	Request      map[string]any                   `json:"request" mapstructure:"request"`
 	PreConfig    map[string]resolvable.Resolvable `json:"preConfig" mapstructure:"preConfig"`
-	TriggerFlows []uint                           `json:"triggerFlows" mapstructure:"triggerFlows"`
+	TriggerFlows []TriggerConditionRequest        `json:"triggerFlows" mapstructure:"triggerFlows"`
+}
+
+type TriggerConditionRequest struct {
+	If      condition.Condition `json:"if" mapstructure:"if"`
+	Trigger uint                `json:"trigger" mapstructure:"trigger"`
 }
 
 func (a *CreateApiRequest) Validate() error {
@@ -49,6 +55,20 @@ func (a *CreateApiRequest) Validate() error {
 				}
 				return nil
 			})),
-		validation.Field(&a.TriggerFlows, validation.Required),
+		validation.Field(&a.TriggerFlows, validation.Required, validation.Each(
+			validation.By(func(value interface{}) error {
+				t := value.(TriggerConditionRequest)
+				return t.Validate()
+			}))),
+	)
+}
+
+func (t *TriggerConditionRequest) Validate() error {
+	return validation.ValidateStruct(t,
+		validation.Field(&t.If, validation.By(func(value interface{}) error {
+			c := value.(condition.Condition)
+			return c.Validate()
+		})),
+		validation.Field(&t.Trigger, validation.Required),
 	)
 }

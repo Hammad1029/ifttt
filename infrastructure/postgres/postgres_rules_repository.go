@@ -73,6 +73,28 @@ func (p *PostgresRulesRepository) GetRuleByName(name string) (*rule.Rule, error)
 	return &domainRule, nil
 }
 
+func (p *PostgresRulesRepository) GetRulesLikeName(name string) (*[]rule.Rule, error) {
+	var pgRules []rules
+	if err := p.client.Find(&pgRules, "name like ?", fmt.Sprintf("%%%s%%", name)).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("method *PostgresApiRepository.GetRuleByName: could not query rules: %s", err)
+	}
+
+	var domainRules []rule.Rule
+	for _, r := range pgRules {
+		if dRule, err := r.toDomain(); err != nil {
+			return nil,
+				fmt.Errorf("method *PostgresApiRepository.GetAllRules: could not convert to domain rule: %s", err)
+		} else {
+			domainRules = append(domainRules, *dRule)
+		}
+	}
+
+	return &domainRules, nil
+}
+
 func (p *PostgresRulesRepository) InsertRule(dRule *rule.CreateRuleRequest) error {
 	var pgRule rules
 	if err := pgRule.fromDomain(dRule); err != nil {

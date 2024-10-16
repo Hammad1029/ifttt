@@ -13,23 +13,19 @@ import (
 
 func (pgRule *rules) toDomain() (*rule.Rule, error) {
 	domainRule := rule.Rule{
+		Id:          pgRule.ID,
 		Name:        pgRule.Name,
 		Description: pgRule.Description,
 	}
 
-	if err := json.Unmarshal(pgRule.Conditions.Bytes, &domainRule.Conditions); err != nil {
+	if err := json.Unmarshal(pgRule.Pre.Bytes, &domainRule.Pre); err != nil {
 		return nil,
-			fmt.Errorf("method *PostgresRulesRepository.ToDomain: error in unmarshalling conditions: %s", err)
+			fmt.Errorf("method *PostgresRulesRepository.ToDomain: error in unmarshalling pre: %s", err)
 	}
 
-	if err := json.Unmarshal(pgRule.Then.Bytes, &domainRule.Then); err != nil {
+	if err := json.Unmarshal(pgRule.Switch.Bytes, &domainRule.Switch); err != nil {
 		return nil,
-			fmt.Errorf("method *PostgresRulesRepository.ToDomain: error in unmarshalling then: %s", err)
-	}
-
-	if err := json.Unmarshal(pgRule.Else.Bytes, &domainRule.Else); err != nil {
-		return nil,
-			fmt.Errorf("method *PostgresRulesRepository.ToDomain: error in unmarshalling else: %s", err)
+			fmt.Errorf("method *PostgresRulesRepository.ToDomain: error in unmarshalling switch: %s", err)
 	}
 
 	return &domainRule, nil
@@ -39,28 +35,22 @@ func (pgRule *rules) fromDomain(domainRule *rule.CreateRuleRequest) error {
 	pgRule.Name = domainRule.Name
 	pgRule.Description = domainRule.Description
 
-	if conditionsMarshalled, err := json.Marshal(domainRule.Conditions); err != nil {
+	if preMarshalled, err := json.Marshal(domainRule.Pre); err != nil {
 		return fmt.Errorf("method *PostgresRulesRepository.FromDomain: could not marshal conditions: %s", err)
 	} else {
-		pgRule.Conditions = pgtype.JSONB{Bytes: conditionsMarshalled, Status: pgtype.Present}
+		pgRule.Pre = pgtype.JSONB{Bytes: preMarshalled, Status: pgtype.Present}
 	}
 
-	if thenMarshalled, err := json.Marshal(domainRule.Then); err != nil {
-		return fmt.Errorf("method *PostgresRulesRepository.FromDomain: could not marshal then: %s", err)
+	if switchMarshalled, err := json.Marshal(domainRule.Switch); err != nil {
+		return fmt.Errorf("method *PostgresRulesRepository.FromDomain: could not marshal switch: %s", err)
 	} else {
-		pgRule.Then = pgtype.JSONB{Bytes: thenMarshalled, Status: pgtype.Present}
-	}
-
-	if elseMarshalled, err := json.Marshal(domainRule.Else); err != nil {
-		return fmt.Errorf("method *PostgresRulesRepository.FromDomain: could not marshal else: %s", err)
-	} else {
-		pgRule.Else = pgtype.JSONB{Bytes: elseMarshalled, Status: pgtype.Present}
+		pgRule.Switch = pgtype.JSONB{Bytes: switchMarshalled, Status: pgtype.Present}
 	}
 
 	return nil
 }
 
-func (t *trigger_flows) fromDomain(domainTFlow *triggerflow.CreateTriggerFlowRequest) {
+func (t *trigger_flows) fromDomain(domainTFlow *triggerflow.CreateTriggerFlowRequest) error {
 	t.Name = domainTFlow.Name
 	t.Description = domainTFlow.Description
 	t.ClassId = domainTFlow.Class
@@ -70,6 +60,12 @@ func (t *trigger_flows) fromDomain(domainTFlow *triggerflow.CreateTriggerFlowReq
 	for _, r := range domainTFlow.AllRules {
 		t.AllRules = append(t.AllRules, rules{Model: gorm.Model{ID: r}})
 	}
+	if bfMarshalled, err := json.Marshal(domainTFlow.BranchFlows); err != nil {
+		return fmt.Errorf("method *PostgresRulesRepository.FromDomain: could not marshal branchFlow: %s", err)
+	} else {
+		t.BranchFlow = pgtype.JSONB{Bytes: bfMarshalled, Status: pgtype.Present}
+	}
+	return nil
 }
 
 func (t *trigger_flows) toDomain() (*triggerflow.TriggerFlow, error) {
@@ -95,6 +91,11 @@ func (t *trigger_flows) toDomain() (*triggerflow.TriggerFlow, error) {
 		domanTFlow.AllRules = append(domanTFlow.AllRules, *dRule)
 	}
 
+	if err := json.Unmarshal(t.BranchFlow.Bytes, &domanTFlow.BranchFlows); err != nil {
+		return nil,
+			fmt.Errorf("method *PostgresRulesRepository.ToDomain: error in unmarshalling branchFlows: %s", err)
+	}
+
 	return &domanTFlow, nil
 }
 
@@ -105,19 +106,25 @@ func (a *apis) fromDomain(domainApi *api.CreateApiRequest) error {
 	a.Description = domainApi.Description
 
 	if reqMarshalled, err := json.Marshal(domainApi.Request); err != nil {
-		return fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal request")
+		return fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal request: %s", err)
 	} else {
 		a.Request = pgtype.JSONB{Bytes: reqMarshalled, Status: pgtype.Present}
 	}
 
 	if preConfigMarshalled, err := json.Marshal(domainApi.PreConfig); err != nil {
-		return fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal pre config")
+		return fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal pre config: %s", err)
 	} else {
 		a.PreConfig = pgtype.JSONB{Bytes: preConfigMarshalled, Status: pgtype.Present}
 	}
 
 	for _, dtf := range domainApi.TriggerFlows {
-		a.Triggerflows = append(a.Triggerflows, trigger_flows{Model: gorm.Model{ID: dtf}})
+		a.TriggerFlowRef = append(a.TriggerFlowRef, trigger_flows{Model: gorm.Model{ID: dtf.Trigger}})
+	}
+
+	if tConditionsMarshalled, err := json.Marshal(domainApi.TriggerFlows); err != nil {
+		return fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal trigger conditions: %s", err)
+	} else {
+		a.TriggerFlows = pgtype.JSONB{Bytes: tConditionsMarshalled, Status: pgtype.Present}
 	}
 
 	return nil
@@ -139,6 +146,30 @@ func (a *apis) toDomain() (*api.Api, error) {
 	if err := json.Unmarshal(a.PreConfig.Bytes, &domainApi.PreConfig); err != nil {
 		return nil,
 			fmt.Errorf("method *PostgresAPIRepository.ToDomain: could not cast pgApi: %s", err)
+	}
+
+	var tConditions []api.TriggerConditionRequest
+	if err := json.Unmarshal(a.TriggerFlows.Bytes, &tConditions); err != nil {
+		return nil,
+			fmt.Errorf("method *PostgresAPIRepository.ToDomain: could not cast pgApi: %s", err)
+	}
+
+	triggerFlowMap := make(map[uint]trigger_flows)
+	for _, tFlow := range a.TriggerFlowRef {
+		triggerFlowMap[tFlow.ID] = tFlow
+	}
+
+	for _, tc := range tConditions {
+		tcModel, ok := triggerFlowMap[tc.Trigger]
+		if !ok {
+			return nil,
+				fmt.Errorf("method *PostgresAPIRepository.ToDomain: trigger flow not found from conditions")
+		}
+		domainTFlow, err := tcModel.toDomain()
+		if err != nil {
+			return nil, fmt.Errorf("method *PostgresAPIRepository.ToDomain: %s", err)
+		}
+		*domainApi.TriggerFlows = append(*domainApi.TriggerFlows, api.TriggerCondition{If: tc.If, Trigger: *domainTFlow})
 	}
 
 	return &domainApi, nil

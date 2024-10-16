@@ -111,8 +111,14 @@ func (c *apiCallResolvable) Validate() error {
 		validation.Field(&c.Method, validation.Required, validation.In(
 			http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPut)),
 		validation.Field(&c.Url, validation.Required, is.URL),
-		validation.Field(&c.Headers, validation.Required.When(len(c.Headers) > 0)),
-		validation.Field(&c.Body, validation.Required.When(len(c.Body) > 0)),
+		validation.Field(&c.Headers, validation.By(func(value interface{}) error {
+			m := value.(map[string]any)
+			return validateMapIfResolvable(m)
+		})),
+		validation.Field(&c.Body, validation.By(func(value interface{}) error {
+			m := value.(map[string]any)
+			return validateMapIfResolvable(m)
+		})),
 	)
 }
 
@@ -145,7 +151,7 @@ func (c *jqResolvable) Validate() error {
 }
 
 func (c *stringInterpolationResolvable) Validate() error {
-	parametersCount := len(common.RegexPositionalParameters.FindAllString(c.Template, -1))
+	parametersCount := len(common.RegexStringInterpolationParameters.FindAllString(c.Template, -1))
 	return validation.ValidateStruct(c,
 		validation.Field(&c.Template, validation.Required, validation.By(func(value interface{}) error {
 			if parametersCount == 0 {
@@ -209,8 +215,13 @@ func (c *setStoreResolvable) Validate() error {
 }
 
 func (c *preConfigResolvable) Validate() error {
-	var mapCasted map[string]any = *c
-	return validateMapIfResolvable(mapCasted)
+	var mapCasted map[string]Resolvable = *c
+	for _, val := range mapCasted {
+		if err := val.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func validateMapIfResolvable(val map[string]any) error {
