@@ -7,8 +7,19 @@ import (
 
 type users struct {
 	gorm.Model
-	Email    string `gorm:"type:varchar(50);unique" mapstructure:"email"`
-	Password string `gorm:"type:varchar(255)" mapstructure:"password"`
+	Email     string       `gorm:"type:varchar(50);unique" mapstructure:"email"`
+	Password  string       `gorm:"type:varchar(255)" mapstructure:"password"`
+	PreConfig pgtype.JSONB `gorm:"type:jsonb;default:'{}';not null" mapstructure:"preConfig"`
+}
+
+type crons struct {
+	gorm.Model
+	Name           string          `gorm:"type:varchar(50);not null;unique" mapstructure:"name"`
+	Description    string          `gorm:"type:text;default:''" mapstructure:"description"`
+	Cron           string          `gorm:"type:varchar(30);default:''" mapstructure:"description"`
+	PreConfig      pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"preConfig"`
+	TriggerFlowRef []trigger_flows `gorm:"many2many:cron_trigger_flows;joinForeignKey:CronId;joinReferences:FlowId;" mapstructure:"triggerFlows"`
+	TriggerFlows   pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"triggerConditions"`
 }
 
 type apis struct {
@@ -34,9 +45,9 @@ type trigger_flows struct {
 	Description string       `gorm:"type:text;default:''" mapstructure:"description"`
 	ClassId     uint         `gorm:"type:int;not null" mapstructure:"classId"`
 	Class       classes      `mapstructure:"class"`
-	StartRules  []rules      `gorm:"many2many:trigger_start_rules;joinForeignKey:FlowId;joinReferences:RuleId;" mapstructure:"startRules"`
-	AllRules    []rules      `gorm:"many2many:trigger_all_rules;joinForeignKey:FlowId;joinReferences:RuleId;" mapstructure:"allRules"`
-	BranchFlow  pgtype.JSONB `json:"branchFlows" gorm:"type:jsonb;default:'{}';not null" mapstructure:"branchFlows"`
+	StartState  uint         `gorm:"type:int;not null" mapstructure:"startState"`
+	Rules       []rules      `gorm:"many2many:trigger_rules;joinForeignKey:FlowId;joinReferences:RuleId;" mapstructure:"rules"`
+	BranchFlows pgtype.JSONB `gorm:"type:jsonb;default:'{}';not null" mapstructure:"branchFlows"`
 }
 
 type rules struct {

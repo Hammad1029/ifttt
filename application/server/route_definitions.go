@@ -41,6 +41,38 @@ func getRouteDefinitions(controllers *controllers.AllController) *[]common.Route
 			},
 		},
 		{
+			Path:        "/cron",
+			Method:      "GROUP",
+			Description: "Cron Management",
+			Authorized:  true,
+			Children: []common.RouteDefinition{
+				{
+					Path:          "/getAll",
+					Method:        http.MethodGet,
+					Description:   "Get All Cron Jobs",
+					Authenticated: true,
+					Authorized:    true,
+					HandlerFunc:   controllers.CronController.GetAll,
+				},
+				{
+					Path:          "/getDetails",
+					Method:        http.MethodPost,
+					Description:   "Get Cron Job Details By Name",
+					Authenticated: true,
+					Authorized:    true,
+					HandlerFunc:   controllers.CronController.GetByName,
+				},
+				{
+					Path:          "/create",
+					Method:        http.MethodPost,
+					Description:   "Create Cron Job",
+					Authenticated: true,
+					Authorized:    true,
+					HandlerFunc:   controllers.CronController.Create,
+				},
+			},
+		},
+		{
 			Path:        "/apis",
 			Method:      "GROUP",
 			Description: "API Management",

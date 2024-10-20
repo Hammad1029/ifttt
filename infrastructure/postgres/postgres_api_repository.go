@@ -17,7 +17,9 @@ func NewPostgresAPIRepository(base *PostgresBaseRepository) *PostgresAPIReposito
 
 func (p *PostgresAPIRepository) GetAllApis() (*[]api.Api, error) {
 	var pgApis []apis
-	if err := p.client.Find(&pgApis).Error; err != nil {
+	if err := p.client.
+		Preload("TriggerFlowRef").Preload("TriggerFlowRef.Rules").
+		Find(&pgApis).Error; err != nil {
 		return nil, fmt.Errorf("method *PostgresAPIRepository.GetAllApis: could not query apis: %s", err)
 	}
 
@@ -34,30 +36,10 @@ func (p *PostgresAPIRepository) GetAllApis() (*[]api.Api, error) {
 	return &domainApis, nil
 }
 
-func (p *PostgresAPIRepository) GetApiByNameOrPath(name string, path string) (*api.Api, error) {
-	var pgApi apis
-	if err := p.client.First(&pgApi, "name = ? or path = ?", name, path).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("method *PostgresAPIRepository.GetApisByNameOrPath: could not query apis: %s", err)
-	}
-
-	var domainApi api.Api
-	if dApi, err := pgApi.toDomain(); err != nil {
-		return nil,
-			fmt.Errorf("method *PostgresAPIRepository.GetAllApis: could not convert to domain api: %s", err)
-	} else {
-		domainApi = *dApi
-	}
-
-	return &domainApi, nil
-}
-
-func (p *PostgresAPIRepository) GetApiDetailsByNameAndPath(name string, path string) (*api.Api, error) {
+func (p *PostgresAPIRepository) GetApiByNameAndPath(name string, path string) (*api.Api, error) {
 	var pgApi apis
 	if err := p.client.
-		Preload("Triggerflows").Preload("Triggerflows.StartRules").Preload("Triggerflows.AllRules").
+		Preload("TriggerFlowRef").Preload("TriggerFlowRef.Rules").
 		First(&pgApi, "name = ? and path = ?", name, path).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil

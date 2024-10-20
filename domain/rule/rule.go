@@ -21,5 +21,5 @@ type RuleSwitch struct {
 type RuleSwitchCase struct {
 	Condition condition.Condition     `json:"condition" mapstructure:"condition"`
 	Do        []resolvable.Resolvable `json:"do" mapstructure:"do"`
-	Return    resolvable.Resolvable   `json:"return" mapstructure:"return"`
+	Return    uint                    `json:"return" mapstructure:"return"`
 }

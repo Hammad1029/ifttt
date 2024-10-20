@@ -47,6 +47,11 @@ func (rc *rulesController) Create(c *gin.Context) {
 		return
 	}
 
+	if reqBody.Switch.Default.Return != common.RuleDefaultReturn {
+		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["InvalidReturnValue"]})
+		return
+	}
+
 	if err := rc.serverCore.ConfigStore.RuleRepo.InsertRule(&reqBody); err != nil {
 		common.HandleErrorResponse(c, err)
 		return

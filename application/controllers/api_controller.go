@@ -4,6 +4,7 @@ import (
 	"ifttt/manager/application/core"
 	"ifttt/manager/common"
 	"ifttt/manager/domain/api"
+	triggerflow "ifttt/manager/domain/trigger_flow"
 
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
@@ -35,7 +36,7 @@ func (ac *apiController) GetDetails(c *gin.Context) {
 		return
 	}
 
-	api, err := ac.serverCore.ConfigStore.APIRepo.GetApiDetailsByNameAndPath(reqBody.Name, reqBody.Path)
+	api, err := ac.serverCore.ConfigStore.APIRepo.GetApiByNameAndPath(reqBody.Name, reqBody.Path)
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
@@ -50,7 +51,7 @@ func (ac *apiController) Create(c *gin.Context) {
 		return
 	}
 
-	if api, err := ac.serverCore.ConfigStore.APIRepo.GetApiByNameOrPath(reqBody.Name, reqBody.Path); err != nil {
+	if api, err := ac.serverCore.ConfigStore.APIRepo.GetApiByNameAndPath(reqBody.Name, reqBody.Path); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else if api != nil {
@@ -58,7 +59,7 @@ func (ac *apiController) Create(c *gin.Context) {
 		return
 	}
 
-	tIds := lo.Map(reqBody.TriggerFlows, func(t api.TriggerConditionRequest, _ int) uint {
+	tIds := lo.Map(reqBody.TriggerFlows, func(t triggerflow.TriggerConditionRequest, _ int) uint {
 		return t.Trigger
 	})
 

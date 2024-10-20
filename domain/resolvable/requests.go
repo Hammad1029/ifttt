@@ -6,12 +6,10 @@ import (
 	"net/http"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/mitchellh/mapstructure"
 )
 
 const (
-	accessorRuleResolvable                = "rule"
 	accessorJqResolvable                  = "jq"
 	accessorGetRequestResolvable          = "getReq"
 	accessorGetResponseResolvable         = "getRes"
@@ -30,7 +28,6 @@ const (
 )
 
 var resolveTypes = []string{
-	accessorRuleResolvable,
 	accessorJqResolvable,
 	accessorGetRequestResolvable,
 	accessorGetResponseResolvable,
@@ -82,8 +79,6 @@ func (r *Resolvable) Validate() error {
 					resolver = &setStoreResolvable{}
 				case accessorResponseResolvable:
 					resolver = &responseResolvable{}
-				case accessorRuleResolvable:
-					resolver = &callRuleResolvable{}
 				case accessorPreConfigResolvable:
 					resolver = &preConfigResolvable{}
 				case accessorStringInterpolationResolvable:
@@ -102,15 +97,15 @@ func (r *Resolvable) Validate() error {
 	)
 }
 
-func (c *callRuleResolvable) Validate() error {
-	return validation.Validate(&c.RuleId, validation.Required)
-}
-
 func (c *apiCallResolvable) Validate() error {
 	return validation.ValidateStruct(c,
 		validation.Field(&c.Method, validation.Required, validation.In(
 			http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPut)),
-		validation.Field(&c.Url, validation.Required, is.URL),
+		validation.Field(&c.URL, validation.Required, validation.By(
+			func(value interface{}) error {
+				r := value.(Resolvable)
+				return r.Validate()
+			})),
 		validation.Field(&c.Headers, validation.By(func(value interface{}) error {
 			m := value.(map[string]any)
 			return validateMapIfResolvable(m)
@@ -119,6 +114,8 @@ func (c *apiCallResolvable) Validate() error {
 			m := value.(map[string]any)
 			return validateMapIfResolvable(m)
 		})),
+		validation.Field(&c.Aysnc),
+		validation.Field(&c.Timeout),
 	)
 }
 
@@ -173,7 +170,7 @@ func (c *queryResolvable) Validate() error {
 	positionalCount := len(common.RegexPositionalParameters.FindAllString(c.QueryHash, -1))
 	return validation.ValidateStruct(c,
 		validation.Field(&c.QueryString, validation.Required),
-		validation.Field(&c.QueryHash, validation.Required),
+		validation.Field(&c.QueryHash, validation.Required, validation.In(common.GetMD5Hash(c.QueryString))),
 		validation.Field(&c.Return, validation.Required),
 		validation.Field(&c.Named, validation.Required),
 		validation.Field(&c.NamedParameters, validation.When(c.Named, validation.Length(namedCount, namedCount),
@@ -196,6 +193,8 @@ func (c *queryResolvable) Validate() error {
 					return param.Validate()
 				},
 			))).Else(validation.Empty)),
+		validation.Field(&c.Async),
+		validation.Field(&c.Timeout),
 	)
 }
 

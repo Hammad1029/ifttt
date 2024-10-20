@@ -7,9 +7,11 @@ type Resolvable struct {
 
 type apiCallResolvable struct {
 	Method  string         `json:"method" mapstructure:"method"`
-	Url     string         `json:"url" mapstructure:"url"`
+	URL     Resolvable     `json:"url" mapstructure:"url"`
 	Headers map[string]any `json:"headers" mapstructure:"headers"`
 	Body    map[string]any `json:"body" mapstructure:"body"`
+	Aysnc   bool           `json:"async" mapstructure:"async"`
+	Timeout uint           `json:"timeOut" mapstructure:"timeOut"`
 }
 
 type arithmetic struct {
@@ -40,10 +42,6 @@ type jqResolvable struct {
 	Input any        `json:"input" mapstructure:"input"`
 }
 
-type callRuleResolvable struct {
-	RuleId uint `json:"ruleId" mapstructure:"ruleId"`
-}
-
 type stringInterpolationResolvable struct {
 	Template   string       `json:"template" mapstructure:"template"`
 	Parameters []Resolvable `json:"parameters" mapstructure:"parameters"`
@@ -56,6 +54,8 @@ type queryResolvable struct {
 	Named                bool                  `json:"named" mapstructure:"named"`
 	NamedParameters      map[string]Resolvable `json:"namedParameters" mapstructure:"namedParameters"`
 	PositionalParameters []Resolvable          `json:"positionalParameters" mapstructure:"positionalParameters"`
+	Async                bool                  `json:"async" mapstructure:"async"`
+	Timeout              uint                  `json:"timeout" mapstructure:"timeout"`
 }
 
 type responseResolvable struct {

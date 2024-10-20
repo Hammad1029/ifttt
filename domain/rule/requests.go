@@ -1,6 +1,7 @@
 package rule
 
 import (
+	"ifttt/manager/common"
 	"ifttt/manager/domain/condition"
 	"ifttt/manager/domain/resolvable"
 
@@ -51,6 +52,11 @@ func (rs *RuleSwitch) Validate() error {
 }
 
 func (rsw *RuleSwitchCase) Validate() error {
+	allowedReturnsAny := []any{}
+	for _, r := range common.RuleAllowedReturns {
+		allowedReturnsAny = append(allowedReturnsAny, r)
+	}
+
 	return validation.ValidateStruct(rsw,
 		validation.Field(&rsw.Condition, validation.By(func(value interface{}) error {
 			c := value.(condition.Condition)
@@ -60,9 +66,6 @@ func (rsw *RuleSwitchCase) Validate() error {
 			r := value.(resolvable.Resolvable)
 			return r.Validate()
 		}))),
-		validation.Field(&rsw.Return, validation.By(func(value interface{}) error {
-			r := value.(resolvable.Resolvable)
-			return r.Validate()
-		})),
+		validation.Field(&rsw.Return, validation.In(allowedReturnsAny...)),
 	)
 }

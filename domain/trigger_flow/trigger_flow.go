@@ -1,7 +1,7 @@
 package triggerflow
 
 import (
-	"ifttt/manager/domain/resolvable"
+	"ifttt/manager/domain/condition"
 	"ifttt/manager/domain/rule"
 )
 
@@ -10,15 +10,21 @@ type Class struct {
 }
 
 type TriggerFlow struct {
-	Name        string                `mapstructure:"name"`
-	Description string                `mapstructure:"description"`
-	Class       Class                 `mapstructure:"class"`
-	StartRules  []rule.Rule           `mapstructure:"startRules"`
-	AllRules    []rule.Rule           `mapstructure:"allRules"`
-	BranchFlows map[uint][]BranchFlow `mapstructure:"branchFlows"`
+	ID          uint                 `json:"id" mapstructure:"id"`
+	Name        string               `json:"name" mapstructure:"name"`
+	Description string               `json:"description" mapstructure:"description"`
+	Class       Class                `json:"class" mapstructure:"class"`
+	StartState  uint                 `json:"startState" mapstructure:"startState"`
+	Rules       map[uint]*rule.Rule  `json:"rules" mapstructure:"rules"`
+	BranchFlows map[uint]*BranchFlow `json:"branchFlows" mapstructure:"branchFlows"`
 }
 
 type BranchFlow struct {
-	IfReturn resolvable.Resolvable `json:"ifReturn" mapstructure:"ifReturn"`
-	Jump     uint                  `json:"jump" mapstructure:"jump"`
+	Rule   uint          `json:"rule" mapstructure:"rule"`
+	States map[uint]uint `json:"states" mapstructure:"states"`
+}
+
+type TriggerCondition struct {
+	If      condition.Condition `json:"if" mapstructure:"if"`
+	Trigger TriggerFlow         `json:"trigger" mapstructure:"trigger"`
 }

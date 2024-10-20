@@ -2,8 +2,8 @@ package api
 
 import (
 	"ifttt/manager/common"
-	"ifttt/manager/domain/condition"
 	"ifttt/manager/domain/resolvable"
+	triggerflow "ifttt/manager/domain/trigger_flow"
 	"net/http"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -14,27 +14,22 @@ type GetDetailsRequest struct {
 	Path string `json:"path" mapstructure:"path"`
 }
 
+type CreateApiRequest struct {
+	Name         string                                `json:"name" mapstructure:"name"`
+	Path         string                                `json:"path" mapstructure:"path"`
+	Method       string                                `json:"method" mapstructure:"method"`
+	Description  string                                `json:"description" mapstructure:"description"`
+	Request      map[string]any                        `json:"request" mapstructure:"request"`
+	PreConfig    map[string]resolvable.Resolvable      `json:"preConfig" mapstructure:"preConfig"`
+	TriggerFlows []triggerflow.TriggerConditionRequest `json:"triggerFlows" mapstructure:"triggerFlows"`
+}
+
 func (g *GetDetailsRequest) Validate() error {
 	return validation.ValidateStruct(g,
 		validation.Field(&g.Name, validation.Required, validation.Length(3, 0)),
 		validation.Field(&g.Path, validation.Required, validation.Length(3, 0),
 			validation.Match(common.RegexEndpoint)),
 	)
-}
-
-type CreateApiRequest struct {
-	Name         string                           `json:"name" mapstructure:"name"`
-	Path         string                           `json:"path" mapstructure:"path"`
-	Method       string                           `json:"method" mapstructure:"method"`
-	Description  string                           `json:"description" mapstructure:"description"`
-	Request      map[string]any                   `json:"request" mapstructure:"request"`
-	PreConfig    map[string]resolvable.Resolvable `json:"preConfig" mapstructure:"preConfig"`
-	TriggerFlows []TriggerConditionRequest        `json:"triggerFlows" mapstructure:"triggerFlows"`
-}
-
-type TriggerConditionRequest struct {
-	If      condition.Condition `json:"if" mapstructure:"if"`
-	Trigger uint                `json:"trigger" mapstructure:"trigger"`
 }
 
 func (a *CreateApiRequest) Validate() error {
@@ -57,18 +52,8 @@ func (a *CreateApiRequest) Validate() error {
 			})),
 		validation.Field(&a.TriggerFlows, validation.Required, validation.Each(
 			validation.By(func(value interface{}) error {
-				t := value.(TriggerConditionRequest)
+				t := value.(triggerflow.TriggerConditionRequest)
 				return t.Validate()
 			}))),
-	)
-}
-
-func (t *TriggerConditionRequest) Validate() error {
-	return validation.ValidateStruct(t,
-		validation.Field(&t.If, validation.By(func(value interface{}) error {
-			c := value.(condition.Condition)
-			return c.Validate()
-		})),
-		validation.Field(&t.Trigger, validation.Required),
 	)
 }

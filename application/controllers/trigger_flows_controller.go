@@ -58,36 +58,32 @@ func (tfc *triggerFlowsController) Create(c *gin.Context) {
 		return
 	}
 
-	if requiredRules, err := tfc.serverCore.ConfigStore.RuleRepo.GetRulesByIds(reqBody.StartRules); err != nil {
+	if requiredRules, err := tfc.serverCore.ConfigStore.RuleRepo.GetRulesByIds(reqBody.Rules); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
-	} else if len(*requiredRules) != len(reqBody.StartRules) {
+	} else if len(*requiredRules) != len(reqBody.Rules) {
 		common.ResponseHandler(c,
-			common.ResponseConfig{Response: common.Responses["TriggerFlowStartRulesNotFound"]})
+			common.ResponseConfig{Response: common.Responses["TriggerFlowRulesNotFound"]})
 		return
 	}
 
-	if requiredRules, err := tfc.serverCore.ConfigStore.RuleRepo.GetRulesByIds(reqBody.AllRules); err != nil {
-		common.HandleErrorResponse(c, err)
-		return
-	} else if len(*requiredRules) != len(reqBody.AllRules) {
-		common.ResponseHandler(c,
-			common.ResponseConfig{Response: common.Responses["TriggerFlowAllRulesNotFound"]})
-		return
+	for _, flow := range reqBody.BranchFlows {
+		if _, found := lo.Find(reqBody.Rules, func(r uint) bool {
+			return r == flow.Rule
+		}); !found {
+			common.ResponseHandler(c,
+				common.ResponseConfig{Response: common.Responses["InvalidBranchFlow"]})
+			return
+		}
+
+		if ok := lo.Every(common.RuleAllowedReturns, lo.Keys(flow.States)); !ok {
+			common.ResponseHandler(c,
+				common.ResponseConfig{Response: common.Responses["InvalidBranchFlow"]})
+			return
+		}
 	}
 
-	if len(lo.Intersect(reqBody.AllRules, lo.Keys(reqBody.BranchFlows))) != len(reqBody.AllRules) {
-		common.ResponseHandler(c,
-			common.ResponseConfig{Response: common.Responses["InvalidBranchFlow"]})
-		return
-	}
-
-	jumpIds := lo.FlatMap(lo.Values(reqBody.BranchFlows), func(bF []triggerflow.BranchFlow, _ int) []uint {
-		return lo.Map(bF, func(f triggerflow.BranchFlow, _ int) uint {
-			return f.Jump
-		})
-	})
-	if !lo.Every(reqBody.AllRules, jumpIds) {
+	if _, ok := reqBody.BranchFlows[reqBody.StartState]; !ok {
 		common.ResponseHandler(c,
 			common.ResponseConfig{Response: common.Responses["InvalidBranchFlow"]})
 		return

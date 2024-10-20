@@ -1,54 +1,61 @@
 package triggerflow
 
 import (
-	"ifttt/manager/domain/resolvable"
+	"ifttt/manager/domain/condition"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
+type CreateTriggerFlowRequest struct {
+	Name        string               `json:"name" mapstructure:"name"`
+	Description string               `json:"description" mapstructure:"description"`
+	Class       uint                 `json:"class" mapstructure:"class"`
+	StartState  uint                 `json:"startState" mapstructure:"startState"`
+	Rules       []uint               `json:"rules" mapstructure:"rules"`
+	BranchFlows map[uint]*BranchFlow `json:"branchFlows" mapstructure:"branchFlows"`
+}
+
 type GetDetailsRequest struct {
 	Name string `json:"name" mapstructure:"name"`
+}
+
+type TriggerConditionRequest struct {
+	If      condition.Condition `json:"if" mapstructure:"if"`
+	Trigger uint                `json:"trigger" mapstructure:"trigger"`
 }
 
 func (g *GetDetailsRequest) Validate() error {
 	return validation.Validate(g.Name, validation.Required, validation.Length(3, 0))
 }
 
-type CreateTriggerFlowRequest struct {
-	Name        string                `json:"name" mapstructure:"name"`
-	Description string                `json:"description" mapstructure:"description"`
-	Class       uint                  `json:"class" mapstructure:"class"`
-	StartRules  []uint                `json:"startRules" mapstructure:"startRules"`
-	AllRules    []uint                `json:"allRules" mapstructure:"allRules"`
-	BranchFlows map[uint][]BranchFlow `json:"branchFlows" mapstructure:"branchFlows"`
-}
-
 func (c *CreateTriggerFlowRequest) Validate() error {
-	allRules := make([]any, len(c.AllRules))
-	for _, v := range c.AllRules {
-		allRules = append(allRules, v)
-	}
-
 	return validation.ValidateStruct(c,
 		validation.Field(&c.Name, validation.Required, validation.Length(3, 0)),
 		validation.Field(&c.Description, validation.Required, validation.Length(3, 0)),
 		validation.Field(&c.Class, validation.Required),
-		validation.Field(&c.StartRules, validation.Required, validation.Each(validation.In(allRules...))),
-		validation.Field(&c.AllRules, validation.Required),
-		validation.Field(&c.BranchFlows, validation.Each(validation.Each(
+		validation.Field(&c.StartState, validation.Required),
+		validation.Field(&c.Rules, validation.Required),
+		validation.Field(&c.BranchFlows, validation.Each(
 			validation.By(func(value interface{}) error {
 				b := value.(BranchFlow)
 				return b.Validate()
-			})))),
+			}))),
 	)
 }
 
 func (b *BranchFlow) Validate() error {
 	return validation.ValidateStruct(b,
-		validation.Field(&b.IfReturn, validation.By(func(value interface{}) error {
-			r := value.(resolvable.Resolvable)
-			return r.Validate()
+		validation.Field(&b.Rule, validation.Required),
+		validation.Field(&b.States, validation.Required),
+	)
+}
+
+func (t *TriggerConditionRequest) Validate() error {
+	return validation.ValidateStruct(t,
+		validation.Field(&t.If, validation.By(func(value interface{}) error {
+			c := value.(condition.Condition)
+			return c.Validate()
 		})),
-		validation.Field(&b.Jump, validation.Required),
+		validation.Field(&t.Trigger, validation.Required),
 	)
 }
