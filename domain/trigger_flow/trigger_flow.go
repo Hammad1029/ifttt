@@ -6,7 +6,7 @@ import (
 )
 
 type Class struct {
-	Name string `mapstructure:"name"`
+	Name string `json:"name" mapstructure:"name"`
 }
 
 type TriggerFlow struct {

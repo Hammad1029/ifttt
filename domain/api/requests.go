@@ -15,13 +15,15 @@ type GetDetailsRequest struct {
 }
 
 type CreateApiRequest struct {
-	Name         string                                `json:"name" mapstructure:"name"`
-	Path         string                                `json:"path" mapstructure:"path"`
-	Method       string                                `json:"method" mapstructure:"method"`
-	Description  string                                `json:"description" mapstructure:"description"`
-	Request      map[string]any                        `json:"request" mapstructure:"request"`
-	PreConfig    map[string]resolvable.Resolvable      `json:"preConfig" mapstructure:"preConfig"`
-	TriggerFlows []triggerflow.TriggerConditionRequest `json:"triggerFlows" mapstructure:"triggerFlows"`
+	Name        string                                `json:"name" mapstructure:"name"`
+	Path        string                                `json:"path" mapstructure:"path"`
+	Method      string                                `json:"method" mapstructure:"method"`
+	Description string                                `json:"description" mapstructure:"description"`
+	Request     map[string]any                        `json:"request" mapstructure:"request"`
+	PreConfig   map[string]resolvable.Resolvable      `json:"preConfig" mapstructure:"preConfig"`
+	PreWare     []uint                                `json:"preWare" mapstructure:"preWare"`
+	MainWare    []triggerflow.TriggerConditionRequest `json:"triggerFlows" mapstructure:"triggerFlows"`
+	PostWare    []uint                                `json:"postWare" mapstructure:"postWare"`
 }
 
 func (g *GetDetailsRequest) Validate() error {
@@ -50,7 +52,7 @@ func (a *CreateApiRequest) Validate() error {
 				}
 				return nil
 			})),
-		validation.Field(&a.TriggerFlows, validation.Required, validation.Each(
+		validation.Field(&a.MainWare, validation.Required, validation.Each(
 			validation.By(func(value interface{}) error {
 				t := value.(triggerflow.TriggerConditionRequest)
 				return t.Validate()

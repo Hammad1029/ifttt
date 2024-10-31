@@ -59,7 +59,8 @@ func (a *authController) Login(c *gin.Context) {
 		return
 	}
 
-	common.ResponseHandler(c, common.ResponseConfig{Data: tokenPair})
+	response := auth.LoginResponse{Tokens: tokenPair, User: user}
+	common.ResponseHandler(c, common.ResponseConfig{Data: response})
 }
 
 func (a *authController) Logout(c *gin.Context) {
@@ -100,7 +101,7 @@ func (a *authController) RefreshToken(c *gin.Context) {
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
-	} else if cacheExists == nil || !cacheExists.RefreshToken.IsSameToken(refreshHeader) {
+	} else if cacheExists == nil || !cacheExists.Refresh.IsSameToken(refreshHeader) {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}

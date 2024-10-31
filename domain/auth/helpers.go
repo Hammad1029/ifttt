@@ -8,10 +8,11 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-func (t *TokenDetails) createToken(expiry int, email string, secret string) error {
+func (t *TokenDetails) createToken(expiry int, email string, secret string, tokenType string) error {
 	t.Expiry = time.Now().Add(time.Minute * time.Duration(expiry)).Unix()
 	t.Claims = jwt.MapClaims{
 		"email": email,
+		"type":  tokenType,
 		"exp":   t.Expiry,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, t.Claims)

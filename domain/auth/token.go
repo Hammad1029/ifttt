@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 	"ifttt/manager/application/config"
+	"ifttt/manager/common"
 	"strconv"
 
 	"github.com/golang-jwt/jwt"
@@ -15,8 +16,8 @@ type TokenService struct {
 }
 
 type TokenPair struct {
-	AccessToken  *TokenDetails `json:"accessToken"`
-	RefreshToken *TokenDetails `json:"refreshToken"`
+	Access  *TokenDetails `json:"access"`
+	Refresh *TokenDetails `json:"refresh"`
 }
 
 type TokenDetails struct {
@@ -50,17 +51,17 @@ func NewTokenService() (*TokenService, error) {
 
 func (t *TokenService) NewTokenPair(email string) (*TokenPair, error) {
 	accessToken := TokenDetails{}
-	if err := accessToken.createToken(t.AccessExpiry, email, t.Secret); err != nil {
+	if err := accessToken.createToken(t.AccessExpiry, email, t.Secret, common.AccessTokenKey); err != nil {
 		return nil, fmt.Errorf("method *TokenService.NewTokenPair: could not create access token: %s", err)
 	}
 	refreshToken := TokenDetails{}
-	if err := refreshToken.createToken(t.RefreshExpiry, email, t.Secret); err != nil {
+	if err := refreshToken.createToken(t.RefreshExpiry, email, t.Secret, common.RefreshTokenKey); err != nil {
 		return nil, fmt.Errorf("method *TokenService.NewTokenPair: could not create refresh token: %s", err)
 	}
 
 	return &TokenPair{
-		AccessToken:  &accessToken,
-		RefreshToken: &refreshToken,
+		Access:  &accessToken,
+		Refresh: &refreshToken,
 	}, nil
 }
 
@@ -76,7 +77,10 @@ func (t *TokenService) VerifyToken(header string) (*TokenDetails, error) {
 		}
 		return []byte(t.Secret), nil
 	})
-	if !token.Valid || err != nil {
+	if err != nil {
+		return nil, err
+	}
+	if !token.Valid {
 		return nil, nil
 	}
 

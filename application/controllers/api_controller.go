@@ -59,14 +59,14 @@ func (ac *apiController) Create(c *gin.Context) {
 		return
 	}
 
-	tIds := lo.Map(reqBody.TriggerFlows, func(t triggerflow.TriggerConditionRequest, _ int) uint {
+	tIds := lo.Map(reqBody.MainWare, func(t triggerflow.TriggerConditionRequest, _ int) uint {
 		return t.Trigger
 	})
 
 	if requiredTFlows, err := ac.serverCore.ConfigStore.TriggerFlowRepo.GetTriggerFlowsByIds(tIds); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
-	} else if len(*requiredTFlows) != len(reqBody.TriggerFlows) {
+	} else if len(*requiredTFlows) != len(reqBody.MainWare) {
 		common.ResponseHandler(c,
 			common.ResponseConfig{Response: common.Responses["TriggerFlowNotFound"]})
 		return

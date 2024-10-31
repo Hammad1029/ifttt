@@ -33,7 +33,7 @@ func (a *AllMiddlewares) Authenticator(c *gin.Context) {
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
-	} else if cacheExists == nil || !cacheExists.AccessToken.IsSameToken(authHeader) {
+	} else if cacheExists.Access == nil || !cacheExists.Access.IsSameToken(authHeader) {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}

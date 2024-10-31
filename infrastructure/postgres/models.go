@@ -24,14 +24,16 @@ type crons struct {
 
 type apis struct {
 	gorm.Model
-	Name           string          `gorm:"type:varchar(50);not null;unique" mapstructure:"name"`
-	Path           string          `gorm:"type:varchar(50);not null;unique" mapstructure:"path"`
-	Method         string          `gorm:"type:varchar(10);not null" mapstructure:"method"`
-	Description    string          `gorm:"type:text;default:''" mapstructure:"description"`
-	Request        pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"request"`
-	PreConfig      pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"preConfig"`
-	TriggerFlowRef []trigger_flows `gorm:"many2many:api_trigger_flows;joinForeignKey:ApiId;joinReferences:FlowId;" mapstructure:"triggerFlows"`
-	TriggerFlows   pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"triggerConditions"`
+	Name         string          `gorm:"type:varchar(50);not null;unique" mapstructure:"name"`
+	Path         string          `gorm:"type:varchar(50);not null;unique" mapstructure:"path"`
+	Method       string          `gorm:"type:varchar(10);not null" mapstructure:"method"`
+	Description  string          `gorm:"type:text;default:''" mapstructure:"description"`
+	Request      pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"request"`
+	PreConfig    pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"preConfig"`
+	PreWare      []trigger_flows `gorm:"many2many:api_trigger_flows_pre;joinForeignKey:ApiId;joinReferences:FlowId;" mapstructure:"triggerFlows"`
+	MainWare     []trigger_flows `gorm:"many2many:api_trigger_flows_main;joinForeignKey:ApiId;joinReferences:FlowId;" mapstructure:"triggerFlows"`
+	PostWare     []trigger_flows `gorm:"many2many:api_trigger_flows_post;joinForeignKey:ApiId;joinReferences:FlowId;" mapstructure:"triggerFlows"`
+	TriggerFlows pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"triggerConditions"`
 }
 
 type classes struct {
