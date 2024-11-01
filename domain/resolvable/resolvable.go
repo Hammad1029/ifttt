@@ -21,30 +21,43 @@ type arithmetic struct {
 	Value     Resolvable   `json:"value" mapstructure:"value"`
 }
 
-// type getRequestResolvable map[string]any
+type setCacheResolvable struct {
+	Key   Resolvable `json:"key" mapstructure:"key"`
+	Value Resolvable `json:"value" mapstructure:"value"`
+	TTL   uint       `json:"ttl" mapstructure:"ttl"`
+}
 
-// type getResponseResolvable map[string]any
+type getCacheResolvable struct {
+	Key Resolvable `json:"key" mapstructure:"key"`
+}
 
-// type getStoreResolvable map[string]any
+type dbDumpResolvable struct {
+	Columns map[string]Resolvable `json:"columns" mapstructure:"columns"`
+	Table   string                `json:"table" mapstructure:"table"`
+}
 
-// type getApiResultsResolvable map[string]map[string]any
+type encodeResolvable struct {
+	Input Resolvable `json:"input" mapstructure:"input"`
+	Alg   string     `json:"alg" mapstructure:"alg"`
+}
 
-// type getQueryResultsResolvable map[string][]map[string]any
+type getRequestResolvable struct{}
 
-// type getConstResolvable struct {
-// 	Value any `json:"value" mapstructure:"value"`
-// }
+type getResponseResolvable struct{}
 
-type preConfigResolvable map[string]Resolvable
+type getStoreResolvable struct{}
+
+type getPreConfigResolvable struct{}
+
+type getHeadersResolvable struct{}
+
+type getConstResolvable struct {
+	Value any `json:"value" mapstructure:"value"`
+}
 
 type jqResolvable struct {
 	Query Resolvable `json:"query" mapstructure:"query"`
 	Input any        `json:"input" mapstructure:"input"`
-}
-
-type stringInterpolationResolvable struct {
-	Template   string       `json:"template" mapstructure:"template"`
-	Parameters []Resolvable `json:"parameters" mapstructure:"parameters"`
 }
 
 type queryResolvable struct {
@@ -66,3 +79,15 @@ type responseResolvable struct {
 type setResResolvable map[string]any
 
 type setStoreResolvable map[string]any
+
+type setLogResolvable struct {
+	LogData any    `json:"logData" mapstructure:"logData"`
+	LogType string `json:"logType" mapstructure:"logType"`
+}
+
+type stringInterpolationResolvable struct {
+	Template   string       `json:"template" mapstructure:"template"`
+	Parameters []Resolvable `json:"parameters" mapstructure:"parameters"`
+}
+
+type uuidResolvable struct{}

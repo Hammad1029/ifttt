@@ -7,3 +7,17 @@ const (
 	AccessTokenKey  = "user-session-at"
 	RefreshTokenKey = "user-session-rt"
 )
+
+const (
+	LogError = "error"
+	LogInfo  = "info"
+)
+
+const (
+	EncodeMD5          = "md5"
+	EncodeSHA1         = "sha1"
+	EncodeSHA2         = "sha2"
+	EncodeBcrypt       = "bcrypt"
+	EncodeBase64Decode = "base64-de"
+	EncodeBase64Encode = "base64-en"
+)
