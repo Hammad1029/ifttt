@@ -27,5 +27,5 @@ EXPOSE 5600
 
 USER nonroot:nonroot
 
-ENTRYPOINT ["/"]
+ENTRYPOINT ["/main"]
 
