@@ -1,5 +1,5 @@
 # Dockerfile
-FROM golang:1.21.5-alpine
+FROM golang:1.21.5-alpine AS build-stage
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
@@ -14,10 +14,18 @@ RUN go mod download
 COPY . .
 
 # Build the Go app
-RUN go build -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+
+FROM gcr.io/distroless/base-debian11 AS build-release-stage
+
+WORKDIR /
+
+COPY --from=build-stage / /
 
 # Expose port
-EXPOSE 8080
+EXPOSE 5600
 
-# Command to run the executable
-CMD ["./main"]
+USER nonroot:nonroot
+
+ENTRYPOINT ["/"]
+
