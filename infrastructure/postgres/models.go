@@ -7,9 +7,8 @@ import (
 
 type users struct {
 	gorm.Model
-	Email     string       `gorm:"type:varchar(50);unique" mapstructure:"email"`
-	Password  string       `gorm:"type:varchar(255)" mapstructure:"password"`
-	PreConfig pgtype.JSONB `gorm:"type:jsonb;default:'{}';not null" mapstructure:"preConfig"`
+	Email    string `gorm:"type:varchar(50);unique" mapstructure:"email"`
+	Password string `gorm:"type:varchar(255)" mapstructure:"password"`
 }
 
 type crons struct {
