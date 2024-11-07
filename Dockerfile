@@ -13,6 +13,9 @@ RUN go mod download
 # Copy the source from the current directory to the Working Directory inside the container
 COPY . .
 
+# Copy the env.json file to the working directory
+COPY env.json ./
+
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
@@ -20,7 +23,9 @@ FROM gcr.io/distroless/base-debian11 AS build-release-stage
 
 WORKDIR /
 
-COPY --from=build-stage /app /
+# Copy the built binary and the env.json file from the build-stage
+COPY --from=build-stage /app/main /
+COPY --from=build-stage /app/env.json /
 
 # Expose port
 EXPOSE 5600
@@ -28,4 +33,3 @@ EXPOSE 5600
 USER nonroot:nonroot
 
 ENTRYPOINT ["/main"]
-
