@@ -122,7 +122,7 @@ func (r *Resolvable) Validate() error {
 
 func (d *dbDumpResolvable) Validate() error {
 	return validation.ValidateStruct(d,
-		validation.Field(&d.Table, validation.Required, validation.Min(3)),
+		validation.Field(&d.Table, validation.Required, validation.Length(3, 0)),
 		validation.Field(&d.Columns, validation.Required, validation.Each(
 			validation.By(func(value interface{}) error {
 				r := value.(Resolvable)
@@ -230,7 +230,8 @@ func (c *apiCallResolvable) Validate() error {
 func (c *arithmetic) Validate() error {
 	return validation.ValidateStruct(c,
 		validation.Field(&c.Group, validation.NotNil),
-		validation.Field(&c.Operation, validation.Required, validation.In("+", "-", "*", "/", "%")),
+		validation.Field(&c.Operation, validation.When(c.Group, validation.Required,
+			validation.In("+", "-", "*", "/", "%")).Else(validation.Empty)),
 		validation.Field(&c.Operators, validation.Each(validation.Required, validation.By(
 			func(value interface{}) error {
 				a := value.(arithmetic)
@@ -238,7 +239,7 @@ func (c *arithmetic) Validate() error {
 			}))),
 		validation.Field(&c.Value, validation.When(!c.Group, validation.By(
 			func(value interface{}) error {
-				r := value.(Resolvable)
+				r := value.(*Resolvable)
 				return r.Validate()
 			})).Else(validation.Nil)),
 	)
@@ -273,27 +274,28 @@ func (c *stringInterpolationResolvable) Validate() error {
 }
 
 func (c *queryResolvable) Validate() error {
-	namedParams := common.RegexNamedParameters.FindAllString(c.QueryHash, -1)
+	namedParams := common.RegexNamedParameters.FindAllString(c.QueryString, -1)
 	namedCount := len(namedParams)
-	positionalCount := len(common.RegexPositionalParameters.FindAllString(c.QueryHash, -1))
+	positionalCount := len(common.RegexPositionalParameters.FindAllString(c.QueryString, -1))
 	return validation.ValidateStruct(c,
 		validation.Field(&c.QueryString, validation.Required),
 		validation.Field(&c.QueryHash, validation.Required, validation.In(common.GetMD5Hash(c.QueryString))),
-		validation.Field(&c.Return, validation.Required),
-		validation.Field(&c.Named, validation.Required),
-		validation.Field(&c.NamedParameters, validation.When(c.Named, validation.Length(namedCount, namedCount),
-			validation.By(func(value interface{}) error {
-				paramMap := value.(map[string]Resolvable)
-				for _, key := range namedParams {
-					if r, ok := paramMap[key]; !ok {
-						return validation.NewError("named_param_not_found",
-							fmt.Sprintf("named parameter %s not found", key))
-					} else if err := r.Validate(); err != nil {
-						return err
+		validation.Field(&c.Return, validation.NotNil),
+		validation.Field(&c.Named, validation.NotNil),
+		validation.Field(&c.NamedParameters, validation.When(c.Named,
+			validation.Length(namedCount, namedCount), validation.By(
+				func(value interface{}) error {
+					paramMap := value.(map[string]Resolvable)
+					for _, key := range namedParams {
+						if r, ok := paramMap[key]; !ok {
+							return validation.NewError("named_param_not_found",
+								fmt.Sprintf("named parameter %s not found", key))
+						} else if err := r.Validate(); err != nil {
+							return err
+						}
 					}
-				}
-				return nil
-			})).Else(validation.Empty)),
+					return nil
+				})).Else(validation.Empty)),
 		validation.Field(&c.PositionalParameters, validation.When(!c.Named,
 			validation.Length(positionalCount, positionalCount), validation.Each(validation.By(
 				func(value interface{}) error {

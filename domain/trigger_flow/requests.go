@@ -46,7 +46,7 @@ func (c *CreateTriggerFlowRequest) Validate() error {
 func (b *BranchFlow) Validate() error {
 	return validation.ValidateStruct(b,
 		validation.Field(&b.Rule, validation.Required),
-		validation.Field(&b.States, validation.Required),
+		validation.Field(&b.States),
 	)
 }
 

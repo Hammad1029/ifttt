@@ -11,14 +11,14 @@ type apiCallResolvable struct {
 	Headers map[string]any `json:"headers" mapstructure:"headers"`
 	Body    map[string]any `json:"body" mapstructure:"body"`
 	Aysnc   bool           `json:"async" mapstructure:"async"`
-	Timeout uint           `json:"timeOut" mapstructure:"timeOut"`
+	Timeout uint           `json:"timeout" mapstructure:"timeout"`
 }
 
 type arithmetic struct {
 	Group     bool         `json:"group" mapstructure:"group"`
 	Operation string       `json:"operation" mapstructure:"operation"`
 	Operators []arithmetic `json:"operators" mapstructure:"operators"`
-	Value     Resolvable   `json:"value" mapstructure:"value"`
+	Value     *Resolvable  `json:"value" mapstructure:"value"`
 }
 
 type setCacheResolvable struct {
