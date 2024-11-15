@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"ifttt/manager/domain/api"
 	"ifttt/manager/domain/cron"
+	requestvalidator "ifttt/manager/domain/request_validator"
 	"ifttt/manager/domain/resolvable"
 	"ifttt/manager/domain/rule"
 	triggerflow "ifttt/manager/domain/trigger_flow"
@@ -55,7 +56,6 @@ func (pgRule *rules) fromDomain(domainRule *rule.CreateRuleRequest) error {
 func (t *trigger_flows) fromDomain(domainTFlow *triggerflow.CreateTriggerFlowRequest) error {
 	t.Name = domainTFlow.Name
 	t.Description = domainTFlow.Description
-	t.ClassId = domainTFlow.Class
 	t.StartState = domainTFlow.StartState
 	for _, r := range domainTFlow.Rules {
 		t.Rules = append(t.Rules, rules{Model: gorm.Model{ID: r}})
@@ -73,7 +73,6 @@ func (t *trigger_flows) toDomain() (*triggerflow.TriggerFlow, error) {
 		ID:          t.ID,
 		Name:        t.Name,
 		Description: t.Description,
-		Class:       triggerflow.Class{Name: t.Class.Name},
 		StartState:  t.StartState,
 		Rules:       map[uint]*rule.Rule{},
 		BranchFlows: map[uint]*triggerflow.BranchFlow{},
@@ -139,7 +138,7 @@ func (a *apis) toDomain() (*api.Api, error) {
 		Path:        a.Path,
 		Method:      a.Method,
 		Description: a.Description,
-		Request:     map[string]any{},
+		Request:     map[string]requestvalidator.RequestParameter{},
 		PreConfig:   map[string]resolvable.Resolvable{},
 		PreWare:     &[]triggerflow.TriggerFlow{},
 		MainWare:    &[]triggerflow.TriggerCondition{},

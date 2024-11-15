@@ -4,6 +4,7 @@ import (
 	"ifttt/manager/application/core"
 	"ifttt/manager/common"
 	"ifttt/manager/domain/api"
+	requestvalidator "ifttt/manager/domain/request_validator"
 	triggerflow "ifttt/manager/domain/trigger_flow"
 
 	"github.com/gin-gonic/gin"
@@ -36,7 +37,7 @@ func (ac *apiController) GetDetails(c *gin.Context) {
 		return
 	}
 
-	api, err := ac.serverCore.ConfigStore.APIRepo.GetApiByNameAndPath(reqBody.Name, reqBody.Path)
+	api, err := ac.serverCore.ConfigStore.APIRepo.GetApiByNameOrPath(reqBody.Name, reqBody.Path)
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
@@ -51,7 +52,7 @@ func (ac *apiController) Create(c *gin.Context) {
 		return
 	}
 
-	if api, err := ac.serverCore.ConfigStore.APIRepo.GetApiByNameAndPath(reqBody.Name, reqBody.Path); err != nil {
+	if api, err := ac.serverCore.ConfigStore.APIRepo.GetApiByNameOrPath(reqBody.Name, reqBody.Path); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else if api != nil {
@@ -69,6 +70,11 @@ func (ac *apiController) Create(c *gin.Context) {
 	} else if len(*requiredTFlows) != len(reqBody.MainWare) {
 		common.ResponseHandler(c,
 			common.ResponseConfig{Response: common.Responses["TriggerFlowNotFound"]})
+		return
+	}
+
+	if err := requestvalidator.GenerateAll(&reqBody.Request); err != nil {
+		common.HandleErrorResponse(c, err)
 		return
 	}
 

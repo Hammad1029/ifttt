@@ -12,7 +12,7 @@ func Init() error {
 	config = viper.New()
 	config.SetConfigName("env")
 	config.SetConfigType("json")
-	config.AddConfigPath("./")
+	config.AddConfigPath("./config")
 	if err := config.ReadInConfig(); err != nil {
 		return fmt.Errorf("could not read in config %s", err)
 	}

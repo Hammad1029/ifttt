@@ -160,7 +160,7 @@ func casbinFactory(storer configStorer, store *ConfigStore) error {
 		return fmt.Errorf("method casbinFactory: could not create casbin adapter: %s", err)
 	}
 
-	casbinEnforcer, err := casbin.NewEnforcer("./application/config/casbin_model.conf", casbinAdapter)
+	casbinEnforcer, err := casbin.NewEnforcer(config.GetConfig().GetString("casbin.modelLocation"), casbinAdapter)
 	if err != nil {
 		return fmt.Errorf("method casbinFactory: could not create casbin enforcer: %s", err)
 	}

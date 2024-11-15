@@ -2,6 +2,7 @@ package api
 
 import (
 	"ifttt/manager/common"
+	requestvalidator "ifttt/manager/domain/request_validator"
 	"ifttt/manager/domain/resolvable"
 	triggerflow "ifttt/manager/domain/trigger_flow"
 	"net/http"
@@ -15,15 +16,15 @@ type GetDetailsRequest struct {
 }
 
 type CreateApiRequest struct {
-	Name        string                                `json:"name" mapstructure:"name"`
-	Path        string                                `json:"path" mapstructure:"path"`
-	Method      string                                `json:"method" mapstructure:"method"`
-	Description string                                `json:"description" mapstructure:"description"`
-	Request     map[string]any                        `json:"request" mapstructure:"request"`
-	PreConfig   map[string]resolvable.Resolvable      `json:"preConfig" mapstructure:"preConfig"`
-	PreWare     []uint                                `json:"preWare" mapstructure:"preWare"`
-	MainWare    []triggerflow.TriggerConditionRequest `json:"triggerFlows" mapstructure:"triggerFlows"`
-	PostWare    []uint                                `json:"postWare" mapstructure:"postWare"`
+	Name        string                                       `json:"name" mapstructure:"name"`
+	Path        string                                       `json:"path" mapstructure:"path"`
+	Method      string                                       `json:"method" mapstructure:"method"`
+	Description string                                       `json:"description" mapstructure:"description"`
+	Request     map[string]requestvalidator.RequestParameter `json:"request" mapstructure:"request"`
+	PreConfig   map[string]resolvable.Resolvable             `json:"preConfig" mapstructure:"preConfig"`
+	PreWare     []uint                                       `json:"preWare" mapstructure:"preWare"`
+	MainWare    []triggerflow.TriggerConditionRequest        `json:"triggerFlows" mapstructure:"triggerFlows"`
+	PostWare    []uint                                       `json:"postWare" mapstructure:"postWare"`
 }
 
 func (g *GetDetailsRequest) Validate() error {

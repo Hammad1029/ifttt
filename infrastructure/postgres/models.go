@@ -35,17 +35,10 @@ type apis struct {
 	TriggerFlows pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"triggerConditions"`
 }
 
-type classes struct {
-	gorm.Model
-	Name string `gorm:"type:varchar(50);not null;unique" mapstructure:"name"`
-}
-
 type trigger_flows struct {
 	gorm.Model
 	Name        string       `gorm:"type:varchar(50);not null;unique" mapstructure:"name"`
 	Description string       `gorm:"type:text;default:''" mapstructure:"description"`
-	ClassId     uint         `gorm:"type:int;not null" mapstructure:"classId"`
-	Class       classes      `mapstructure:"class"`
 	StartState  uint         `gorm:"type:int;not null" mapstructure:"startState"`
 	Rules       []rules      `gorm:"many2many:trigger_rules;joinForeignKey:FlowId;joinReferences:RuleId;" mapstructure:"rules"`
 	BranchFlows pgtype.JSONB `gorm:"type:jsonb;default:'{}';not null" mapstructure:"branchFlows"`

@@ -36,11 +36,13 @@ func (p *PostgresAPIRepository) GetAllApis() (*[]api.Api, error) {
 	return &domainApis, nil
 }
 
-func (p *PostgresAPIRepository) GetApiByNameAndPath(name string, path string) (*api.Api, error) {
+func (p *PostgresAPIRepository) GetApiByNameOrPath(name string, path string) (*api.Api, error) {
 	var pgApi apis
 	if err := p.client.
-		Preload("TriggerFlowRef").Preload("TriggerFlowRef.Rules").
-		First(&pgApi, "name = ? and path = ?", name, path).Error; err != nil {
+		Preload("PreWare").Preload("PreWare.Rules").
+		Preload("MainWare").Preload("MainWare.Rules").
+		Preload("PostWare").Preload("PostWare.Rules").
+		First(&pgApi, "name = ? or path = ?", name, path).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}

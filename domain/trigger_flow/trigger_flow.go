@@ -5,15 +5,10 @@ import (
 	"ifttt/manager/domain/rule"
 )
 
-type Class struct {
-	Name string `json:"name" mapstructure:"name"`
-}
-
 type TriggerFlow struct {
 	ID          uint                 `json:"id" mapstructure:"id"`
 	Name        string               `json:"name" mapstructure:"name"`
 	Description string               `json:"description" mapstructure:"description"`
-	Class       Class                `json:"class" mapstructure:"class"`
 	StartState  uint                 `json:"startState" mapstructure:"startState"`
 	Rules       map[uint]*rule.Rule  `json:"rules" mapstructure:"rules"`
 	BranchFlows map[uint]*BranchFlow `json:"branchFlows" mapstructure:"branchFlows"`

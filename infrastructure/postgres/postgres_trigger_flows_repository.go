@@ -17,7 +17,7 @@ func NewPostgresTriggerFlowsRepository(base *PostgresBaseRepository) *PostgresTr
 
 func (p *PostgresTriggerFlowsRepository) GetAllTriggerFlows() (*[]triggerflow.TriggerFlow, error) {
 	var pgTFlows []trigger_flows
-	if err := p.client.Preload("Class").Find(&pgTFlows).Error; err != nil {
+	if err := p.client.Preload("Class").Preload("Rules").Find(&pgTFlows).Error; err != nil {
 		return nil, fmt.Errorf("method *PostgresApiRepository.GetTriggerFlowByName: could not query trigger flows: %s", err)
 	}
 

@@ -9,7 +9,6 @@ import (
 type CreateTriggerFlowRequest struct {
 	Name        string               `json:"name" mapstructure:"name"`
 	Description string               `json:"description" mapstructure:"description"`
-	Class       uint                 `json:"class" mapstructure:"class"`
 	StartState  uint                 `json:"startState" mapstructure:"startState"`
 	Rules       []uint               `json:"rules" mapstructure:"rules"`
 	BranchFlows map[uint]*BranchFlow `json:"branchFlows" mapstructure:"branchFlows"`
@@ -32,7 +31,6 @@ func (c *CreateTriggerFlowRequest) Validate() error {
 	return validation.ValidateStruct(c,
 		validation.Field(&c.Name, validation.Required, validation.Length(3, 0)),
 		validation.Field(&c.Description, validation.Required, validation.Length(3, 0)),
-		validation.Field(&c.Class, validation.Required),
 		validation.Field(&c.StartState, validation.Required),
 		validation.Field(&c.Rules, validation.Required),
 		validation.Field(&c.BranchFlows, validation.Each(

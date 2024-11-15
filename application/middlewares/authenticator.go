@@ -13,10 +13,7 @@ import (
 func (a *AllMiddlewares) Authenticator(c *gin.Context) {
 	authHeader := c.GetHeader("Authorization")
 	tokenDetails, err := a.serverCore.TokenService.VerifyToken(authHeader)
-	if err != nil {
-		common.HandleErrorResponse(c, err)
-		return
-	} else if tokenDetails == nil {
+	if err != nil || tokenDetails == nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
