@@ -2,7 +2,6 @@ package requestvalidator
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/fatih/structs"
 	"github.com/go-viper/mapstructure/v2"
@@ -43,37 +42,28 @@ func (r *RequestParameter) Generate() (string, error) {
 }
 
 func (t *textValue) Generate() (string, error) {
-	var patterns []string
-
-	var charClass strings.Builder
-	charClass.WriteString("[")
-	if t.Alpha {
-		charClass.WriteString(alphaRegex)
-	}
-	if t.Numeric {
-		charClass.WriteString(numericRegex)
-	}
-
-	if t.Special {
-		charClass.WriteString(specialRegex)
-	}
-	charClass.WriteString("]")
-
-	patterns = append(patterns, charClass.String())
-
-	if t.Minimum > 0 || t.Maximum > 0 {
-		patterns = append(patterns, t.minMax(t.Minimum, t.Maximum))
-	}
+	var regex string
 
 	if len(t.In) > 0 {
-		patterns = append(patterns, t.in(t.In))
+		return t.in(), nil
 	}
 
-	if len(t.NotIn) > 0 {
-		patterns = append(patterns, t.notIn(t.NotIn))
+	charClass := "["
+	if t.Alpha {
+		charClass += alphaRegex
 	}
+	if t.Numeric {
+		charClass += numericRegex
+	}
+	if t.Special {
+		charClass += specialRegex
+	}
+	charClass += "]"
+	regex += charClass
 
-	return strings.Join(patterns, ""), nil
+	regex += t.minMax()
+
+	return regex, nil
 }
 
 func (t *textValue) GetMap() map[string]any {
@@ -81,12 +71,10 @@ func (t *textValue) GetMap() map[string]any {
 }
 
 func (n *numberValue) Generate() (string, error) {
-	var patterns []string
-	patterns = append(patterns, numberRegex)
-	patterns = append(patterns, n.minMax(n.Minimum, n.Maximum))
-	patterns = append(patterns, n.in(n.In))
-	patterns = append(patterns, n.notIn(n.NotIn))
-	return strings.Join(patterns, ""), nil
+	var regex string
+	regex += fmt.Sprintf("[%s]+", numericRegex)
+	regex += n.in()
+	return regex, nil
 }
 
 func (n *numberValue) GetMap() map[string]any {

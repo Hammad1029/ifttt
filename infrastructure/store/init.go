@@ -3,11 +3,12 @@ package store
 import (
 	"fmt"
 	"ifttt/manager/application/config"
+	"ifttt/manager/common"
 	"ifttt/manager/domain/api"
 	"ifttt/manager/domain/auth"
 	"ifttt/manager/domain/cron"
+	"ifttt/manager/domain/orm_schema"
 	"ifttt/manager/domain/rule"
-	"ifttt/manager/domain/schema"
 	triggerflow "ifttt/manager/domain/trigger_flow"
 	"ifttt/manager/domain/user"
 	"strings"
@@ -44,11 +45,12 @@ type ConfigStore struct {
 	RuleRepo        rule.Repository
 	TriggerFlowRepo triggerflow.Repository
 	UserRepo        user.Repository
+	OrmRepo         orm_schema.OrmRepository
 }
 
 type DataStore struct {
 	Store      dataStorer
-	SchemaRepo schema.Repository
+	SchemaRepo orm_schema.SchemaRepository
 }
 
 type CacheStore struct {
@@ -91,9 +93,7 @@ func configStoreFactory(connectionSettings map[string]any) (*ConfigStore, error)
 	}
 
 	switch strings.ToLower(fmt.Sprint(dbName)) {
-	// case scyllaDb:
-	// 	storer = &scyllaStore{}
-	case postgresDb:
+	case common.DbNamePostgres:
 		storer = &postgresStore{}
 	default:
 		return nil, fmt.Errorf("method configStoreFactory: db not found %s", dbName)
@@ -119,10 +119,10 @@ func dataStoreFactory(connectionSettings map[string]any) (*DataStore, error) {
 	}
 
 	switch strings.ToLower(fmt.Sprint(dbName)) {
-	case scyllaDb:
-		storer = &scyllaStore{}
-	case postgresDb:
+	case common.DbNamePostgres:
 		storer = &postgresStore{}
+	case common.DbNameMySql:
+		storer = &mysqlStore{}
 	default:
 		return nil, fmt.Errorf("method dataStoreFactory: db not found %s", dbName)
 	}
@@ -141,7 +141,7 @@ func cacheStoreFactory(connectionSettings map[string]any) (*CacheStore, error) {
 	}
 
 	switch strings.ToLower(fmt.Sprint(dbName)) {
-	case redisCache:
+	case common.DbNameRedis:
 		storer = &RedisStore{}
 	default:
 		return nil, fmt.Errorf("method cacheStoreFactory: db not found %s", dbName)

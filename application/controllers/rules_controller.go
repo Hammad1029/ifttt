@@ -3,6 +3,7 @@ package controllers
 import (
 	"ifttt/manager/application/core"
 	"ifttt/manager/common"
+	"ifttt/manager/domain/resolvable"
 	"ifttt/manager/domain/rule"
 
 	"github.com/gin-gonic/gin"
@@ -49,6 +50,14 @@ func (rc *rulesController) Create(c *gin.Context) {
 
 	if reqBody.Switch.Default.Return != common.RuleDefaultReturn {
 		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["InvalidReturnValue"]})
+		return
+	}
+
+	if err := resolvable.ManipulateArray(reqBody.Pre); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	} else if err := resolvable.ManipulateArray(reqBody.Finally); err != nil {
+		common.HandleErrorResponse(c, err)
 		return
 	}
 

@@ -39,9 +39,7 @@ func (p *PostgresAPIRepository) GetAllApis() (*[]api.Api, error) {
 func (p *PostgresAPIRepository) GetApiByNameOrPath(name string, path string) (*api.Api, error) {
 	var pgApi apis
 	if err := p.client.
-		Preload("PreWare").Preload("PreWare.Rules").
-		Preload("MainWare").Preload("MainWare.Rules").
-		Preload("PostWare").Preload("PostWare.Rules").
+		Preload("Triggers").Preload("Triggers.Rules").
 		First(&pgApi, "name = ? or path = ?", name, path).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -62,13 +60,12 @@ func (p *PostgresAPIRepository) GetApiByNameOrPath(name string, path string) (*a
 
 func (p *PostgresAPIRepository) InsertApi(apiReq *api.CreateApiRequest) error {
 	var pgApi apis
-	err := pgApi.fromDomain(apiReq)
-	if err != nil {
-		return fmt.Errorf("method *PostgresAPIRepository.GetAllApis: could not convert from domain api: %s", err)
+	if err := pgApi.fromDomain(apiReq); err != nil {
+		return fmt.Errorf("could not convert from domain api: %s", err)
 	}
 
 	if err := p.client.Create(&pgApi).Error; err != nil {
-		return fmt.Errorf("method *PostgresApiRepository.InsertApi: could not insert api: %s", err)
+		return fmt.Errorf("could not insert api: %s", err)
 	}
 	return nil
 }

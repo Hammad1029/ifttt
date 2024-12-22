@@ -5,30 +5,34 @@ import (
 	"fmt"
 	"ifttt/manager/domain/api"
 	"ifttt/manager/domain/cron"
+	"ifttt/manager/domain/orm_schema"
 	requestvalidator "ifttt/manager/domain/request_validator"
 	"ifttt/manager/domain/resolvable"
 	"ifttt/manager/domain/rule"
 	triggerflow "ifttt/manager/domain/trigger_flow"
 
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/jackc/pgtype"
 	"gorm.io/gorm"
 )
 
 func (pgRule *rules) toDomain() (*rule.Rule, error) {
 	domainRule := rule.Rule{
-		Id:          pgRule.ID,
+		ID:          pgRule.ID,
 		Name:        pgRule.Name,
 		Description: pgRule.Description,
 	}
 
 	if err := json.Unmarshal(pgRule.Pre.Bytes, &domainRule.Pre); err != nil {
-		return nil,
-			fmt.Errorf("method *PostgresRulesRepository.ToDomain: error in unmarshalling pre: %s", err)
+		return nil, err
 	}
 
 	if err := json.Unmarshal(pgRule.Switch.Bytes, &domainRule.Switch); err != nil {
-		return nil,
-			fmt.Errorf("method *PostgresRulesRepository.ToDomain: error in unmarshalling switch: %s", err)
+		return nil, err
+	}
+
+	if err := json.Unmarshal(pgRule.Finally.Bytes, &domainRule.Finally); err != nil {
+		return nil, err
 	}
 
 	return &domainRule, nil
@@ -112,17 +116,11 @@ func (a *apis) fromDomain(domainApi *api.CreateApiRequest) error {
 		a.PreConfig = pgtype.JSONB{Bytes: preConfigMarshalled, Status: pgtype.Present}
 	}
 
-	for _, dtf := range domainApi.PreWare {
-		a.PreWare = append(a.PreWare, trigger_flows{Model: gorm.Model{ID: dtf}})
-	}
-	for _, dtf := range domainApi.MainWare {
-		a.MainWare = append(a.MainWare, trigger_flows{Model: gorm.Model{ID: dtf.Trigger}})
-	}
-	for _, dtf := range domainApi.PostWare {
-		a.PostWare = append(a.PostWare, trigger_flows{Model: gorm.Model{ID: dtf}})
+	for _, dtf := range domainApi.Triggers {
+		a.Triggers = append(a.Triggers, trigger_flows{Model: gorm.Model{ID: dtf.Trigger}})
 	}
 
-	if tConditionsMarshalled, err := json.Marshal(domainApi.MainWare); err != nil {
+	if tConditionsMarshalled, err := json.Marshal(domainApi.Triggers); err != nil {
 		return fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal trigger conditions: %s", err)
 	} else {
 		a.TriggerFlows = pgtype.JSONB{Bytes: tConditionsMarshalled, Status: pgtype.Present}
@@ -140,9 +138,7 @@ func (a *apis) toDomain() (*api.Api, error) {
 		Description: a.Description,
 		Request:     map[string]requestvalidator.RequestParameter{},
 		PreConfig:   map[string]resolvable.Resolvable{},
-		PreWare:     &[]triggerflow.TriggerFlow{},
-		MainWare:    &[]triggerflow.TriggerCondition{},
-		PostWare:    &[]triggerflow.TriggerFlow{},
+		Triggers:    &[]triggerflow.TriggerCondition{},
 	}
 
 	if err := json.Unmarshal(a.Request.Bytes, &domainApi.Request); err != nil {
@@ -158,24 +154,8 @@ func (a *apis) toDomain() (*api.Api, error) {
 		return nil, err
 	}
 
-	for _, tFlow := range a.PreWare {
-		domainTFlow, err := tFlow.toDomain()
-		if err != nil {
-			return nil, err
-		}
-		*domainApi.PreWare = append(*domainApi.PreWare, *domainTFlow)
-	}
-
-	for _, tFlow := range a.PostWare {
-		domainTFlow, err := tFlow.toDomain()
-		if err != nil {
-			return nil, err
-		}
-		*domainApi.PostWare = append(*domainApi.PostWare, *domainTFlow)
-	}
-
 	triggerFlowMap := make(map[uint]trigger_flows)
-	for _, tFlow := range a.MainWare {
+	for _, tFlow := range a.Triggers {
 		triggerFlowMap[tFlow.ID] = tFlow
 	}
 
@@ -189,7 +169,7 @@ func (a *apis) toDomain() (*api.Api, error) {
 		if err != nil {
 			return nil, fmt.Errorf("method *PostgresAPIRepository.ToDomain: %s", err)
 		}
-		*domainApi.MainWare = append(*domainApi.MainWare,
+		*domainApi.Triggers = append(*domainApi.Triggers,
 			triggerflow.TriggerCondition{If: tc.If, Trigger: *domainTFlow})
 	}
 
@@ -259,4 +239,40 @@ func (c *crons) toDomain() (*cron.Cron, error) {
 	}
 
 	return &dCron, nil
+}
+
+func (o *orm_model) fromDomain(dModel *orm_schema.Model) error {
+	return mapstructure.Decode(dModel, o)
+}
+
+// func (o *orm_projection) fromDomain(dProjection *orm_schema.Projection) error {
+// 	return mapstructure.Decode(dProjection, o)
+// }
+
+func (o *orm_association) fromDomain(dAssociation *orm_schema.ModelAssociation) error {
+	return mapstructure.Decode(dAssociation, o)
+}
+
+func (o *orm_model) toDomain() (*orm_schema.Model, error) {
+	var domain orm_schema.Model
+	if err := mapstructure.Decode(o, &domain); err != nil {
+		return nil, err
+	}
+	return &domain, nil
+}
+
+// func (o *orm_projection) toDomain() (*orm_schema.Projection, error) {
+// 	var domain orm_schema.Projection
+// 	if err := mapstructure.Decode(o, &domain); err != nil {
+// 		return nil, err
+// 	}
+// 	return &domain, nil
+// }
+
+func (o *orm_association) toDomain() (*orm_schema.ModelAssociation, error) {
+	var domain orm_schema.ModelAssociation
+	if err := mapstructure.Decode(o, &domain); err != nil {
+		return nil, err
+	}
+	return &domain, nil
 }

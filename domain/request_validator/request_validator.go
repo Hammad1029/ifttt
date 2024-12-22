@@ -22,14 +22,12 @@ type textValue struct {
 	Minimum int   `json:"minimum" mapstructure:"minimum"`
 	Maximum int   `json:"maximum" mapstructure:"maximum"`
 	In      []any `json:"in" mapstructure:"in"`
-	NotIn   []any `json:"notIn" mapstructure:"notIn"`
 }
 
 type numberValue struct {
 	Minimum int   `json:"minimum" mapstructure:"minimum"`
 	Maximum int   `json:"maximum" mapstructure:"maximum"`
 	In      []any `json:"in" mapstructure:"in"`
-	NotIn   []any `json:"notIn" mapstructure:"notIn"`
 }
 
 type booleanValue struct {

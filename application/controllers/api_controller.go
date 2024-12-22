@@ -5,6 +5,7 @@ import (
 	"ifttt/manager/common"
 	"ifttt/manager/domain/api"
 	requestvalidator "ifttt/manager/domain/request_validator"
+	"ifttt/manager/domain/resolvable"
 	triggerflow "ifttt/manager/domain/trigger_flow"
 
 	"github.com/gin-gonic/gin"
@@ -60,20 +61,29 @@ func (ac *apiController) Create(c *gin.Context) {
 		return
 	}
 
-	tIds := lo.Map(reqBody.MainWare, func(t triggerflow.TriggerConditionRequest, _ int) uint {
+	tIds := lo.Map(reqBody.Triggers, func(t triggerflow.TriggerConditionRequest, _ int) uint {
 		return t.Trigger
 	})
 
 	if requiredTFlows, err := ac.serverCore.ConfigStore.TriggerFlowRepo.GetTriggerFlowsByIds(tIds); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
-	} else if len(*requiredTFlows) != len(reqBody.MainWare) {
+	} else if len(*requiredTFlows) != len(reqBody.Triggers) {
 		common.ResponseHandler(c,
 			common.ResponseConfig{Response: common.Responses["TriggerFlowNotFound"]})
 		return
 	}
 
 	if err := requestvalidator.GenerateAll(&reqBody.Request); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	}
+
+	if err := resolvable.ManipulateArray(
+		lo.MapToSlice(reqBody.PreConfig,
+			func(_ string, r resolvable.Resolvable) resolvable.Resolvable {
+				return r
+			})); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}

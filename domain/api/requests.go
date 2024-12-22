@@ -22,9 +22,7 @@ type CreateApiRequest struct {
 	Description string                                       `json:"description" mapstructure:"description"`
 	Request     map[string]requestvalidator.RequestParameter `json:"request" mapstructure:"request"`
 	PreConfig   map[string]resolvable.Resolvable             `json:"preConfig" mapstructure:"preConfig"`
-	PreWare     []uint                                       `json:"preWare" mapstructure:"preWare"`
-	MainWare    []triggerflow.TriggerConditionRequest        `json:"triggerFlows" mapstructure:"triggerFlows"`
-	PostWare    []uint                                       `json:"postWare" mapstructure:"postWare"`
+	Triggers    []triggerflow.TriggerConditionRequest        `json:"triggers" mapstructure:"triggers"`
 }
 
 func (g *GetDetailsRequest) Validate() error {
@@ -53,7 +51,7 @@ func (a *CreateApiRequest) Validate() error {
 				}
 				return nil
 			})),
-		validation.Field(&a.MainWare, validation.Required, validation.Each(
+		validation.Field(&a.Triggers, validation.Required, validation.Each(
 			validation.By(func(value interface{}) error {
 				t := value.(triggerflow.TriggerConditionRequest)
 				return t.Validate()

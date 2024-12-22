@@ -14,7 +14,5 @@ type Api struct {
 	Description string                                       `json:"description" mapstructure:"description"`
 	Request     map[string]requestvalidator.RequestParameter `json:"request" mapstructure:"request"`
 	PreConfig   map[string]resolvable.Resolvable             `json:"preConfig" mapstructure:"preConfig"`
-	PreWare     *[]triggerflow.TriggerFlow                   `json:"preWare" mapstructure:"preWare"`
-	MainWare    *[]triggerflow.TriggerCondition              `json:"mainWare" mapstructure:"mainWare"`
-	PostWare    *[]triggerflow.TriggerFlow                   `json:"postWare" mapstructure:"postWare"`
+	Triggers    *[]triggerflow.TriggerCondition              `json:"triggers" mapstructure:"triggers"`
 }

@@ -6,11 +6,12 @@ import (
 )
 
 type Rule struct {
-	Id          uint                    `json:"id" mapstructure:"id"`
+	ID          uint                    `json:"id" mapstructure:"id"`
 	Name        string                  `json:"name" mapstructure:"name"`
 	Description string                  `json:"description" mapstructure:"description"`
 	Pre         []resolvable.Resolvable `json:"pre" mapstructure:"pre"`
 	Switch      RuleSwitch              `json:"switch" mapstructure:"switch"`
+	Finally     []resolvable.Resolvable `json:"finally" mapstructure:"finally"`
 }
 
 type RuleSwitch struct {

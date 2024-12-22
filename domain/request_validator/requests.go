@@ -28,7 +28,7 @@ func (r *RequestParameter) Validate() error {
 				case dataTypeMap:
 					validator = &mapValue{}
 				default:
-					return validation.NewError("resolvable_not_found", fmt.Sprintf("datatype %s not found", r.DataType))
+					return validation.NewError("datatype_not_found", fmt.Sprintf("datatype %s not found", r.DataType))
 				}
 				data := value.(map[string]any)
 				if err := mapstructure.Decode(data, &validator); err != nil {
@@ -47,7 +47,6 @@ func (t *textValue) Validate() error {
 		validation.Field(&t.Minimum),
 		validation.Field(&t.Maximum),
 		validation.Field(&t.In),
-		validation.Field(&t.NotIn),
 	)
 }
 
@@ -56,7 +55,6 @@ func (n *numberValue) Validate() error {
 		validation.Field(&n.Minimum),
 		validation.Field(&n.Maximum),
 		validation.Field(&n.In),
-		validation.Field(&n.NotIn),
 	)
 }
 
@@ -71,7 +69,8 @@ func (a *arrayValue) Validate() error {
 		validation.Field(&a.OfType, validation.Required, validation.By(
 			func(value interface{}) error {
 				if casted, ok := value.(*RequestParameter); !ok {
-					return validation.NewError("validator-not-casted", fmt.Sprintf("could not cast validator for %s", dataTypeArray))
+					return validation.NewError("validator-not-casted",
+						fmt.Sprintf("could not cast validator for %s", dataTypeArray))
 				} else {
 					return casted.Validate()
 				}
@@ -81,7 +80,7 @@ func (a *arrayValue) Validate() error {
 
 func (m *mapValue) Validate() error {
 	return validation.Validate(m, validation.By(
-		func(value interface{}) error {
+		func(_ interface{}) error {
 			for _, val := range *m {
 				if err := val.Validate(); err != nil {
 					return err

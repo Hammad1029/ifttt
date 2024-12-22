@@ -29,9 +29,7 @@ type apis struct {
 	Description  string          `gorm:"type:text;default:''" mapstructure:"description"`
 	Request      pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"request"`
 	PreConfig    pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"preConfig"`
-	PreWare      []trigger_flows `gorm:"many2many:api_trigger_flows_pre;joinForeignKey:ApiId;joinReferences:FlowId;" mapstructure:"triggerFlows"`
-	MainWare     []trigger_flows `gorm:"many2many:api_trigger_flows_main;joinForeignKey:ApiId;joinReferences:FlowId;" mapstructure:"triggerFlows"`
-	PostWare     []trigger_flows `gorm:"many2many:api_trigger_flows_post;joinForeignKey:ApiId;joinReferences:FlowId;" mapstructure:"triggerFlows"`
+	Triggers     []trigger_flows `gorm:"many2many:api_trigger_flows_main;joinForeignKey:ApiId;joinReferences:FlowId;" mapstructure:"triggerFlows"`
 	TriggerFlows pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"triggerConditions"`
 }
 
@@ -46,8 +44,38 @@ type trigger_flows struct {
 
 type rules struct {
 	gorm.Model
-	Name        string       `json:"name" gorm:"type:varchar(50);not null;unique" mapstructure:"name"`
-	Description string       `json:"description" gorm:"type:text;default:''" mapstructure:"description"`
-	Pre         pgtype.JSONB `json:"pre" gorm:"type:jsonb;default:'[]';not null" mapstructure:"pre"`
-	Switch      pgtype.JSONB `json:"switch" gorm:"type:jsonb;default:'{\"cases\":[],\"default\":{\"do\":[],\"return\":{\"resolveType\":\"const\",\"resolveData\":\"\"}}}';not null" mapstructure:"switch"`
+	Name        string       `gorm:"type:varchar(50);not null;unique" mapstructure:"name"`
+	Description string       `gorm:"type:text;default:''" mapstructure:"description"`
+	Pre         pgtype.JSONB `gorm:"type:jsonb;default:'[]';not null" mapstructure:"pre"`
+	Switch      pgtype.JSONB `gorm:"type:jsonb;default:'{\"cases\":[],\"default\":{\"do\":[],\"return\":{\"resolveType\":\"const\",\"resolveData\":\"\"}}}';not null" mapstructure:"switch"`
+	Finally     pgtype.JSONB `gorm:"type:jsonb;default:'[]';not null" mapstructure:"finally"`
+}
+
+type orm_model struct {
+	gorm.Model
+	Name        string           `gorm:"type:varchar(255);not null" mapstructure:"name" json:"name"`
+	Table       string           `gorm:"type:varchar(255);not null" mapstructure:"table" json:"table"`
+	PrimaryKey  string           `gorm:"type:varchar(255);not null" mapstructure:"primaryKey" json:"primaryKey"`
+	Projections []orm_projection `gorm:"foreignKey:ModelID" mapstructure:"projections" json:"projections"`
+}
+
+type orm_projection struct {
+	gorm.Model
+	ModelID  uint   `gorm:"not null"`
+	Column   string `gorm:"type:varchar(255);not null" mapstructure:"column" json:"column"`
+	As       string `gorm:"type:varchar(255);not null" mapstructure:"as" json:"as"`
+	DataType string `gorm:"type:varchar(255);not null" mapstructure:"dataType" json:"dataType"`
+}
+
+type orm_association struct {
+	gorm.Model
+	Name                 string `gorm:"type:varchar(255);not null" mapstructure:"name" json:"name"`
+	Type                 string `gorm:"type:varchar(255);not null" mapstructure:"type" json:"type"`
+	TableName            string `gorm:"type:varchar(255);not null" mapstructure:"tableName" json:"tableName"`
+	ColumnName           string `gorm:"type:varchar(255);not null" mapstructure:"columnName" json:"columnName"`
+	ReferencesTable      string `gorm:"type:varchar(255);not null" mapstructure:"referencesTable" json:"referencesTable"`
+	ReferencesField      string `gorm:"type:varchar(255);not null" mapstructure:"referencesField" json:"referencesField"`
+	JoinTable            string `gorm:"type:varchar(255);not null" mapstructure:"joinTable" json:"joinTable"`
+	JoinTableSourceField string `gorm:"type:varchar(255);not null" mapstructure:"joinTableSourceField" json:"joinTableSourceField"`
+	JoinTableTargetField string `gorm:"type:varchar(255);not null" mapstructure:"joinTableTargetField" json:"joinTableTargetField"`
 }

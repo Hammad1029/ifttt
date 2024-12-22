@@ -37,16 +37,17 @@ var Responses = map[string]Response{
 	"InvalidTriggerConditions": {"30", "Invalid Trigger Conditions"},
 	"InvalidReturnValue":       {"30", "Invalid Return Value For Rule Case"},
 	"CronAlreadyExists":        {"30", "Cron already exists"},
-
-	"WrongCredentials":   {"35", "Wrong login credentials"},
-	"UserNotFound":       {"40", "User not found"},
-	"UserAlreadyExists":  {"40", "User already exists"},
-	"PermissionNotFound": {"45", "Permission not found"},
-	"RoleAlreadyExists":  {"45", "Role not found"},
-	"BadRequest":         {"400", "Bad request"},
-	"Unauthorized":       {"401", "Unauthorized"},
-	"NotFound":           {"404", "Not Found"},
-	"ServerError":        {"500", "Internal Server Error"},
+	"InvalidORM":               {"30", "Invalid ORM Configuration"},
+	"WrongCredentials":         {"35", "Wrong login credentials"},
+	"UserNotFound":             {"40", "User not found"},
+	"UserAlreadyExists":        {"40", "User already exists"},
+	"PermissionNotFound":       {"45", "Permission not found"},
+	"RoleAlreadyExists":        {"45", "Role not found"},
+	"AlreadyExists":            {"45", "Already exists"},
+	"BadRequest":               {"400", "Bad request"},
+	"Unauthorized":             {"401", "Unauthorized"},
+	"NotFound":                 {"404", "Not Found"},
+	"ServerError":              {"500", "Internal Server Error"},
 }
 
 func ResponseHandler(c *gin.Context, config ResponseConfig) {

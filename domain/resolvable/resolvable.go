@@ -1,5 +1,12 @@
 package resolvable
 
+import "ifttt/manager/domain/orm_schema"
+
+type ResolvableInterface interface {
+	Manipulate() error
+	Validate() error
+}
+
 type Resolvable struct {
 	ResolveType string         `json:"resolveType" mapstructure:"resolveType"`
 	ResolveData map[string]any `json:"resolveData" mapstructure:"resolveData"`
@@ -56,13 +63,12 @@ type getConstResolvable struct {
 }
 
 type jqResolvable struct {
-	Query Resolvable `json:"query" mapstructure:"query"`
-	Input any        `json:"input" mapstructure:"input"`
+	Query any `json:"query" mapstructure:"query"`
+	Input any `json:"input" mapstructure:"input"`
 }
 
 type queryResolvable struct {
 	QueryString          string                `json:"queryString" mapstructure:"queryString"`
-	QueryHash            string                `json:"queryHash" mapstructure:"queryHash"`
 	Return               bool                  `json:"return" mapstructure:"return"`
 	Named                bool                  `json:"named" mapstructure:"named"`
 	NamedParameters      map[string]Resolvable `json:"namedParameters" mapstructure:"namedParameters"`
@@ -91,3 +97,17 @@ type stringInterpolationResolvable struct {
 }
 
 type uuidResolvable struct{}
+
+type castResolvable struct {
+	Input any    `json:"input" mapstructure:"input"`
+	To    string `json:"to" mapstructure:"to"`
+}
+
+type ormResolvable struct {
+	Query              queryResolvable       `json:"query" mapstructure:"query"`
+	Operation          string                `json:"operation" mapstructure:"operation"`
+	Model              string                `json:"model" mapstructure:"model"`
+	ConditionsTemplate string                `json:"conditionsTemplate" mapstructure:"conditionsTemplate"`
+	ConditionsValue    []any                 `json:"conditionsValue" mapstructure:"conditionsValue"`
+	Populate           []orm_schema.Populate `json:"populate" mapstructure:"populate"`
+}

@@ -21,3 +21,35 @@ const (
 	EncodeBase64Decode = "base64-de"
 	EncodeBase64Encode = "base64-en"
 )
+
+const (
+	CastToString  = "string"
+	CastToNumber  = "number"
+	CastToBoolean = "boolean"
+)
+
+const (
+	DatabaseTypeString  = "string"
+	DatabaseTypeNumber  = "number"
+	DatabaseTypeBoolean = "boolean"
+)
+
+const (
+	AssociationsHasOne        = "hasOne"
+	AssociationsHasMany       = "hasMany"
+	AssociationsBelongsTo     = "belongsTo"
+	AssociationsBelongsToMany = "belongsToMany"
+)
+
+const (
+	DbNameMySql    = "mysql"
+	DbNamePostgres = "postgres"
+	DbNameRedis    = "redis"
+)
+
+const (
+	OrmSelect = "select"
+	OrmUpdate = "update"
+	OrmInsert = "insert"
+	OrmDelete = "delete"
+)

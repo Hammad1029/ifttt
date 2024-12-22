@@ -10,8 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const postgresDb = "postgres"
-
 type postgresStore struct {
 	store  *gorm.DB
 	config postgresConfig
@@ -53,6 +51,7 @@ func (p *postgresStore) createConfigStore() *ConfigStore {
 		RuleRepo:        postgresInfra.NewPostgresRulesRepository(postgresBase),
 		TriggerFlowRepo: postgresInfra.NewPostgresTriggerFlowsRepository(postgresBase),
 		UserRepo:        postgresInfra.NewPostgresUserRepository(postgresBase),
+		OrmRepo:         postgresInfra.NewPostgresOrmRepository(postgresBase),
 	}
 }
 

@@ -190,6 +190,22 @@ func getRouteDefinitions(controllers *controllers.AllController) *[]common.Route
 					Authorized:    true,
 					HandlerFunc:   controllers.SchemaController.UpdateTable,
 				},
+				{
+					Path:          "/create-model",
+					Method:        http.MethodPost,
+					Description:   "Create Model",
+					Authenticated: true,
+					Authorized:    true,
+					HandlerFunc:   controllers.SchemaController.CreateModel,
+				},
+				{
+					Path:          "/create-association",
+					Method:        http.MethodPost,
+					Description:   "Create Association",
+					Authenticated: true,
+					Authorized:    true,
+					HandlerFunc:   controllers.SchemaController.CreateAssociation,
+				},
 			},
 		},
 		{

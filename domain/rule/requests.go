@@ -21,6 +21,7 @@ type CreateRuleRequest struct {
 	Description string                  `json:"description" mapstructure:"description"`
 	Pre         []resolvable.Resolvable `json:"pre" mapstructure:"pre"`
 	Switch      RuleSwitch              `json:"switch" mapstructure:"switch"`
+	Finally     []resolvable.Resolvable `json:"finally" mapstructure:"finally"`
 }
 
 func (c *CreateRuleRequest) Validate() error {
@@ -35,6 +36,10 @@ func (c *CreateRuleRequest) Validate() error {
 			rs := value.(RuleSwitch)
 			return rs.Validate()
 		})),
+		validation.Field(&c.Finally, validation.Each(validation.By(func(value interface{}) error {
+			r := value.(resolvable.Resolvable)
+			return r.Validate()
+		}))),
 	)
 }
 

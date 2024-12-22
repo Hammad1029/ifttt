@@ -8,7 +8,7 @@ type AllController struct {
 	ApiController          *apiController
 	TriggerFlowsController *triggerFlowsController
 	RulesController        *rulesController
-	SchemaController       *schemaController
+	SchemaController       *ormSchemaController
 	AuthController         *authController
 	UserController         *userController
 	RoleController         *roleController
@@ -20,7 +20,7 @@ func NewAllController(serverCore *core.ServerCore) *AllController {
 		ApiController:          newApiController(serverCore),
 		TriggerFlowsController: newTriggerFlowsController(serverCore),
 		RulesController:        newRulesController(serverCore),
-		SchemaController:       newSchemaController(serverCore),
+		SchemaController:       newOrmSchemaController(serverCore),
 		AuthController:         newAuthController(serverCore),
 		UserController:         newUserController(serverCore),
 		RoleController:         newRoleController(serverCore),
