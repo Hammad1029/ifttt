@@ -53,3 +53,8 @@ const (
 	OrmInsert = "insert"
 	OrmDelete = "delete"
 )
+
+const (
+	DependencyOrmQueryRepo  = iota
+	DependencyOrmSchemaRepo = iota
+)

@@ -42,7 +42,8 @@ func (m *mysqlStore) init(config map[string]any) error {
 func (m *mysqlStore) createDataStore() *DataStore {
 	mysqlBase := mysqlInfra.NewMySqlBaseRepository(m.store)
 	return &DataStore{
-		Store:      m,
-		SchemaRepo: mysqlInfra.NewMySqlSchemaRepository(mysqlBase),
+		Store:                 m,
+		SchemaRepo:            mysqlInfra.NewMySqlSchemaRepository(mysqlBase),
+		OrmQueryGeneratorRepo: mysqlInfra.NewMySqlOrmQueryGeneratorRepository(mysqlBase),
 	}
 }

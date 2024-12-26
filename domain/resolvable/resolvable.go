@@ -2,11 +2,6 @@ package resolvable
 
 import "ifttt/manager/domain/orm_schema"
 
-type ResolvableInterface interface {
-	Manipulate() error
-	Validate() error
-}
-
 type Resolvable struct {
 	ResolveType string         `json:"resolveType" mapstructure:"resolveType"`
 	ResolveData map[string]any `json:"resolveData" mapstructure:"resolveData"`
@@ -103,8 +98,8 @@ type castResolvable struct {
 	To    string `json:"to" mapstructure:"to"`
 }
 
-type ormResolvable struct {
-	Query              queryResolvable       `json:"query" mapstructure:"query"`
+type OrmResolvable struct {
+	Query              *queryResolvable      `json:"query" mapstructure:"query"`
 	Operation          string                `json:"operation" mapstructure:"operation"`
 	Model              string                `json:"model" mapstructure:"model"`
 	ConditionsTemplate string                `json:"conditionsTemplate" mapstructure:"conditionsTemplate"`

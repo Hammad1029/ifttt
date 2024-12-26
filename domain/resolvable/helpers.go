@@ -2,6 +2,7 @@ package resolvable
 
 import (
 	"fmt"
+	"ifttt/manager/common"
 	"reflect"
 
 	"github.com/mitchellh/mapstructure"
@@ -57,13 +58,13 @@ var resolveTypes = []string{
 	accessorOrmResolvable,
 }
 
-func factory(template any) (ResolvableInterface, error) {
+func factory(template any) (resolvableInterface, error) {
 	var base Resolvable
 	if err := mapstructure.Decode(template, &base); err != nil {
 		return nil, err
 	}
 
-	var resolver ResolvableInterface
+	var resolver resolvableInterface
 	switch base.ResolveType {
 	case accessorJqResolvable:
 		resolver = &jqResolvable{}
@@ -108,7 +109,7 @@ func factory(template any) (ResolvableInterface, error) {
 	case accessorCastResolvable:
 		resolver = &castResolvable{}
 	case accessorOrmResolvable:
-		resolver = &ormResolvable{}
+		resolver = &OrmResolvable{}
 	default:
 		return nil, fmt.Errorf("resolvable %s not found", base.ResolveType)
 	}
@@ -120,18 +121,78 @@ func factory(template any) (ResolvableInterface, error) {
 	return resolver, nil
 }
 
-func ifNestedResolvable(val any, validate bool) error {
+func manipulateIfResolvable(val any, dependencies map[common.IntIota]any) (any, error) {
+	if val == nil {
+		return nil, nil
+	}
+
+	concrete := reflect.Indirect(reflect.ValueOf(val)).Interface()
+
+	switch reflect.TypeOf(concrete).Kind() {
+	case reflect.Struct:
+		{
+			if r, ok := concrete.(common.Manipulatable); ok {
+				if err := r.Manipulate(dependencies); err != nil {
+					return nil, err
+				} else {
+					return r, nil
+				}
+			}
+		}
+	case reflect.Map:
+		{
+			var nested Resolvable
+			err := mapstructure.Decode(concrete, &nested)
+			if err == nil && nested.ResolveType != "" && nested.ResolveData != nil {
+				if err := nested.Manipulate(dependencies); err != nil {
+					return nil, err
+				} else {
+					return nested, nil
+				}
+			}
+
+			var mapCloned map[string]any
+			if err := mapstructure.Decode(concrete, &mapCloned); err != nil {
+				return nil, err
+			}
+			for key, _ := range mapCloned {
+				val := mapCloned[key]
+				if v, err := manipulateIfResolvable(&val, dependencies); err != nil {
+					return nil, err
+				} else {
+					mapCloned[key] = v
+				}
+			}
+			return mapCloned, nil
+		}
+	case reflect.Slice, reflect.Array:
+		{
+			var oArr []any
+			if err := mapstructure.Decode(concrete, &oArr); err != nil {
+				return nil, err
+			}
+			for idx, item := range oArr {
+				if v, err := manipulateIfResolvable(&item, dependencies); err != nil {
+					return nil, err
+				} else {
+					oArr[idx] = v
+				}
+			}
+			return oArr, nil
+
+		}
+	}
+	return concrete, nil
+}
+
+func validateIfResolvable(val any, dependencies map[common.IntIota]any) error {
 	var err error
 
 	switch o := val.(type) {
 	case nil:
 		return nil
-	case ResolvableInterface:
-		if validate {
-			return o.Validate()
-		} else {
-			return o.Manipulate()
-		}
+	case common.ValidatorInterface:
+		return o.Validate()
 	default:
 		{
 			switch reflect.TypeOf(o).Kind() {
@@ -140,11 +201,7 @@ func ifNestedResolvable(val any, validate bool) error {
 					var nested Resolvable
 					err = mapstructure.Decode(o, &nested)
 					if err == nil && nested.ResolveType != "" && nested.ResolveData != nil {
-						if validate {
-							return nested.Validate()
-						} else {
-							return nested.Manipulate()
-						}
+						return nested.Validate()
 					}
 
 					var mapCloned map[string]any
@@ -152,7 +209,7 @@ func ifNestedResolvable(val any, validate bool) error {
 						return err
 					}
 					for _, val := range mapCloned {
-						if err = ifNestedResolvable(val, validate); err != nil {
+						if err = validateIfResolvable(val, dependencies); err != nil {
 							return err
 						}
 					}
@@ -165,7 +222,7 @@ func ifNestedResolvable(val any, validate bool) error {
 						return err
 					}
 					for _, item := range oArr {
-						if err = ifNestedResolvable(item, validate); err != nil {
+						if err = validateIfResolvable(item, dependencies); err != nil {
 							return err
 						}
 					}
@@ -197,11 +254,24 @@ func checkIfResolvable(val any) *Resolvable {
 	return &r
 }
 
-func ManipulateArray(arr []Resolvable) error {
+func ManipulateArray(arr []Resolvable, dependencies map[common.IntIota]any) ([]Resolvable, error) {
+	var manipulated []Resolvable
 	for _, r := range arr {
-		if err := r.Manipulate(); err != nil {
-			return err
+		if err := r.Manipulate(dependencies); err != nil {
+			return nil, err
 		}
+		manipulated = append(manipulated, r)
 	}
-	return nil
+	return manipulated, nil
+}
+
+func ManipulateMap(arr map[string]Resolvable, dependencies map[common.IntIota]any) (map[string]Resolvable, error) {
+	manipulated := make(map[string]Resolvable)
+	for key, r := range arr {
+		if err := r.Manipulate(dependencies); err != nil {
+			return nil, err
+		}
+		manipulated[key] = r
+	}
+	return manipulated, nil
 }

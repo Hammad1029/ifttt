@@ -79,13 +79,19 @@ func (ac *apiController) Create(c *gin.Context) {
 		return
 	}
 
-	if err := resolvable.ManipulateArray(
-		lo.MapToSlice(reqBody.PreConfig,
-			func(_ string, r resolvable.Resolvable) resolvable.Resolvable {
-				return r
-			})); err != nil {
+	if manipulated, err := resolvable.ManipulateMap(reqBody.PreConfig, ac.serverCore.ResolvableDependencies); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
+	} else {
+		reqBody.PreConfig = manipulated
+	}
+
+	for idx, tc := range reqBody.Triggers {
+		if err := tc.Manipulate(ac.serverCore.ResolvableDependencies); err != nil {
+			common.HandleErrorResponse(c, err)
+			return
+		}
+		reqBody.Triggers[idx] = tc
 	}
 
 	if err := ac.serverCore.ConfigStore.APIRepo.InsertApi(&reqBody); err != nil {

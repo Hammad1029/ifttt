@@ -8,6 +8,7 @@ import (
 	"ifttt/manager/domain/auth"
 	"ifttt/manager/domain/cron"
 	"ifttt/manager/domain/orm_schema"
+	"ifttt/manager/domain/resolvable"
 	"ifttt/manager/domain/rule"
 	triggerflow "ifttt/manager/domain/trigger_flow"
 	"ifttt/manager/domain/user"
@@ -49,8 +50,9 @@ type ConfigStore struct {
 }
 
 type DataStore struct {
-	Store      dataStorer
-	SchemaRepo orm_schema.SchemaRepository
+	Store                 dataStorer
+	SchemaRepo            orm_schema.SchemaRepository
+	OrmQueryGeneratorRepo resolvable.OrmQueryGenerator
 }
 
 type CacheStore struct {

@@ -10,7 +10,9 @@ type SchemaRepository interface {
 
 type OrmRepository interface {
 	CreateModel(model *Model) error
-	GetModelByName(name string) (*Model, error)
+	GetModelByIdOrName(id uint, name string) (*Model, error)
 	CreateAssociation(association *ModelAssociation) error
 	GetAssociationByName(name string) (*ModelAssociation, error)
+	GetAllModels() (map[string]*Model, error)
+	GetAllAssociations() (map[string]*ModelAssociation, error)
 }

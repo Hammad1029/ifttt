@@ -121,7 +121,7 @@ func (s *ormSchemaController) CreateModel(c *gin.Context) {
 		return
 	}
 
-	if model, err := s.serverCore.ConfigStore.OrmRepo.GetModelByName(reqBody.Name); err != nil {
+	if model, err := s.serverCore.ConfigStore.OrmRepo.GetModelByIdOrName(0, reqBody.Name); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else if model != nil {
@@ -133,8 +133,9 @@ func (s *ormSchemaController) CreateModel(c *gin.Context) {
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
-	} else if !lo.Contains(tableNames, reqBody.Name) {
+	} else if !lo.Contains(tableNames, reqBody.Table) {
 		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["NotFound"]})
+		return
 	}
 
 	tableColumns, err := s.serverCore.DataStore.SchemaRepo.GetAllColumns([]string{reqBody.Name})
@@ -185,11 +186,26 @@ func (s *ormSchemaController) CreateAssociation(c *gin.Context) {
 		return
 	}
 
-	if model, err := s.serverCore.ConfigStore.OrmRepo.GetAssociationByName(reqBody.Name); err != nil {
+	if association, err := s.serverCore.ConfigStore.OrmRepo.GetAssociationByName(reqBody.Name); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
-	} else if model != nil {
+	} else if association != nil {
 		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["AlreadyExists"]})
+		return
+	}
+
+	if model, err := s.serverCore.ConfigStore.OrmRepo.GetModelByIdOrName(reqBody.OwningModelID, ""); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	} else if model == nil || model.Table != reqBody.TableName {
+		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["InvalidORM"]})
+		return
+	}
+	if model, err := s.serverCore.ConfigStore.OrmRepo.GetModelByIdOrName(reqBody.ReferencesModelID, ""); err != nil {
+		common.HandleErrorResponse(c, err)
+		return
+	} else if model == nil || model.Table != reqBody.ReferencesTable {
+		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["InvalidORM"]})
 		return
 	}
 

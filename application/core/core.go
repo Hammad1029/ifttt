@@ -8,12 +8,13 @@ import (
 )
 
 type ServerCore struct {
-	ConfigStore  *store.ConfigStore
-	DataStore    *store.DataStore
-	CacheStore   *store.CacheStore
-	TokenService *auth.TokenService
-	Routes       *[]common.RouteDefinition
-	Permissions  *[]string
+	ConfigStore            *store.ConfigStore
+	DataStore              *store.DataStore
+	CacheStore             *store.CacheStore
+	TokenService           *auth.TokenService
+	Routes                 *[]common.RouteDefinition
+	Permissions            *[]string
+	ResolvableDependencies map[common.IntIota]any
 }
 
 func NewServerCore() (*ServerCore, error) {
@@ -38,6 +39,10 @@ func NewServerCore() (*ServerCore, error) {
 		return nil, fmt.Errorf("method NewServerCore: could not create token service: %s", err)
 	} else {
 		serverCore.TokenService = tokenService
+	}
+	serverCore.ResolvableDependencies = map[common.IntIota]any{
+		common.DependencyOrmQueryRepo:  serverCore.DataStore.OrmQueryGeneratorRepo,
+		common.DependencyOrmSchemaRepo: serverCore.ConfigStore.OrmRepo,
 	}
 
 	return &serverCore, nil

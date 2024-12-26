@@ -64,3 +64,15 @@ func GetMD5Hash(text string) string {
 	hash := md5.Sum([]byte(text))
 	return hex.EncodeToString(hash[:])
 }
+
+func AnyToMap(v any) (map[string]any, error) {
+	bArr, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	var m map[string]any
+	if err := json.Unmarshal(bArr, &m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}

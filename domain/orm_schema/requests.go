@@ -2,6 +2,7 @@ package orm_schema
 
 import (
 	"context"
+	"fmt"
 	"ifttt/manager/common"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -226,9 +227,9 @@ func (c *Constraint) Validate() error {
 
 func (m *Model) Validate() error {
 	return validation.ValidateStruct(m,
-		validation.Field(&m.Name, validation.NotNil),
-		validation.Field(&m.Table, validation.NotNil),
-		validation.Field(&m.Projections, validation.NotNil, validation.Each(validation.By(
+		validation.Field(&m.Name, validation.Required),
+		validation.Field(&m.Table, validation.Required),
+		validation.Field(&m.Projections, validation.Required, validation.Each(validation.By(
 			func(value interface{}) error {
 				if p, ok := value.(Projection); ok {
 					return p.Validate()
@@ -237,15 +238,17 @@ func (m *Model) Validate() error {
 				}
 
 			}))),
-		validation.Field(&m.Name, validation.NotNil, validation.Each(validation.By(
+		validation.Field(&m.PrimaryKey, validation.Required, validation.By(
 			func(value interface{}) error {
-				if c, ok := value.(Constraint); ok {
-					return c.Validate()
-				} else {
-					return validation.NewError("invalid_by_cast", "could not cast in by clause")
+				for _, p := range m.Projections {
+					if p.Column == fmt.Sprint(value) {
+						return nil
+					}
 				}
-
-			}))),
+				return validation.NewError("pkey_not_found", fmt.Sprintf("primary key %s not found", value))
+			})),
+		validation.Field(&m.OwningAssociations, validation.Nil),
+		validation.Field(&m.ReferencedAssociations, validation.Nil),
 	)
 }
 
@@ -264,16 +267,25 @@ func (a *ModelAssociation) Validate() error {
 		validation.Field(&a.Type, validation.Required, validation.In(
 			common.AssociationsBelongsTo, common.AssociationsBelongsToMany,
 			common.AssociationsHasMany, common.AssociationsHasOne)),
+		validation.Field(&a.TableName, validation.Required),
 		validation.Field(&a.ColumnName, validation.Required),
 		validation.Field(&a.ReferencesTable, validation.Required),
 		validation.Field(&a.ReferencesField, validation.Required),
-		validation.Field(&a.JoinTable, validation.Required),
+		validation.Field(&a.JoinTable,
+			validation.When(a.Type == common.AssociationsBelongsToMany, validation.Required)),
+		validation.Field(&a.JoinTableSourceField,
+			validation.When(a.Type == common.AssociationsBelongsToMany, validation.Required)),
+		validation.Field(&a.JoinTableTargetField,
+			validation.When(a.Type == common.AssociationsBelongsToMany, validation.Required)),
+		validation.Field(&a.OwningModelID, validation.Required),
+		validation.Field(&a.ReferencesModelID, validation.Required),
 	)
 }
 
 func (p *Populate) Validate() error {
 	return validation.ValidateStruct(p,
-		validation.Field(&p.Association, validation.NotNil),
+		validation.Field(&p.Model, validation.Required),
+		validation.Field(&p.As, validation.Required),
 		validation.Field(&p.Populate, validation.Each(validation.By(
 			func(value any) error {
 				v := value.(Populate)

@@ -140,11 +140,11 @@ func (c *apiCallResolvable) Validate() error {
 			})),
 		validation.Field(&c.Headers, validation.By(func(value any) error {
 			m := value.(map[string]any)
-			return ifNestedResolvable(m, true)
+			return validateIfResolvable(m, nil)
 		})),
 		validation.Field(&c.Body, validation.By(func(value any) error {
 			m := value.(map[string]any)
-			return ifNestedResolvable(m, true)
+			return validateIfResolvable(m, nil)
 		})),
 		validation.Field(&c.Aysnc),
 		validation.Field(&c.Timeout),
@@ -250,12 +250,12 @@ func (c *responseResolvable) Validate() error {
 
 func (c *setResResolvable) Validate() error {
 	var mapCasted map[string]any = *c
-	return ifNestedResolvable(mapCasted, true)
+	return validateIfResolvable(mapCasted, nil)
 }
 
 func (c *setStoreResolvable) Validate() error {
 	var mapCasted map[string]any = *c
-	return ifNestedResolvable(mapCasted, true)
+	return validateIfResolvable(mapCasted, nil)
 }
 
 func (c *castResolvable) Validate() error {
@@ -263,12 +263,12 @@ func (c *castResolvable) Validate() error {
 		validation.Field(&c.To, validation.In(common.ConvertStringToInterfaceArray(
 			[]string{common.CastToString, common.CastToNumber, common.CastToBoolean})...)),
 		validation.Field(&c.Input, validation.By(func(value any) error {
-			return ifNestedResolvable(value, true)
+			return validateIfResolvable(value, nil)
 		})),
 	)
 }
 
-func (o *ormResolvable) Validate() error {
+func (o *OrmResolvable) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.Query, validation.Nil),
 		validation.Field(&o.Operation, validation.In(
@@ -277,7 +277,7 @@ func (o *ormResolvable) Validate() error {
 		validation.Field(&o.ConditionsTemplate, validation.NotNil),
 		validation.Field(&o.ConditionsValue, validation.Each(validation.By(
 			func(value any) error {
-				return ifNestedResolvable(value, true)
+				return validateIfResolvable(true, nil)
 			}))),
 		validation.Field(&o.Populate, validation.Each(validation.By(
 			func(value any) error {

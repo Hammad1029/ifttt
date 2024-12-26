@@ -73,13 +73,19 @@ func (cC *cronController) Create(c *gin.Context) {
 		return
 	}
 
-	if err := resolvable.ManipulateArray(
-		lo.MapToSlice(reqBody.PreConfig,
-			func(_ string, r resolvable.Resolvable) resolvable.Resolvable {
-				return r
-			})); err != nil {
+	if manipulated, err := resolvable.ManipulateMap(reqBody.PreConfig, cC.serverCore.ResolvableDependencies); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
+	} else {
+		reqBody.PreConfig = manipulated
+	}
+
+	for idx, tc := range reqBody.TriggerFlows {
+		if err := tc.Manipulate(cC.serverCore.ResolvableDependencies); err != nil {
+			common.HandleErrorResponse(c, err)
+			return
+		}
+		reqBody.TriggerFlows[idx] = tc
 	}
 
 	if err := cC.serverCore.ConfigStore.CronRepo.InsertCron(&reqBody); err != nil {
