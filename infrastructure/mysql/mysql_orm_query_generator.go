@@ -43,7 +43,7 @@ func (m *MySqlOrmQueryGeneratorRepository) Generate(
 func (m *MySqlOrmQueryGeneratorRepository) buildProjections(model *orm_schema.Model, alias string) []string {
 	var projs []string
 	for _, p := range model.Projections {
-		projs = append(projs, fmt.Sprintf("`%s`.`%s` AS `%s`.`%s`", alias, p.Column, alias, p.As))
+		projs = append(projs, fmt.Sprintf("`%s`.`%s` AS `%s.%s`", alias, p.Column, alias, p.As))
 	}
 	return projs
 }
@@ -67,7 +67,7 @@ func (m *MySqlOrmQueryGeneratorRepository) buildAssociations(
 
 		concatAlias := fmt.Sprintf("%s_%s", alias, p.As)
 
-		if joinClause, err := m.buildJoin(association, concatAlias); err != nil {
+		if joinClause, err := m.buildJoin(association, concatAlias, alias); err != nil {
 			return nil, nil, err
 		} else {
 			joinClauses = append(joinClauses, joinClause)
@@ -85,7 +85,7 @@ func (m *MySqlOrmQueryGeneratorRepository) buildAssociations(
 	return joinProjections, joinClauses, nil
 }
 
-func (m *MySqlOrmQueryGeneratorRepository) buildJoin(association *orm_schema.ModelAssociation, alias string) (string, error) {
+func (m *MySqlOrmQueryGeneratorRepository) buildJoin(association *orm_schema.ModelAssociation, alias string, joinAlias string) (string, error) {
 	switch association.Type {
 	case common.AssociationsHasOne:
 		return fmt.Sprintf("LEFT OUTER JOIN `%s` AS `%s` ON `%s`.`%s` = `%s`.`%s`",
@@ -93,7 +93,7 @@ func (m *MySqlOrmQueryGeneratorRepository) buildJoin(association *orm_schema.Mod
 			alias,
 			alias,
 			association.ReferencesField,
-			association.TableName,
+			joinAlias,
 			association.ColumnName), nil
 
 	case common.AssociationsHasMany:
@@ -102,7 +102,7 @@ func (m *MySqlOrmQueryGeneratorRepository) buildJoin(association *orm_schema.Mod
 			alias,
 			alias,
 			association.ReferencesField,
-			association.TableName,
+			joinAlias,
 			association.ColumnName), nil
 
 	case common.AssociationsBelongsTo:
@@ -111,7 +111,7 @@ func (m *MySqlOrmQueryGeneratorRepository) buildJoin(association *orm_schema.Mod
 			alias,
 			alias,
 			association.ReferencesField,
-			association.TableName,
+			joinAlias,
 			association.ColumnName), nil
 
 	case common.AssociationsBelongsToMany:
@@ -120,7 +120,7 @@ func (m *MySqlOrmQueryGeneratorRepository) buildJoin(association *orm_schema.Mod
 			alias,
 			alias,
 			association.JoinTableSourceField,
-			association.TableName,
+			joinAlias,
 			association.ColumnName,
 			association.ReferencesTable,
 			association.ReferencesTable,

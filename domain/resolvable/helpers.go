@@ -127,6 +127,9 @@ func manipulateIfResolvable(val any, dependencies map[common.IntIota]any) (any, 
 	}
 
 	concrete := reflect.Indirect(reflect.ValueOf(val)).Interface()
+	if concrete == nil {
+		return nil, nil
+	}
 
 	switch reflect.TypeOf(concrete).Kind() {
 	case reflect.Struct:

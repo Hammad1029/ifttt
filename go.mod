@@ -14,6 +14,7 @@ require (
 	github.com/redis/go-redis/v9 v9.6.1
 	github.com/samber/lo v1.39.0
 	github.com/spf13/viper v1.18.2
+	gorm.io/driver/mysql v1.5.6
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.11
 )
@@ -47,7 +48,6 @@ require (
 	github.com/microsoft/go-mssqldb v1.6.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230126093431-47fa9a501578 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	gorm.io/driver/mysql v1.5.6 // indirect
 	gorm.io/driver/sqlserver v1.5.3 // indirect
 	gorm.io/plugin/dbresolver v1.3.0 // indirect
 	modernc.org/libc v1.22.2 // indirect
