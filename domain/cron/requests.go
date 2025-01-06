@@ -19,11 +19,11 @@ func (c *GetCronRequest) Validate() error {
 }
 
 type CreateCronRequest struct {
-	Name         string                                `json:"name" mapstructure:"name"`
-	Description  string                                `json:"description" mapstructure:"description"`
-	Cron         string                                `json:"cron" mapstructure:"cron"`
-	PreConfig    map[string]resolvable.Resolvable      `json:"preConfig" mapstructure:"preConfig"`
-	TriggerFlows []triggerflow.TriggerConditionRequest `json:"triggerFlows" mapstructure:"triggerFlows"`
+	Name        string                                `json:"name" mapstructure:"name"`
+	Description string                                `json:"description" mapstructure:"description"`
+	Cron        string                                `json:"cron" mapstructure:"cron"`
+	PreConfig   map[string]resolvable.Resolvable      `json:"preConfig" mapstructure:"preConfig"`
+	Triggers    []triggerflow.TriggerConditionRequest `json:"triggers" mapstructure:"triggers"`
 }
 
 func (c *CreateCronRequest) Validate() error {
@@ -41,7 +41,7 @@ func (c *CreateCronRequest) Validate() error {
 				}
 				return nil
 			})),
-		validation.Field(&c.TriggerFlows, validation.Required, validation.Each(
+		validation.Field(&c.Triggers, validation.Required, validation.Each(
 			validation.By(func(value interface{}) error {
 				t := value.(triggerflow.TriggerConditionRequest)
 				return t.Validate()

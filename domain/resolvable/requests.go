@@ -9,11 +9,13 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
+var castError = validation.NewError("resolvable_not_casted", "could not cast resolvable")
+
 func (r *Resolvable) Validate() error {
 	return validation.ValidateStruct(r,
 		validation.Field(&r.ResolveType, validation.Required,
 			validation.In(common.ConvertStringToInterfaceArray(resolveTypes)...)),
-		validation.Field(&r.ResolveData, validation.By(
+		validation.Field(&r.ResolveData, validation.NotNil, validation.By(
 			func(value any) error {
 				if resolver, err := factory(r); err != nil {
 					return validation.NewError("invalid_resolvabke", err.Error())
@@ -25,37 +27,22 @@ func (r *Resolvable) Validate() error {
 	)
 }
 
-func (d *dbDumpResolvable) Validate() error {
-	return validation.ValidateStruct(d,
-		validation.Field(&d.Table, validation.Required, validation.Length(3, 0)),
-		validation.Field(&d.Columns, validation.Required, validation.Each(
-			validation.By(func(value any) error {
-				r, ok := value.(Resolvable)
-				if !ok {
-					return validation.NewError("resolvable_not_casted", "could not cast resolvable")
-				}
-
-				return r.Validate()
-			}))),
-	)
-}
-
-func (u *uuidResolvable) Validate() error {
+func (u *uuid) Validate() error {
 	return nil
 }
 
-func (g *getCacheResolvable) Validate() error {
+func (g *getCache) Validate() error {
 	return validation.Validate(&g.Key, validation.By(func(value any) error {
 		return mustBeResolvable(value)
 	}))
 }
 
-func (s *setCacheResolvable) Validate() error {
+func (s *setCache) Validate() error {
 	return validation.ValidateStruct(s,
 		validation.Field(&s.Key, validation.Required, validation.By(func(value any) error {
 			r, ok := value.(Resolvable)
 			if !ok {
-				return validation.NewError("resolvable_not_casted", "could not cast resolvable")
+				return castError
 			}
 
 			return r.Validate()
@@ -63,7 +50,7 @@ func (s *setCacheResolvable) Validate() error {
 		validation.Field(&s.Value, validation.Required, validation.By(func(value any) error {
 			r, ok := value.(Resolvable)
 			if !ok {
-				return validation.NewError("resolvable_not_casted", "could not cast resolvable")
+				return castError
 			}
 
 			return r.Validate()
@@ -72,7 +59,7 @@ func (s *setCacheResolvable) Validate() error {
 	)
 }
 
-func (s *encodeResolvable) Validate() error {
+func (s *encode) Validate() error {
 	return validation.ValidateStruct(s,
 		validation.Field(&s.Alg, validation.Required,
 			validation.In(common.EncodeMD5, common.EncodeSHA1, common.EncodeSHA2,
@@ -81,14 +68,14 @@ func (s *encodeResolvable) Validate() error {
 		validation.Field(&s.Input, validation.Required, validation.By(func(value any) error {
 			r, ok := value.(Resolvable)
 			if !ok {
-				return validation.NewError("resolvable_not_casted", "could not cast resolvable")
+				return castError
 			}
 
 			return r.Validate()
 		})))
 }
 
-func (s *setLogResolvable) Validate() error {
+func (s *setLog) Validate() error {
 	return validation.ValidateStruct(s,
 		validation.Field(&s.LogType, validation.Required, validation.In(common.LogError, common.LogInfo)),
 		validation.Field(&s.LogData, validation.NotNil, validation.By(
@@ -101,31 +88,31 @@ func (s *setLogResolvable) Validate() error {
 		)))
 }
 
-func (g *getRequestResolvable) Validate() error {
+func (g *getRequest) Validate() error {
 	return nil
 }
 
-func (g *getResponseResolvable) Validate() error {
+func (g *getResponse) Validate() error {
 	return nil
 }
 
-func (g *getStoreResolvable) Validate() error {
+func (g *getStore) Validate() error {
 	return nil
 }
 
-func (g *getPreConfigResolvable) Validate() error {
+func (g *getPreConfig) Validate() error {
 	return nil
 }
 
-func (g *getHeadersResolvable) Validate() error {
+func (g *getHeaders) Validate() error {
 	return nil
 }
 
-func (g *getConstResolvable) Validate() error {
+func (g *getConst) Validate() error {
 	return nil
 }
 
-func (c *apiCallResolvable) Validate() error {
+func (c *apiCall) Validate() error {
 	return validation.ValidateStruct(c,
 		validation.Field(&c.Method, validation.Required, validation.In(
 			http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPut)),
@@ -133,18 +120,18 @@ func (c *apiCallResolvable) Validate() error {
 			func(value any) error {
 				r, ok := value.(Resolvable)
 				if !ok {
-					return validation.NewError("resolvable_not_casted", "could not cast resolvable")
+					return castError
 				}
 
 				return r.Validate()
 			})),
 		validation.Field(&c.Headers, validation.By(func(value any) error {
 			m := value.(map[string]any)
-			return validateIfResolvable(m, nil)
+			return validateIfResolvable(m)
 		})),
 		validation.Field(&c.Body, validation.By(func(value any) error {
 			m := value.(map[string]any)
-			return validateIfResolvable(m, nil)
+			return validateIfResolvable(m)
 		})),
 		validation.Field(&c.Aysnc),
 		validation.Field(&c.Timeout),
@@ -165,7 +152,7 @@ func (c *arithmetic) Validate() error {
 			func(value any) error {
 				r, ok := value.(*Resolvable)
 				if !ok {
-					return validation.NewError("resolvable_not_casted", "could not cast resolvable")
+					return castError
 				}
 
 				return r.Validate()
@@ -173,7 +160,7 @@ func (c *arithmetic) Validate() error {
 	)
 }
 
-func (c *jqResolvable) Validate() error {
+func (c *jq) Validate() error {
 	return validation.ValidateStruct(c,
 		validation.Field(&c.Query, validation.Required, validation.By(
 			func(value any) error {
@@ -189,7 +176,7 @@ func (c *jqResolvable) Validate() error {
 	)
 }
 
-func (c *stringInterpolationResolvable) Validate() error {
+func (c *stringInterpolation) Validate() error {
 	parametersCount := len(common.RegexStringInterpolationParameters.FindAllString(c.Template, -1))
 	return validation.ValidateStruct(c,
 		validation.Field(&c.Template, validation.Required, validation.By(func(value any) error {
@@ -202,7 +189,7 @@ func (c *stringInterpolationResolvable) Validate() error {
 			validation.Each(validation.Required, validation.By(func(value any) error {
 				r, ok := value.(Resolvable)
 				if !ok {
-					return validation.NewError("resolvable_not_casted", "could not cast resolvable")
+					return castError
 				}
 
 				return r.Validate()
@@ -210,13 +197,12 @@ func (c *stringInterpolationResolvable) Validate() error {
 	)
 }
 
-func (c *queryResolvable) Validate() error {
+func (c *query) Validate() error {
 	namedParams := common.RegexNamedParameters.FindAllString(c.QueryString, -1)
 	namedCount := len(namedParams)
 	positionalCount := len(common.RegexPositionalParameters.FindAllString(c.QueryString, -1))
 	return validation.ValidateStruct(c,
 		validation.Field(&c.QueryString, validation.Required),
-		validation.Field(&c.Return, validation.NotNil),
 		validation.Field(&c.Named, validation.NotNil),
 		validation.Field(&c.NamedParameters, validation.When(c.Named,
 			validation.Length(namedCount, namedCount), validation.By(
@@ -244,45 +230,143 @@ func (c *queryResolvable) Validate() error {
 	)
 }
 
-func (c *responseResolvable) Validate() error {
+func (c *response) Validate() error {
 	return nil
 }
 
-func (c *setResResolvable) Validate() error {
+func (c *setRes) Validate() error {
 	var mapCasted map[string]any = *c
-	return validateIfResolvable(mapCasted, nil)
+	return validateIfResolvable(mapCasted)
 }
 
-func (c *setStoreResolvable) Validate() error {
+func (c *setStore) Validate() error {
 	var mapCasted map[string]any = *c
-	return validateIfResolvable(mapCasted, nil)
+	return validateIfResolvable(mapCasted)
 }
 
-func (c *castResolvable) Validate() error {
+func (c *cast) Validate() error {
 	return validation.ValidateStruct(c,
 		validation.Field(&c.To, validation.In(common.ConvertStringToInterfaceArray(
 			[]string{common.CastToString, common.CastToNumber, common.CastToBoolean})...)),
 		validation.Field(&c.Input, validation.By(func(value any) error {
-			return validateIfResolvable(value, nil)
+			return validateIfResolvable(value)
 		})),
 	)
 }
 
-func (o *OrmResolvable) Validate() error {
+func (o *Orm) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.Query, validation.Nil),
 		validation.Field(&o.Operation, validation.In(
-			common.OrmSelect, common.OrmUpdate, common.OrmInsert, common.OrmDelete)),
+			common.OrmSelect, common.OrmInsert)),
 		validation.Field(&o.Model, validation.NotNil),
-		validation.Field(&o.ConditionsTemplate, validation.NotNil),
-		validation.Field(&o.ConditionsValue, validation.Each(validation.By(
-			func(value any) error {
-				return validateIfResolvable(true, nil)
-			}))),
-		validation.Field(&o.Populate, validation.Each(validation.By(
-			func(value any) error {
-				v := value.(orm_schema.Populate)
-				return v.Validate()
-			}))),
+		validation.Field(&o.Project,
+			validation.When(o.Operation == common.OrmSelect,
+				validation.By(
+					func(value any) error {
+						if casted, ok := value.(*[]orm_schema.Projection); !ok {
+							return castError
+						} else {
+							for _, p := range *casted {
+								if err := p.Validate(false); err != nil {
+									return err
+								}
+							}
+							return nil
+						}
+					}),
+			).Else(validation.Nil)),
+		validation.Field(&o.Columns,
+			validation.When(o.Operation == common.OrmInsert,
+				validation.By(
+					func(value any) error {
+						return validateIfResolvable(value)
+					}),
+			).Else(validation.Nil)),
+		validation.Field(&o.Populate,
+			validation.When(o.Operation == common.OrmSelect, validation.By(
+				func(value any) error {
+					if casted, ok := value.(*[]orm_schema.Populate); !ok {
+						return castError
+					} else {
+						for _, p := range *casted {
+							if err := p.Validate(validateIfResolvable); err != nil {
+								return err
+							}
+						}
+						return nil
+					}
+				}),
+			).Else(validation.Nil)),
+		validation.Field(&o.Where,
+			validation.When(o.Operation == common.OrmSelect, validation.By(
+				func(value any) error {
+					if v, ok := value.(*orm_schema.Where); !ok {
+						return castError
+					} else {
+						return v.Validate(validateIfResolvable)
+					}
+				}),
+			).Else(validation.Nil)),
+		validation.Field(&o.OrderBy, validation.When(o.Operation != common.OrmSelect, validation.Empty)),
+		validation.Field(&o.Limit, validation.When(o.Operation != common.OrmSelect, validation.Empty)),
 	)
+}
+
+func (d *dateFunc) Validate() error {
+	return validation.ValidateStruct(d,
+		validation.Field(&d.Input,
+			validation.By(func(value any) error {
+				v := value.(dateInput)
+				return v.Validate()
+			})),
+		validation.Field(&d.Manipulators, validation.Each(
+			validation.By(func(value any) error {
+				m := value.(dateManipulator)
+				return m.Validate()
+			}))),
+		validation.Field(&d.Format),
+		validation.Field(&d.UTC),
+	)
+}
+
+func (d *dateManipulator) Validate() error {
+	return validation.ValidateStruct(d,
+		validation.Field(&d.Operator, validation.In(common.DateOperatorAdd, common.DateOperatorSubtract)),
+		validation.Field(&d.Operand,
+			validation.By(func(value any) error {
+				v := value.(Resolvable)
+				return v.Validate()
+			})),
+		validation.Field(&d.Unit, validation.Required),
+	)
+}
+
+func (d *dateInput) Validate() error {
+	return validation.ValidateStruct(d,
+		validation.Field(&d.Input, validation.When(d.Input != nil, validation.By(
+			func(value any) error {
+				r := value.(*Resolvable)
+				return r.Validate()
+			}))),
+		validation.Field(&d.Parse, validation.When(d.Input == nil, validation.Empty)),
+		validation.Field(&d.Timezone),
+	)
+}
+
+func (f *forEach) Validate() error {
+	return validation.ValidateStruct(f,
+		validation.Field(&f.Input, validation.NotNil, validation.By(
+			func(value any) error {
+				return validateIfResolvable(value)
+			})),
+		validation.Field(&f.Do, validation.NotNil, validation.By(
+			func(value any) error {
+				return validateIfResolvable(value)
+			})),
+	)
+}
+
+func (f *getIter) Validate() error {
+	return nil
 }

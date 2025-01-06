@@ -10,7 +10,7 @@ type CreateTriggerFlowRequest struct {
 	Name        string               `json:"name" mapstructure:"name"`
 	Description string               `json:"description" mapstructure:"description"`
 	StartState  uint                 `json:"startState" mapstructure:"startState"`
-	Rules       []uint               `json:"rules" mapstructure:"rules"`
+	Rules       []string             `json:"rules" mapstructure:"rules"`
 	BranchFlows map[uint]*BranchFlow `json:"branchFlows" mapstructure:"branchFlows"`
 }
 
@@ -20,7 +20,7 @@ type GetDetailsRequest struct {
 
 type TriggerConditionRequest struct {
 	If      condition.Condition `json:"if" mapstructure:"if"`
-	Trigger uint                `json:"trigger" mapstructure:"trigger"`
+	Trigger string              `json:"trigger" mapstructure:"trigger"`
 }
 
 func (g *GetDetailsRequest) Validate() error {

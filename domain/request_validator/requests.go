@@ -15,7 +15,7 @@ func (r *RequestParameter) Validate() error {
 		validation.Field(&r.Required),
 		validation.Field(&r.Config, validation.Required, validation.By(
 			func(value interface{}) error {
-				var validator common.ValidatorInterface
+				var validator common.Validatable
 				switch r.DataType {
 				case dataTypeText:
 					validator = &textValue{}

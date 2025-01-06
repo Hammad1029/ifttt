@@ -7,9 +7,9 @@ import (
 
 type resolvableInterface interface {
 	common.Manipulatable
-	common.ValidatorInterface
+	common.Validatable
 }
 
 type OrmQueryGenerator interface {
-	Generate(r *OrmResolvable, models map[string]*orm_schema.Model) (string, error)
+	Generate(r *Orm, rootModel *orm_schema.Model, models map[string]*orm_schema.Model) (string, error)
 }

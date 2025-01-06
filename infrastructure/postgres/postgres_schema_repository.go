@@ -188,3 +188,8 @@ func (p *PostgresSchemaRepository) UpdateTable(updates *orm_schema.UpdateTableRe
 
 	return nil
 }
+
+func (p *PostgresSchemaRepository) GenerateAssociations(tables []string) (
+	*[]orm_schema.ModelAssociation, error) {
+	return nil, nil
+}

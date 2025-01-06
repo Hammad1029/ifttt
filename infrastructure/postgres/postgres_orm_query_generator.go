@@ -14,6 +14,7 @@ func NewPostgresOrmQueryGeneratorRepository(base *PostgresBaseRepository) *Postg
 }
 
 func (p *PostgresOrmQueryGeneratorRepository) Generate(
-	r *resolvable.OrmResolvable, models map[string]*orm_schema.Model) (string, error) {
+	r *resolvable.Orm, rootModel *orm_schema.Model, models map[string]*orm_schema.Model,
+) (string, error) {
 	return "", nil
 }

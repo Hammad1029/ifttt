@@ -2,7 +2,6 @@ package orm_schema
 
 import (
 	"context"
-	"fmt"
 	"ifttt/manager/common"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -232,32 +231,26 @@ func (m *Model) Validate() error {
 		validation.Field(&m.Projections, validation.Required, validation.Each(validation.By(
 			func(value interface{}) error {
 				if p, ok := value.(Projection); ok {
-					return p.Validate()
+					return p.Validate(true)
 				} else {
 					return validation.NewError("invalid_by_cast", "could not cast in by clause")
 				}
 
 			}))),
-		validation.Field(&m.PrimaryKey, validation.Required, validation.By(
-			func(value interface{}) error {
-				for _, p := range m.Projections {
-					if p.Column == fmt.Sprint(value) {
-						return nil
-					}
-				}
-				return validation.NewError("pkey_not_found", fmt.Sprintf("primary key %s not found", value))
-			})),
+		validation.Field(&m.PrimaryKey),
 		validation.Field(&m.OwningAssociations, validation.Nil),
 		validation.Field(&m.ReferencedAssociations, validation.Nil),
 	)
 }
 
-func (c *Projection) Validate() error {
+func (c *Projection) Validate(dataType bool) error {
 	return validation.ValidateStruct(c,
 		validation.Field(&c.As, validation.Required),
 		validation.Field(&c.Column, validation.Required),
-		validation.Field(&c.DataType, validation.Required,
-			validation.In(common.DatabaseTypeString, common.DatabaseTypeNumber, common.DatabaseTypeBoolean)),
+		validation.Field(&c.DataType,
+			validation.When(dataType, validation.Required, validation.In(
+				common.DatabaseTypeString, common.DatabaseTypeNumber, common.DatabaseTypeBoolean,
+			)).Else(validation.Empty)),
 	)
 }
 
@@ -282,14 +275,36 @@ func (a *ModelAssociation) Validate() error {
 	)
 }
 
-func (p *Populate) Validate() error {
+func (w *Where) Validate(cb func(val any) error) error {
+	return validation.ValidateStruct(w,
+		validation.Field(&w.Template, validation.NotNil),
+		validation.Field(&w.Values, validation.Each(validation.By(
+			func(value any) error {
+				return cb(value)
+			}))),
+	)
+}
+
+func (p *Populate) Validate(cb func(val any) error) error {
 	return validation.ValidateStruct(p,
 		validation.Field(&p.Model, validation.Required),
 		validation.Field(&p.As, validation.Required),
+		validation.Field(&p.Required),
+		validation.Field(&p.Project, validation.Each(validation.By(
+			func(value any) error {
+				v := value.(Projection)
+				return v.Validate(false)
+			})),
+		),
+		validation.Field(&p.Where, validation.Each(validation.By(
+			func(value any) error {
+				v := value.(Where)
+				return v.Validate(cb)
+			}))),
 		validation.Field(&p.Populate, validation.Each(validation.By(
 			func(value any) error {
 				v := value.(Populate)
-				return v.Validate()
+				return v.Validate(cb)
 			}))),
 	)
 }

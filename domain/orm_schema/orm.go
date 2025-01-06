@@ -32,7 +32,15 @@ type ModelAssociation struct {
 }
 
 type Populate struct {
-	Model    string     `mapstructure:"model" json:"model"`
-	As       string     `mapstructure:"as" json:"as"`
-	Populate []Populate `mapstructure:"populate" json:"populate"`
+	Model    string       `mapstructure:"model" json:"model"`
+	As       string       `mapstructure:"as" json:"as"`
+	Project  []Projection `mapstructure:"project" json:"project"`
+	Where    Where        `mapstructure:"where" json:"where"`
+	Populate []Populate   `mapstructure:"populate" json:"populate"`
+	Required *bool        `mapstructure:"required" json:"required"`
+}
+
+type Where struct {
+	Template string `json:"template" mapstructure:"template"`
+	Values   []any  `json:"values" mapstructure:"values"`
 }

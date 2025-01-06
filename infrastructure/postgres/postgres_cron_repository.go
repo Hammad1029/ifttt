@@ -3,6 +3,7 @@ package postgres
 import (
 	"fmt"
 	"ifttt/manager/domain/cron"
+	triggerflow "ifttt/manager/domain/trigger_flow"
 
 	"gorm.io/gorm"
 )
@@ -56,9 +57,9 @@ func (p *PostgresCronRepository) GetCronByName(name string) (*cron.Cron, error) 
 	return &domainCron, nil
 }
 
-func (p *PostgresCronRepository) InsertCron(req *cron.CreateCronRequest) error {
+func (p *PostgresCronRepository) InsertCron(req *cron.CreateCronRequest, attachTriggers *[]triggerflow.TriggerFlow) error {
 	var pgCron crons
-	err := pgCron.fromDomain(req)
+	err := pgCron.fromDomain(req, attachTriggers)
 	if err != nil {
 		return err
 	}

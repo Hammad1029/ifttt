@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"ifttt/manager/common"
 	"ifttt/manager/domain/orm_schema"
+	"sort"
 
-	"github.com/go-viper/mapstructure/v2"
+	"github.com/samber/lo"
 )
 
 func (r *Resolvable) Manipulate(dependencies map[common.IntIota]any) error {
@@ -21,7 +22,7 @@ func (r *Resolvable) Manipulate(dependencies map[common.IntIota]any) error {
 	}
 }
 
-func (r *apiCallResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *apiCall) Manipulate(dependencies map[common.IntIota]any) error {
 	if err := r.URL.Manipulate(dependencies); err != nil {
 		return err
 	}
@@ -37,7 +38,7 @@ func (r *apiCallResolvable) Manipulate(dependencies map[common.IntIota]any) erro
 	if manipulated, err := manipulateIfResolvable(r.Body, dependencies); err != nil {
 		return err
 	} else if mapped, ok := manipulated.(map[string]any); !ok {
-		return fmt.Errorf("could not cast to map")
+		return fmt.Errorf("could not cast body to map")
 	} else {
 		r.Headers = mapped
 	}
@@ -58,7 +59,7 @@ func (r *arithmetic) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (r *setCacheResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *setCache) Manipulate(dependencies map[common.IntIota]any) error {
 	if err := r.Key.Manipulate(dependencies); err != nil {
 		return err
 	} else if err := r.Value.Manipulate(dependencies); err != nil {
@@ -67,68 +68,55 @@ func (r *setCacheResolvable) Manipulate(dependencies map[common.IntIota]any) err
 	return nil
 }
 
-func (r *getCacheResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *getCache) Manipulate(dependencies map[common.IntIota]any) error {
 	return r.Key.Manipulate(dependencies)
 }
 
-func (r *dbDumpResolvable) Manipulate(dependencies map[common.IntIota]any) error {
-	if manipulated, err := ManipulateMap(r.Columns, dependencies); err != nil {
-		return err
-	} else {
-		r.Columns = manipulated
-		return nil
-	}
-}
-
-func (r *encodeResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *encode) Manipulate(dependencies map[common.IntIota]any) error {
 	return r.Input.Manipulate(dependencies)
 }
 
-func (r *getRequestResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *getRequest) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (r *getResponseResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *getResponse) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (r *getStoreResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *getStore) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (r *getPreConfigResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *getPreConfig) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (r *getHeadersResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *getHeaders) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (r *getConstResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *getConst) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (r *jqResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *jq) Manipulate(dependencies map[common.IntIota]any) error {
 	if manipulated, err := manipulateIfResolvable(&r.Input, dependencies); err != nil {
 		return err
-	} else if mapped, ok := manipulated.(map[string]any); !ok {
-		return fmt.Errorf("could not cast to map")
 	} else {
-		r.Input = mapped
+		r.Input = manipulated
 	}
 
 	if manipulated, err := manipulateIfResolvable(r.Query, dependencies); err != nil {
 		return err
-	} else if mapped, ok := manipulated.(map[string]any); !ok {
-		return fmt.Errorf("could not cast to map")
 	} else {
-		r.Query = mapped
+		r.Query = manipulated
 	}
 
 	return nil
 }
 
-func (r *queryResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *query) Manipulate(dependencies map[common.IntIota]any) error {
 	if manipulated, err := ManipulateMap(r.NamedParameters, dependencies); err != nil {
 		return err
 	} else {
@@ -144,37 +132,37 @@ func (r *queryResolvable) Manipulate(dependencies map[common.IntIota]any) error 
 	return nil
 }
 
-func (r *responseResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *response) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (r *setResResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *setRes) Manipulate(dependencies map[common.IntIota]any) error {
 	if manipulated, err := manipulateIfResolvable(r, dependencies); err != nil {
 		return err
 	} else if mapped, ok := manipulated.(map[string]any); !ok {
-		return fmt.Errorf("could not cast to map")
+		return fmt.Errorf("could not cast setres to map")
 	} else {
-		*r = setResResolvable(mapped)
+		*r = setRes(mapped)
 	}
 	return nil
 }
 
-func (r *setStoreResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *setStore) Manipulate(dependencies map[common.IntIota]any) error {
 	if manipulated, err := manipulateIfResolvable(r, dependencies); err != nil {
 		return err
 	} else if mapped, ok := manipulated.(map[string]any); !ok {
-		return fmt.Errorf("could not cast to map")
+		return fmt.Errorf("could not cast setstore to map")
 	} else {
-		*r = setStoreResolvable(mapped)
+		*r = setStore(mapped)
 	}
 	return nil
 }
 
-func (r *setLogResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *setLog) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (r *stringInterpolationResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *stringInterpolation) Manipulate(dependencies map[common.IntIota]any) error {
 	if manipulated, err := ManipulateArray(r.Parameters, dependencies); err != nil {
 		return err
 	} else {
@@ -183,11 +171,11 @@ func (r *stringInterpolationResolvable) Manipulate(dependencies map[common.IntIo
 	}
 }
 
-func (r *uuidResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *uuid) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (r *castResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *cast) Manipulate(dependencies map[common.IntIota]any) error {
 	if manipulated, err := manipulateIfResolvable(r.Input, dependencies); err != nil {
 		return err
 	} else {
@@ -196,7 +184,7 @@ func (r *castResolvable) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (r *OrmResolvable) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *Orm) Manipulate(dependencies map[common.IntIota]any) error {
 	queryGenerator, ok := dependencies[common.DependencyOrmQueryRepo].(OrmQueryGenerator)
 	if !ok {
 		return fmt.Errorf("could not get query generator repo")
@@ -206,20 +194,13 @@ func (r *OrmResolvable) Manipulate(dependencies map[common.IntIota]any) error {
 		return fmt.Errorf("could not get orm repo")
 	}
 
-	if manipulated, err := manipulateIfResolvable(r.ConditionsValue, dependencies); err != nil {
-		return err
-	} else if mapped, ok := manipulated.([]any); !ok {
-		return fmt.Errorf("could not cast to map")
-	} else {
-		r.ConditionsValue = mapped
-	}
-
-	r.Query = &queryResolvable{
+	r.Query = &query{
 		NamedParameters:      map[string]Resolvable{},
 		PositionalParameters: []Resolvable{},
 	}
+
 	if r.Operation == common.OrmSelect {
-		r.Query.Return = true
+	} else if r.Operation == common.OrmInsert {
 	} else {
 		return fmt.Errorf("operation %s not allowed", r.Operation)
 	}
@@ -228,25 +209,112 @@ func (r *OrmResolvable) Manipulate(dependencies map[common.IntIota]any) error {
 	if err != nil {
 		return err
 	}
+	rootModel, ok := allModels[r.Model]
+	if !ok {
+		return fmt.Errorf("model %s not found", r.Model)
+	}
 
-	if queryString, err := queryGenerator.Generate(r, allModels); err != nil {
+	if r.Columns != nil {
+		allowedColumns := lo.SliceToMap(rootModel.Projections,
+			func(p orm_schema.Projection) (string, orm_schema.Projection) {
+				return p.Column, p
+			})
+		for col := range *r.Columns {
+			if _, ok := allowedColumns[col]; !ok {
+				return fmt.Errorf("column %s not in model %s projections", col, rootModel.Name)
+			}
+		}
+		colsSorted := lo.Keys(*r.Columns)
+		sort.Strings(colsSorted)
+		if manipulated, err := manipulateIfResolvable(r.Columns, dependencies); err != nil {
+			return err
+		} else if mapped, ok := manipulated.(map[string]any); !ok {
+			return fmt.Errorf("could not cast manipulated to map")
+		} else {
+			r.Columns = &mapped
+			for key, v := range *r.Columns {
+				if converted, err := anyToResolvable(v); err != nil {
+					return err
+				} else {
+					r.Query.NamedParameters[key] = *converted
+				}
+			}
+			r.Query.Named = true
+		}
+	}
+
+	if r.Project != nil {
+		if err := r.ManipulateProjection(r.Model, &allModels, r.Project); err != nil {
+			return err
+		}
+	} else {
+		r.Project = &[]orm_schema.Projection{}
+	}
+
+	if r.Where != nil {
+		if err := r.ManipulateWhere(r.Where, dependencies); err != nil {
+			return err
+		}
+	} else {
+		r.Where = &orm_schema.Where{}
+	}
+
+	if r.Populate != nil {
+		if err := r.ManipulatePopulate(r.Populate, &allModels, dependencies); err != nil {
+			return err
+		}
+	} else {
+		r.Populate = &[]orm_schema.Populate{}
+	}
+
+	if queryString, err := queryGenerator.Generate(r, rootModel, allModels); err != nil {
 		return err
 	} else {
 		r.Query.QueryString = queryString
 	}
 
-	for _, v := range r.ConditionsValue {
-		if res := checkIfResolvable(v); res != nil {
-			r.Query.PositionalParameters = append(r.Query.PositionalParameters, *res)
-		} else {
-			constRes := getConstResolvable{Value: v}
-			param := Resolvable{ResolveType: accessorGetConstResolvable}
-			if err := mapstructure.Decode(constRes, &param.ResolveData); err != nil {
-				return err
-			}
-			r.Query.PositionalParameters = append(r.Query.PositionalParameters, param)
+	return nil
+}
+
+func (d *dateFunc) Manipulate(dependencies map[common.IntIota]any) error {
+	if err := d.Input.Manipulate(dependencies); err != nil {
+		return err
+	}
+	for _, m := range d.Manipulators {
+		if err := m.Manipulate(dependencies); err != nil {
+			return err
 		}
 	}
+	return nil
+}
 
+func (d *dateManipulator) Manipulate(dependencies map[common.IntIota]any) error {
+	return d.Operand.Manipulate(dependencies)
+}
+
+func (d *dateInput) Manipulate(dependencies map[common.IntIota]any) error {
+	if d.Input != nil {
+		return d.Input.Manipulate(dependencies)
+	}
+	return nil
+}
+
+func (f *forEach) Manipulate(dependencies map[common.IntIota]any) error {
+	if manipulated, err := manipulateIfResolvable(f.Input, dependencies); err != nil {
+		return err
+	} else {
+		f.Input = manipulated
+	}
+
+	if manipulated, err := ManipulateArray(*f.Do, dependencies); err != nil {
+		return err
+	} else {
+		f.Do = &manipulated
+	}
+
+	return nil
+}
+
+func (f *getIter) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }

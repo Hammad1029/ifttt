@@ -58,7 +58,8 @@ func (tfc *triggerFlowsController) Create(c *gin.Context) {
 		return
 	}
 
-	if requiredRules, err := tfc.serverCore.ConfigStore.RuleRepo.GetRulesByIds(reqBody.Rules); err != nil {
+	requiredRules, err := tfc.serverCore.ConfigStore.RuleRepo.GetRulesByNames(reqBody.Rules)
+	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else if len(*requiredRules) != len(reqBody.Rules) {
@@ -67,15 +68,16 @@ func (tfc *triggerFlowsController) Create(c *gin.Context) {
 		return
 	}
 
-	for _, flow := range reqBody.BranchFlows {
-		if _, found := lo.Find(reqBody.Rules, func(r uint) bool {
-			return r == flow.Rule
-		}); !found {
-			common.ResponseHandler(c,
-				common.ResponseConfig{Response: common.Responses["InvalidBranchFlow"]})
-			return
-		}
+	if len(lo.Intersect(reqBody.Rules, lo.MapToSlice(reqBody.BranchFlows,
+		func(_ uint, flow *triggerflow.BranchFlow) string {
+			return flow.Rule
+		}))) != len(reqBody.Rules) {
+		common.ResponseHandler(c,
+			common.ResponseConfig{Response: common.Responses["InvalidBranchFlow"]})
+		return
+	}
 
+	for _, flow := range reqBody.BranchFlows {
 		if ok := lo.Every(common.RuleAllowedReturns, lo.Keys(flow.States)); !ok {
 			common.ResponseHandler(c,
 				common.ResponseConfig{Response: common.Responses["InvalidBranchFlow"]})
@@ -89,7 +91,7 @@ func (tfc *triggerFlowsController) Create(c *gin.Context) {
 		return
 	}
 
-	if err := tfc.serverCore.ConfigStore.TriggerFlowRepo.InsertTriggerFlow(&reqBody); err != nil {
+	if err := tfc.serverCore.ConfigStore.TriggerFlowRepo.InsertTriggerFlow(&reqBody, requiredRules); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}

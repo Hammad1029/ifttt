@@ -1,6 +1,6 @@
 module ifttt/manager
 
-go 1.21.5
+go 1.23
 
 require (
 	github.com/casbin/casbin/v2 v2.99.0
@@ -47,6 +47,7 @@ require (
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/microsoft/go-mssqldb v1.6.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230126093431-47fa9a501578 // indirect
+	github.com/tkuchiki/go-timezone v0.2.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	gorm.io/driver/sqlserver v1.5.3 // indirect
 	gorm.io/plugin/dbresolver v1.3.0 // indirect

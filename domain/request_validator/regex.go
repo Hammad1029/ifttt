@@ -8,7 +8,7 @@ import (
 const (
 	alphaRegex   = "a-zA-Z *"
 	numericRegex = "0-9"
-	specialRegex = `!@#$%^&*(),.?":{}|<>`
+	specialRegex = `!@#$-_%^&*(),.?":{}|<>`
 	booleanRegex = `^(true|false)$`
 )
 

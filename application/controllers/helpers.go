@@ -21,7 +21,7 @@ func validateAndBind(c *gin.Context, output any) bool {
 		return false
 	}
 
-	if validator, ok := output.(common.ValidatorInterface); ok {
+	if validator, ok := output.(common.Validatable); ok {
 		if err := validator.Validate(); err != nil {
 			if internalErr, ok := err.(validation.InternalError); ok {
 				common.HandleErrorResponse(c,

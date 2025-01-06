@@ -204,3 +204,8 @@ func (p *MySqlSchemaRepository) UpdateTable(updates *orm_schema.UpdateTableReque
 
 	return nil
 }
+
+func (m *MySqlSchemaRepository) GenerateAssociations(tables []string) (
+	*[]orm_schema.ModelAssociation, error) {
+	return nil, nil
+}

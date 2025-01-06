@@ -3,6 +3,7 @@ package postgres
 import (
 	"fmt"
 	"ifttt/manager/domain/api"
+	triggerflow "ifttt/manager/domain/trigger_flow"
 
 	"gorm.io/gorm"
 )
@@ -58,9 +59,9 @@ func (p *PostgresAPIRepository) GetApiByNameOrPath(name string, path string) (*a
 	return &domainApi, nil
 }
 
-func (p *PostgresAPIRepository) InsertApi(apiReq *api.CreateApiRequest) error {
+func (p *PostgresAPIRepository) InsertApi(apiReq *api.CreateApiRequest, attachTriggers *[]triggerflow.TriggerFlow) error {
 	var pgApi apis
-	if err := pgApi.fromDomain(apiReq); err != nil {
+	if err := pgApi.fromDomain(apiReq, attachTriggers); err != nil {
 		return fmt.Errorf("could not convert from domain api: %s", err)
 	}
 

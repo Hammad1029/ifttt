@@ -67,6 +67,26 @@ func (o *PostgresOrmRepository) GetAssociationByName(name string) (*orm_schema.M
 	}
 }
 
+func (o *PostgresOrmRepository) GetAssociationByNameOrTablesAndType(
+	name string, table1 string, table2 string, relType string,
+) (*orm_schema.ModelAssociation, error) {
+	var pgAssociation orm_association
+	tableNames := []string{table1, table2}
+	if err := o.client.
+		First(&pgAssociation,
+			"name = ? or (references_table in ? and table_name in ? and references_table != table_name and \"type\" = ?)",
+			name, tableNames, tableNames, relType).Error; err == gorm.ErrRecordNotFound {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+	if dAssociation, err := pgAssociation.toDomain(); err != nil {
+		return nil, err
+	} else {
+		return dAssociation, nil
+	}
+}
+
 func (o *PostgresOrmRepository) GetAllAssociations() (map[string]*orm_schema.ModelAssociation, error) {
 	var pgAssociation []orm_association
 	if err := o.client.Find(&pgAssociation).Error; err == gorm.ErrRecordNotFound {

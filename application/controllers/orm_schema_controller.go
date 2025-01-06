@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"ifttt/manager/application/core"
 	"ifttt/manager/common"
 	"ifttt/manager/domain/orm_schema"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
@@ -138,7 +140,7 @@ func (s *ormSchemaController) CreateModel(c *gin.Context) {
 		return
 	}
 
-	tableColumns, err := s.serverCore.DataStore.SchemaRepo.GetAllColumns([]string{reqBody.Name})
+	tableColumns, err := s.serverCore.DataStore.SchemaRepo.GetAllColumns([]string{reqBody.Table})
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
@@ -149,13 +151,18 @@ func (s *ormSchemaController) CreateModel(c *gin.Context) {
 		reqCols := lo.Map(reqBody.Projections, func(proj orm_schema.Projection, _ int) string {
 			return proj.Column
 		})
-		if len(reqBody.Projections) != len(lo.Intersect(colNames, reqCols)) {
-			common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["InvalidORM"]})
+		intersection := lo.Intersect(colNames, reqCols)
+		notInSchema, _ := lo.Difference(intersection, colNames)
+		if len(notInSchema) != 0 {
+			common.ResponseHandler(c, common.ResponseConfig{
+				Response: common.Responses["InvalidORM"],
+				Data:     fmt.Sprintf("extra columns: %s", strings.Join(notInSchema, ",")),
+			})
 			return
 		}
 	}
 
-	tableConstraints, err := s.serverCore.DataStore.SchemaRepo.GetAllConstraints([]string{reqBody.Name})
+	tableConstraints, err := s.serverCore.DataStore.SchemaRepo.GetAllConstraints([]string{reqBody.Table})
 	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
@@ -186,7 +193,9 @@ func (s *ormSchemaController) CreateAssociation(c *gin.Context) {
 		return
 	}
 
-	if association, err := s.serverCore.ConfigStore.OrmRepo.GetAssociationByName(reqBody.Name); err != nil {
+	if association, err := s.serverCore.ConfigStore.OrmRepo.GetAssociationByNameOrTablesAndType(
+		reqBody.Name, reqBody.TableName, reqBody.ReferencesTable, reqBody.Type,
+	); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else if association != nil {
@@ -197,14 +206,28 @@ func (s *ormSchemaController) CreateAssociation(c *gin.Context) {
 	if model, err := s.serverCore.ConfigStore.OrmRepo.GetModelByIdOrName(reqBody.OwningModelID, ""); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
-	} else if model == nil || model.Table != reqBody.TableName {
+	} else if model == nil || model.Table != reqBody.TableName ||
+		!lo.SomeBy(model.Projections, func(p orm_schema.Projection) bool {
+			if reqBody.Type == common.AssociationsHasMany || reqBody.Type == common.AssociationsHasOne {
+				return p.Column == reqBody.ColumnName && model.PrimaryKey == reqBody.ColumnName
+			} else {
+				return p.Column == reqBody.ColumnName
+			}
+		}) {
 		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["InvalidORM"]})
 		return
 	}
 	if model, err := s.serverCore.ConfigStore.OrmRepo.GetModelByIdOrName(reqBody.ReferencesModelID, ""); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
-	} else if model == nil || model.Table != reqBody.ReferencesTable {
+	} else if model == nil || model.Table != reqBody.ReferencesTable ||
+		!lo.SomeBy(model.Projections, func(p orm_schema.Projection) bool {
+			if reqBody.Type == common.AssociationsBelongsTo {
+				return p.Column == reqBody.ReferencesField && model.PrimaryKey == reqBody.ReferencesField
+			} else {
+				return p.Column == reqBody.ColumnName
+			}
+		}) {
 		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["InvalidORM"]})
 		return
 	}

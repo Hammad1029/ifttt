@@ -55,6 +55,11 @@ const (
 )
 
 const (
-	DependencyOrmQueryRepo  = iota
-	DependencyOrmSchemaRepo = iota
+	DependencyOrmQueryRepo = iota
+	DependencyOrmSchemaRepo
+)
+
+const (
+	DateOperatorAdd      = "+"
+	DateOperatorSubtract = "-"
 )

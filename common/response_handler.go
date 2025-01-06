@@ -29,7 +29,7 @@ var Responses = map[string]Response{
 	"IndexNotPossible":         {"25", "Index Not Possible"},
 	"IndexNotFound":            {"30", "Index Not Found"},
 	"RuleAlreadyExists":        {"30", "Rule Already Exists"},
-	"APIAlreadyExists":         {"30", "API Already Exists"},
+	"APIAlreadyExists":         {"349", "API Already Exists"},
 	"FlowAlreadyExists":        {"30", "Trigger Flow Already Exists"},
 	"TriggerFlowRulesNotFound": {"30", "All rules not found"},
 	"TriggerFlowNotFound":      {"30", "Trigger flow not found"},

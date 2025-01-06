@@ -6,9 +6,11 @@ import (
 )
 
 func (rs *RuleSwitch) Manipulate(dependencies map[common.IntIota]any) error {
-	for _, c := range rs.Cases {
+	for idx, c := range rs.Cases {
 		if err := c.Manipulate(dependencies); err != nil {
 			return err
+		} else {
+			rs.Cases[idx] = c
 		}
 	}
 	if err := rs.Default.Manipulate(dependencies); err != nil {

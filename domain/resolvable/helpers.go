@@ -3,59 +3,69 @@ package resolvable
 import (
 	"fmt"
 	"ifttt/manager/common"
+	"ifttt/manager/domain/orm_schema"
 	"reflect"
 
 	"github.com/mitchellh/mapstructure"
+	"github.com/samber/lo"
 )
 
 const (
-	accessorJqResolvable                  = "jq"
-	accessorGetRequestResolvable          = "getReq"
-	accessorGetResponseResolvable         = "getRes"
-	accessorGetStoreResolvable            = "getStore"
-	accessorGetConstResolvable            = "const"
-	accessorArithmetic                    = "arithmetic"
-	accessorQueryResolvable               = "query"
-	accessorApiCallResolvable             = "api"
-	accessorSetResResolvable              = "setRes"
-	accessorSetStoreResolvable            = "setStore"
-	accessorSetLogResolvable              = "log"
-	accessorResponseResolvable            = "sendRes"
-	accessorPreConfigResolvable           = "getPreConfig"
-	accessorStringInterpolationResolvable = "stringInterpolation"
-	accessorEncodeResolvable              = "encode"
-	accessorSetCacheResolvable            = "setCache"
-	accessorGetCacheResolvable            = "getCache"
-	accessorUUIDResolvable                = "uuid"
-	accessorHeadersResolvable             = "headers"
-	accessorDbDumpResolvable              = "dbDump"
-	accessorCastResolvable                = "cast"
-	accessorOrmResolvable                 = "orm"
+	accessorJq                  = "jq"
+	accessorGetRequest          = "getReq"
+	accessorGetResponse         = "getRes"
+	accessorGetStore            = "getStore"
+	accessorGetConst            = "const"
+	accessorArithmetic          = "arithmetic"
+	accessorQuery               = "query"
+	accessorApiCall             = "api"
+	accessorSetRes              = "setRes"
+	accessorSetStore            = "setStore"
+	accessorSetLog              = "log"
+	accessorResponse            = "sendRes"
+	accessorPreConfig           = "getPreConfig"
+	accessorStringInterpolation = "stringInterpolation"
+	accessorEncode              = "encode"
+	accessorSetCache            = "setCache"
+	accessorGetCache            = "getCache"
+	accessorUUID                = "uuid"
+	accessorHeaders             = "headers"
+	accessorCast                = "cast"
+	accessorOrm                 = "orm"
+	accessorForEach             = "forEach"
+	accessorGetIter             = "getIter"
+	accessorDateInput           = "dateInput"
+	accessorDateManipulator     = "dateManipulator"
+	accessorDateFunc            = "dateFunc"
 )
 
 var resolveTypes = []string{
-	accessorJqResolvable,
-	accessorGetRequestResolvable,
-	accessorGetResponseResolvable,
-	accessorGetStoreResolvable,
-	accessorGetConstResolvable,
+	accessorJq,
+	accessorGetRequest,
+	accessorGetResponse,
+	accessorGetStore,
+	accessorGetConst,
 	accessorArithmetic,
-	accessorQueryResolvable,
-	accessorApiCallResolvable,
-	accessorSetResResolvable,
-	accessorSetStoreResolvable,
-	accessorSetLogResolvable,
-	accessorResponseResolvable,
-	accessorPreConfigResolvable,
-	accessorStringInterpolationResolvable,
-	accessorEncodeResolvable,
-	accessorSetCacheResolvable,
-	accessorGetCacheResolvable,
-	accessorUUIDResolvable,
-	accessorHeadersResolvable,
-	accessorDbDumpResolvable,
-	accessorCastResolvable,
-	accessorOrmResolvable,
+	accessorQuery,
+	accessorApiCall,
+	accessorSetRes,
+	accessorSetStore,
+	accessorSetLog,
+	accessorResponse,
+	accessorPreConfig,
+	accessorStringInterpolation,
+	accessorEncode,
+	accessorSetCache,
+	accessorGetCache,
+	accessorUUID,
+	accessorHeaders,
+	accessorCast,
+	accessorOrm,
+	accessorForEach,
+	accessorGetIter,
+	accessorDateInput,
+	accessorDateManipulator,
+	accessorDateFunc,
 }
 
 func factory(template any) (resolvableInterface, error) {
@@ -66,56 +76,64 @@ func factory(template any) (resolvableInterface, error) {
 
 	var resolver resolvableInterface
 	switch base.ResolveType {
-	case accessorJqResolvable:
-		resolver = &jqResolvable{}
-	case accessorGetRequestResolvable:
-		resolver = &getRequestResolvable{}
-	case accessorGetResponseResolvable:
-		resolver = &getResponseResolvable{}
-	case accessorGetStoreResolvable:
-		resolver = &getStoreResolvable{}
-	case accessorGetConstResolvable:
-		resolver = &getConstResolvable{}
+	case accessorJq:
+		resolver = &jq{}
+	case accessorGetRequest:
+		resolver = &getRequest{}
+	case accessorGetResponse:
+		resolver = &getResponse{}
+	case accessorGetStore:
+		resolver = &getStore{}
+	case accessorGetConst:
+		resolver = &getConst{}
 	case accessorArithmetic:
 		resolver = &arithmetic{}
-	case accessorQueryResolvable:
-		resolver = &queryResolvable{}
-	case accessorApiCallResolvable:
-		resolver = &apiCallResolvable{}
-	case accessorSetResResolvable:
-		resolver = &setResResolvable{}
-	case accessorSetStoreResolvable:
-		resolver = &setStoreResolvable{}
-	case accessorSetLogResolvable:
-		resolver = &setLogResolvable{}
-	case accessorResponseResolvable:
-		resolver = &responseResolvable{}
-	case accessorPreConfigResolvable:
-		resolver = &getPreConfigResolvable{}
-	case accessorStringInterpolationResolvable:
-		resolver = &stringInterpolationResolvable{}
-	case accessorEncodeResolvable:
-		resolver = &encodeResolvable{}
-	case accessorSetCacheResolvable:
-		resolver = &setCacheResolvable{}
-	case accessorGetCacheResolvable:
-		resolver = &getCacheResolvable{}
-	case accessorUUIDResolvable:
-		resolver = &uuidResolvable{}
-	case accessorHeadersResolvable:
-		resolver = &getHeadersResolvable{}
-	case accessorDbDumpResolvable:
-		resolver = &dbDumpResolvable{}
-	case accessorCastResolvable:
-		resolver = &castResolvable{}
-	case accessorOrmResolvable:
-		resolver = &OrmResolvable{}
+	case accessorQuery:
+		resolver = &query{}
+	case accessorApiCall:
+		resolver = &apiCall{}
+	case accessorSetRes:
+		resolver = &setRes{}
+	case accessorSetStore:
+		resolver = &setStore{}
+	case accessorSetLog:
+		resolver = &setLog{}
+	case accessorResponse:
+		resolver = &response{}
+	case accessorPreConfig:
+		resolver = &getPreConfig{}
+	case accessorStringInterpolation:
+		resolver = &stringInterpolation{}
+	case accessorEncode:
+		resolver = &encode{}
+	case accessorSetCache:
+		resolver = &setCache{}
+	case accessorGetCache:
+		resolver = &getCache{}
+	case accessorUUID:
+		resolver = &uuid{}
+	case accessorHeaders:
+		resolver = &getHeaders{}
+	case accessorCast:
+		resolver = &cast{}
+	case accessorOrm:
+		resolver = &Orm{}
+	case accessorForEach:
+		resolver = &forEach{}
+	case accessorGetIter:
+		resolver = &getIter{}
+	case accessorDateInput:
+		resolver = &dateInput{}
+	case accessorDateManipulator:
+		resolver = &dateManipulator{}
+	case accessorDateFunc:
+		resolver = &dateFunc{}
 	default:
 		return nil, fmt.Errorf("resolvable %s not found", base.ResolveType)
 	}
 
 	if err := mapstructure.Decode(base.ResolveData, &resolver); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not decode resolver %s: %s", base.ResolveType, err)
 	}
 
 	return resolver, nil
@@ -158,7 +176,7 @@ func manipulateIfResolvable(val any, dependencies map[common.IntIota]any) (any, 
 			if err := mapstructure.Decode(concrete, &mapCloned); err != nil {
 				return nil, err
 			}
-			for key, _ := range mapCloned {
+			for key := range mapCloned {
 				val := mapCloned[key]
 				if v, err := manipulateIfResolvable(&val, dependencies); err != nil {
 					return nil, err
@@ -188,55 +206,57 @@ func manipulateIfResolvable(val any, dependencies map[common.IntIota]any) (any, 
 	return concrete, nil
 }
 
-func validateIfResolvable(val any, dependencies map[common.IntIota]any) error {
-	var err error
-
-	switch o := val.(type) {
-	case nil:
+func validateIfResolvable(val any) error {
+	if val == nil {
 		return nil
-	case common.ValidatorInterface:
-		return o.Validate()
-	default:
+	}
+
+	concrete := reflect.Indirect(reflect.ValueOf(val)).Interface()
+	if concrete == nil {
+		return nil
+	}
+
+	switch reflect.TypeOf(concrete).Kind() {
+	case reflect.Struct:
 		{
-			switch reflect.TypeOf(o).Kind() {
-			case reflect.Map:
-				{
-					var nested Resolvable
-					err = mapstructure.Decode(o, &nested)
-					if err == nil && nested.ResolveType != "" && nested.ResolveData != nil {
-						return nested.Validate()
-					}
-
-					var mapCloned map[string]any
-					if err := mapstructure.Decode(o, &mapCloned); err != nil {
-						return err
-					}
-					for _, val := range mapCloned {
-						if err = validateIfResolvable(val, dependencies); err != nil {
-							return err
-						}
-					}
-					return nil
-				}
-			case reflect.Slice, reflect.Array:
-				{
-					var oArr []any
-					if err := mapstructure.Decode(o, &oArr); err != nil {
-						return err
-					}
-					for _, item := range oArr {
-						if err = validateIfResolvable(item, dependencies); err != nil {
-							return err
-						}
-					}
-					return nil
-
-				}
-			default:
-				return nil
+			if r, ok := concrete.(common.Validatable); ok {
+				return r.Validate()
 			}
 		}
+	case reflect.Map:
+		{
+			var nested Resolvable
+			err := mapstructure.Decode(concrete, &nested)
+			if err == nil && nested.ResolveType != "" && nested.ResolveData != nil {
+				return nested.Validate()
+			}
+
+			var mapCloned map[string]any
+			if err := mapstructure.Decode(concrete, &mapCloned); err != nil {
+				return err
+			}
+			for key := range mapCloned {
+				val := mapCloned[key]
+				if err = validateIfResolvable(&val); err != nil {
+					return err
+				}
+			}
+		}
+	case reflect.Slice, reflect.Array:
+		{
+			var oArr []any
+			if err := mapstructure.Decode(concrete, &oArr); err != nil {
+				return err
+			}
+			for _, item := range oArr {
+				if err := validateIfResolvable(&item); err != nil {
+					return err
+				}
+			}
+
+		}
 	}
+	return nil
 }
 
 func mustBeResolvable(val any) error {
@@ -277,4 +297,87 @@ func ManipulateMap(arr map[string]Resolvable, dependencies map[common.IntIota]an
 		manipulated[key] = r
 	}
 	return manipulated, nil
+}
+
+func (p *Orm) ManipulatePopulate(
+	populate *[]orm_schema.Populate, models *map[string]*orm_schema.Model, dependencies map[common.IntIota]any,
+) error {
+	for _, child := range *populate {
+		if pModel, ok := (*models)[p.Model]; !ok {
+			return fmt.Errorf("model in populate not found: %s", p.Model)
+		} else if pModel.PrimaryKey == "" {
+			return fmt.Errorf("model %s does not contain primary key for populate", p.Model)
+		} else if err := p.ManipulateProjection(child.Model, models, &child.Project); err != nil {
+			return err
+		} else if err := p.ManipulateWhere(&child.Where, dependencies); err != nil {
+			return err
+		}
+
+		if err := p.ManipulatePopulate(&child.Populate, models, dependencies); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (w *Orm) ManipulateWhere(where *orm_schema.Where, dependencies map[common.IntIota]any) error {
+	if manipulated, err := manipulateIfResolvable(where.Values, dependencies); err != nil {
+		return err
+	} else if mapped, ok := manipulated.([]any); !ok {
+		return fmt.Errorf("could not cast conditionsValues to map")
+	} else {
+		where.Values = mapped
+	}
+
+	for _, v := range where.Values {
+		if converted, err := anyToResolvable(v); err != nil {
+			return err
+		} else {
+			w.Query.PositionalParameters = append(w.Query.PositionalParameters, *converted)
+		}
+	}
+	return nil
+}
+
+func anyToResolvable(v any) (*Resolvable, error) {
+	if res := checkIfResolvable(v); res != nil {
+		return res, nil
+	} else {
+		constRes := getConst{Value: v}
+		param := Resolvable{ResolveType: accessorGetConst}
+		if err := mapstructure.Decode(constRes, &param.ResolveData); err != nil {
+			return nil, err
+		}
+		return &param, nil
+	}
+}
+
+func (o *Orm) ManipulateProjection(
+	modelName string, models *map[string]*orm_schema.Model, projections *[]orm_schema.Projection,
+) error {
+	model, ok := (*models)[modelName]
+	if !ok {
+		return fmt.Errorf("model %s not found", modelName)
+	}
+
+	modelProjectionsMapped := lo.SliceToMap(model.Projections,
+		func(p orm_schema.Projection) (string, orm_schema.Projection) {
+			return p.Column, p
+		})
+	modelProjectionsKeys := lo.Keys(modelProjectionsMapped)
+	customProjectionsMapped := lo.SliceToMap(*projections,
+		func(p orm_schema.Projection) (string, orm_schema.Projection) {
+			return p.Column, p
+		})
+	customProjectionsKeys := lo.Keys(customProjectionsMapped)
+
+	if len(lo.Intersect(modelProjectionsKeys, customProjectionsKeys)) != len(customProjectionsKeys) {
+		return fmt.Errorf("invalid projections")
+	}
+
+	for idx, p := range *projections {
+		(*projections)[idx].DataType = modelProjectionsMapped[p.Column].DataType
+	}
+
+	return nil
 }

@@ -7,7 +7,7 @@ type Resolvable struct {
 	ResolveData map[string]any `json:"resolveData" mapstructure:"resolveData"`
 }
 
-type apiCallResolvable struct {
+type apiCall struct {
 	Method  string         `json:"method" mapstructure:"method"`
 	URL     Resolvable     `json:"url" mapstructure:"url"`
 	Headers map[string]any `json:"headers" mapstructure:"headers"`
@@ -23,48 +23,42 @@ type arithmetic struct {
 	Value     *Resolvable  `json:"value" mapstructure:"value"`
 }
 
-type setCacheResolvable struct {
+type setCache struct {
 	Key   Resolvable `json:"key" mapstructure:"key"`
 	Value Resolvable `json:"value" mapstructure:"value"`
 	TTL   uint       `json:"ttl" mapstructure:"ttl"`
 }
 
-type getCacheResolvable struct {
+type getCache struct {
 	Key Resolvable `json:"key" mapstructure:"key"`
 }
 
-type dbDumpResolvable struct {
-	Columns map[string]Resolvable `json:"columns" mapstructure:"columns"`
-	Table   string                `json:"table" mapstructure:"table"`
-}
-
-type encodeResolvable struct {
+type encode struct {
 	Input Resolvable `json:"input" mapstructure:"input"`
 	Alg   string     `json:"alg" mapstructure:"alg"`
 }
 
-type getRequestResolvable struct{}
+type getRequest struct{}
 
-type getResponseResolvable struct{}
+type getResponse struct{}
 
-type getStoreResolvable struct{}
+type getStore struct{}
 
-type getPreConfigResolvable struct{}
+type getPreConfig struct{}
 
-type getHeadersResolvable struct{}
+type getHeaders struct{}
 
-type getConstResolvable struct {
+type getConst struct {
 	Value any `json:"value" mapstructure:"value"`
 }
 
-type jqResolvable struct {
+type jq struct {
 	Query any `json:"query" mapstructure:"query"`
 	Input any `json:"input" mapstructure:"input"`
 }
 
-type queryResolvable struct {
+type query struct {
 	QueryString          string                `json:"queryString" mapstructure:"queryString"`
-	Return               bool                  `json:"return" mapstructure:"return"`
 	Named                bool                  `json:"named" mapstructure:"named"`
 	NamedParameters      map[string]Resolvable `json:"namedParameters" mapstructure:"namedParameters"`
 	PositionalParameters []Resolvable          `json:"positionalParameters" mapstructure:"positionalParameters"`
@@ -72,37 +66,67 @@ type queryResolvable struct {
 	Timeout              uint                  `json:"timeout" mapstructure:"timeout"`
 }
 
-type responseResolvable struct {
+type response struct {
 	ResponseCode        string `json:"responseCode" mapstructure:"responseCode"`
 	ResponseDescription string `json:"responseDescription" mapstructure:"responseDescription"`
 }
 
-type setResResolvable map[string]any
+type setRes map[string]any
 
-type setStoreResolvable map[string]any
+type setStore map[string]any
 
-type setLogResolvable struct {
+type setLog struct {
 	LogData any    `json:"logData" mapstructure:"logData"`
 	LogType string `json:"logType" mapstructure:"logType"`
 }
 
-type stringInterpolationResolvable struct {
+type stringInterpolation struct {
 	Template   string       `json:"template" mapstructure:"template"`
 	Parameters []Resolvable `json:"parameters" mapstructure:"parameters"`
 }
 
-type uuidResolvable struct{}
+type uuid struct{}
 
-type castResolvable struct {
+type cast struct {
 	Input any    `json:"input" mapstructure:"input"`
 	To    string `json:"to" mapstructure:"to"`
 }
 
-type OrmResolvable struct {
-	Query              *queryResolvable      `json:"query" mapstructure:"query"`
-	Operation          string                `json:"operation" mapstructure:"operation"`
-	Model              string                `json:"model" mapstructure:"model"`
-	ConditionsTemplate string                `json:"conditionsTemplate" mapstructure:"conditionsTemplate"`
-	ConditionsValue    []any                 `json:"conditionsValue" mapstructure:"conditionsValue"`
-	Populate           []orm_schema.Populate `json:"populate" mapstructure:"populate"`
+type Orm struct {
+	Query     *query                   `json:"query" mapstructure:"query"`
+	Operation string                   `json:"operation" mapstructure:"operation"`
+	Model     string                   `json:"model" mapstructure:"model"`
+	Project   *[]orm_schema.Projection `json:"project" mapstructure:"project"`
+	Columns   *map[string]any          `json:"columns" mapstructure:"columns"`
+	Populate  *[]orm_schema.Populate   `json:"populate" mapstructure:"populate"`
+	Where     *orm_schema.Where        `json:"where" mapstructure:"where"`
+	OrderBy   string                   `json:"orderBy" mapstructure:"orderBy"`
+	Limit     int                      `json:"limit" mapstructure:"limit"`
+}
+
+type forEach struct {
+	Input any           `json:"input" mapstructure:"input"`
+	Do    *[]Resolvable `json:"do" mapstructure:"do"`
+}
+
+type getIter struct {
+}
+
+type dateFunc struct {
+	Input        dateInput         `json:"input" mapstructure:"input"`
+	Manipulators []dateManipulator `json:"manipulators" mapstructure:"manipulators"`
+	Format       string            `json:"format" mapstructure:"format"`
+	UTC          bool              `json:"utc" mapstructure:"utc"`
+}
+
+type dateManipulator struct {
+	Operator string     `json:"operator" mapstructure:"operator"`
+	Operand  Resolvable `json:"operand" mapstructure:"operand"`
+	Unit     string     `json:"unit" mapstructure:"unit"`
+}
+
+type dateInput struct {
+	Input    *Resolvable `json:"input" mapstructure:"input"`
+	Parse    string      `json:"parse" mapstructure:"parse"`
+	Timezone string      `json:"timezone" mapstructure:"timezone"`
 }

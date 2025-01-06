@@ -61,11 +61,12 @@ func (ac *apiController) Create(c *gin.Context) {
 		return
 	}
 
-	tIds := lo.Map(reqBody.Triggers, func(t triggerflow.TriggerConditionRequest, _ int) uint {
+	tNames := lo.Map(reqBody.Triggers, func(t triggerflow.TriggerConditionRequest, _ int) string {
 		return t.Trigger
 	})
 
-	if requiredTFlows, err := ac.serverCore.ConfigStore.TriggerFlowRepo.GetTriggerFlowsByIds(tIds); err != nil {
+	requiredTFlows, err := ac.serverCore.ConfigStore.TriggerFlowRepo.GetTriggerFlowsByNames(tNames)
+	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else if len(*requiredTFlows) != len(reqBody.Triggers) {
@@ -94,7 +95,7 @@ func (ac *apiController) Create(c *gin.Context) {
 		reqBody.Triggers[idx] = tc
 	}
 
-	if err := ac.serverCore.ConfigStore.APIRepo.InsertApi(&reqBody); err != nil {
+	if err := ac.serverCore.ConfigStore.APIRepo.InsertApi(&reqBody, requiredTFlows); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}

@@ -60,14 +60,15 @@ func (cC *cronController) Create(c *gin.Context) {
 		return
 	}
 
-	tIds := lo.Map(reqBody.TriggerFlows, func(t triggerflow.TriggerConditionRequest, _ int) uint {
+	tNames := lo.Map(reqBody.Triggers, func(t triggerflow.TriggerConditionRequest, _ int) string {
 		return t.Trigger
 	})
 
-	if requiredTFlows, err := cC.serverCore.ConfigStore.TriggerFlowRepo.GetTriggerFlowsByIds(tIds); err != nil {
+	requiredTFlows, err := cC.serverCore.ConfigStore.TriggerFlowRepo.GetTriggerFlowsByNames(tNames)
+	if err != nil {
 		common.HandleErrorResponse(c, err)
 		return
-	} else if len(*requiredTFlows) != len(reqBody.TriggerFlows) {
+	} else if len(*requiredTFlows) != len(reqBody.Triggers) {
 		common.ResponseHandler(c,
 			common.ResponseConfig{Response: common.Responses["TriggerFlowNotFound"]})
 		return
@@ -80,15 +81,15 @@ func (cC *cronController) Create(c *gin.Context) {
 		reqBody.PreConfig = manipulated
 	}
 
-	for idx, tc := range reqBody.TriggerFlows {
+	for idx, tc := range reqBody.Triggers {
 		if err := tc.Manipulate(cC.serverCore.ResolvableDependencies); err != nil {
 			common.HandleErrorResponse(c, err)
 			return
 		}
-		reqBody.TriggerFlows[idx] = tc
+		reqBody.Triggers[idx] = tc
 	}
 
-	if err := cC.serverCore.ConfigStore.CronRepo.InsertCron(&reqBody); err != nil {
+	if err := cC.serverCore.ConfigStore.CronRepo.InsertCron(&reqBody, requiredTFlows); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}
