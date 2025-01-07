@@ -74,6 +74,8 @@ func (m *MySqlOrmQueryGeneratorRepository) generateSelect(
 	}
 	if r.OrderBy != "" {
 		query += fmt.Sprintf(" ORDER BY %s", r.OrderBy)
+	} else {
+		query += fmt.Sprintf(" ORDER BY %s.%s ASC", rootModel.Name, rootModel.PrimaryKey)
 	}
 	if r.Limit > 0 {
 		query += fmt.Sprintf(" LIMIT %d", r.Limit)
@@ -85,14 +87,24 @@ func (m *MySqlOrmQueryGeneratorRepository) generateSelect(
 func (m *MySqlOrmQueryGeneratorRepository) buildProjections(
 	model *orm_schema.Model, customProjections *[]orm_schema.Projection, alias string) []string {
 	var projs []string
+	var pKey bool
 	if len(*customProjections) > 0 {
 		for _, p := range *customProjections {
+			if p.Column == model.PrimaryKey {
+				pKey = true
+			}
 			projs = append(projs, fmt.Sprintf("`%s`.`%s` AS `%s.%s`", alias, p.Column, alias, p.As))
 		}
 	} else {
 		for _, p := range model.Projections {
+			if p.Column == model.PrimaryKey {
+				pKey = true
+			}
 			projs = append(projs, fmt.Sprintf("`%s`.`%s` AS `%s.%s`", alias, p.Column, alias, p.As))
 		}
+	}
+	if !pKey {
+		projs = append(projs, fmt.Sprintf("`%s`.`%s` AS `%s.%s`", alias, model.PrimaryKey, alias, model.PrimaryKey))
 	}
 	return projs
 }
@@ -126,8 +138,7 @@ func (m *MySqlOrmQueryGeneratorRepository) buildAssociations(
 
 		if hasRequiredNestedWhere && !m.isJoinRequired(&p) {
 
-			joinClauses = append(joinClauses, fmt.Sprintf("LEFT OUTER JOIN ("))
-
+			joinClauses = append(joinClauses, "LEFT OUTER JOIN (")
 			joinClauses = append(joinClauses, fmt.Sprintf("`%s` AS `%s`", association.ReferencesTable, concatAlias))
 
 			if childProjections, childJoins, err := m.buildAssociations(&p.Populate, joinModel, models, concatAlias); err != nil {
@@ -184,10 +195,11 @@ func (m *MySqlOrmQueryGeneratorRepository) buildJoin(
 			joinType,
 			association.ReferencesTable,
 			alias,
+			joinAlias,
+			association.ColumnName,
 			alias,
 			association.ReferencesField,
-			joinAlias,
-			association.ColumnName), nil
+		), nil
 
 	case common.AssociationsBelongsToMany:
 		return fmt.Sprintf("%s `%s` AS `%s` ON `%s`.`%s` = `%s`.`%s` %s `%s` ON `%s`.`%s` = `%s`.`%s`",
