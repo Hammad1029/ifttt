@@ -20,6 +20,7 @@ func NewPostgresBaseRepository(client *gorm.DB, migrate bool) *PostgresBaseRepos
 			&crons{}, &apis{},
 			&trigger_flows{}, &rules{},
 			&orm_model{}, &orm_projection{}, &orm_association{},
+			&response_profile{}, &response_profile_field{},
 		); err != nil {
 			panic(fmt.Errorf("could not automigrate gorm:%s", err))
 		}

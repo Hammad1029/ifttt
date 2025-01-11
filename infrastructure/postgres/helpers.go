@@ -8,6 +8,7 @@ import (
 	"ifttt/manager/domain/orm_schema"
 	requestvalidator "ifttt/manager/domain/request_validator"
 	"ifttt/manager/domain/resolvable"
+	responseprofiles "ifttt/manager/domain/response_profiles"
 	"ifttt/manager/domain/rule"
 	triggerflow "ifttt/manager/domain/trigger_flow"
 
@@ -251,10 +252,6 @@ func (o *orm_model) fromDomain(dModel *orm_schema.Model) error {
 	return mapstructure.Decode(dModel, o)
 }
 
-// func (o *orm_projection) fromDomain(dProjection *orm_schema.Projection) error {
-// 	return mapstructure.Decode(dProjection, o)
-// }
-
 func (o *orm_association) fromDomain(dAssociation *orm_schema.ModelAssociation) error {
 	return mapstructure.Decode(dAssociation, o)
 }
@@ -267,18 +264,96 @@ func (o *orm_model) toDomain() (*orm_schema.Model, error) {
 	return &domain, nil
 }
 
-// func (o *orm_projection) toDomain() (*orm_schema.Projection, error) {
-// 	var domain orm_schema.Projection
-// 	if err := mapstructure.Decode(o, &domain); err != nil {
-// 		return nil, err
-// 	}
-// 	return &domain, nil
-// }
-
 func (o *orm_association) toDomain() (*orm_schema.ModelAssociation, error) {
 	var domain orm_schema.ModelAssociation
 	if err := mapstructure.Decode(o, &domain); err != nil {
 		return nil, err
 	}
 	return &domain, nil
+}
+
+func (p *response_profile) fromDomain(dProfile *responseprofiles.Profile) error {
+	p.MappedCode = dProfile.MappedCode
+	p.HttpStatus = dProfile.HttpStatus
+	p.Internal = dProfile.Internal
+	p.Code = response_profile_field{}
+	if err := p.Code.fromDomain(&dProfile.Code); err != nil {
+		return err
+	}
+	p.Description = response_profile_field{}
+	if err := p.Description.fromDomain(&dProfile.Description); err != nil {
+		return err
+	}
+	p.Data = response_profile_field{}
+	if err := p.Data.fromDomain(&dProfile.Data); err != nil {
+		return err
+	}
+	p.Errors = response_profile_field{}
+	if err := p.Errors.fromDomain(&dProfile.Errors); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *response_profile_field) fromDomain(dField *responseprofiles.Field) error {
+	p.Key = dField.Key
+	p.Disabled = dField.Disabled
+	if marshalled, err := json.Marshal(dField.Default); err != nil {
+		return err
+	} else {
+		p.Default = pgtype.JSONB{Bytes: marshalled, Status: pgtype.Present}
+	}
+	return nil
+}
+
+func (p *response_profile) toDomain() (*responseprofiles.Profile, error) {
+	dProfile := responseprofiles.Profile{
+		ID:         p.ID,
+		MappedCode: p.MappedCode,
+		HttpStatus: p.HttpStatus,
+		Internal:   p.Internal,
+	}
+	if dCode, err := p.Code.toDomain(); err != nil {
+		return nil, err
+	} else {
+		dProfile.Code = *dCode
+	}
+	if dDescription, err := p.Description.toDomain(); err != nil {
+		return nil, err
+	} else {
+		dProfile.Description = *dDescription
+	}
+	if dData, err := p.Data.toDomain(); err != nil {
+		return nil, err
+	} else {
+		dProfile.Data = *dData
+	}
+	if dErrors, err := p.Errors.toDomain(); err != nil {
+		return nil, err
+	} else {
+		dProfile.Errors = *dErrors
+	}
+	if p.MappedProfiles != nil {
+		mappedProfiles := make([]responseprofiles.Profile, 0, len(*p.MappedProfiles))
+		for _, mp := range *p.MappedProfiles {
+			if dP, err := mp.toDomain(); err != nil {
+				return nil, err
+			} else {
+				mappedProfiles = append(mappedProfiles, *dP)
+			}
+		}
+		dProfile.MappedProfiles = &mappedProfiles
+	}
+	return &dProfile, nil
+}
+
+func (p *response_profile_field) toDomain() (*responseprofiles.Field, error) {
+	dField := responseprofiles.Field{
+		Key:      p.Key,
+		Disabled: p.Disabled,
+	}
+	if err := json.Unmarshal(p.Default.Bytes, &dField.Default); err != nil {
+		return nil, err
+	}
+	return &dField, nil
 }

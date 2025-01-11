@@ -45,13 +45,14 @@ func (p *postgresStore) init(config map[string]any) error {
 func (p *postgresStore) createConfigStore() *ConfigStore {
 	postgresBase := postgresInfra.NewPostgresBaseRepository(p.store, true)
 	return &ConfigStore{
-		Store:           p,
-		CronRepo:        postgresInfra.NewPostgresCronRepository(postgresBase),
-		APIRepo:         postgresInfra.NewPostgresAPIRepository(postgresBase),
-		RuleRepo:        postgresInfra.NewPostgresRulesRepository(postgresBase),
-		TriggerFlowRepo: postgresInfra.NewPostgresTriggerFlowsRepository(postgresBase),
-		UserRepo:        postgresInfra.NewPostgresUserRepository(postgresBase),
-		OrmRepo:         postgresInfra.NewPostgresOrmRepository(postgresBase),
+		Store:               p,
+		CronRepo:            postgresInfra.NewPostgresCronRepository(postgresBase),
+		APIRepo:             postgresInfra.NewPostgresAPIRepository(postgresBase),
+		RuleRepo:            postgresInfra.NewPostgresRulesRepository(postgresBase),
+		TriggerFlowRepo:     postgresInfra.NewPostgresTriggerFlowsRepository(postgresBase),
+		UserRepo:            postgresInfra.NewPostgresUserRepository(postgresBase),
+		OrmRepo:             postgresInfra.NewPostgresOrmRepository(postgresBase),
+		ResponseProfileRepo: postgresInfra.NewPostgresResponseProfileRepository(postgresBase),
 	}
 }
 

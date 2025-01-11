@@ -10,7 +10,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
-func validateAndBind(c *gin.Context, output any) bool {
+func validateAndBind(c *gin.Context, output common.Validatable) bool {
 	if reflect.TypeOf(output).Kind() != reflect.Ptr {
 		common.HandleErrorResponse(c, fmt.Errorf("method validateAndBind: output struct is not a pointer"))
 		return false
