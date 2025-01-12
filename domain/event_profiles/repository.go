@@ -1,7 +1,7 @@
-package responseprofiles
+package eventprofiles
 
 type Repository interface {
 	AddProfile(p *Profile, parent uint) error
-	GetProfilesByInternalAndCode(internal bool, code string) (*[]Profile, error)
+	GetProfilesByInternalAndTrigger(internal bool, trigger string) (*[]Profile, error)
 	GetAllInternalProfiles() (*[]Profile, error)
 }

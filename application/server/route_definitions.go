@@ -265,7 +265,7 @@ func getRouteDefinitions(controllers *controllers.AllController) *[]common.Route
 			},
 		},
 		{
-			Path:        "/responseProfiles",
+			Path:        "/eventProfiles",
 			Method:      "GROUP",
 			Description: "Role Management",
 			Authorized:  true,
@@ -276,7 +276,7 @@ func getRouteDefinitions(controllers *controllers.AllController) *[]common.Route
 					Description:   "Add Profile",
 					Authenticated: true,
 					Authorized:    true,
-					HandlerFunc:   controllers.ResponseProfilesController.AddProfile,
+					HandlerFunc:   controllers.EventProfilesController.AddProfile,
 				},
 				{
 					Path:          "/getAllProfiles",
@@ -284,7 +284,7 @@ func getRouteDefinitions(controllers *controllers.AllController) *[]common.Route
 					Description:   "Get All Profiles",
 					Authenticated: true,
 					Authorized:    true,
-					HandlerFunc:   controllers.ResponseProfilesController.GetAllProfiles,
+					HandlerFunc:   controllers.EventProfilesController.GetAllProfiles,
 				},
 			},
 		},

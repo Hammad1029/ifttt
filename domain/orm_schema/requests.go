@@ -270,8 +270,8 @@ func (a *ModelAssociation) Validate() error {
 			validation.When(a.Type == common.AssociationsBelongsToMany, validation.Required)),
 		validation.Field(&a.JoinTableTargetField,
 			validation.When(a.Type == common.AssociationsBelongsToMany, validation.Required)),
-		validation.Field(&a.OwningModelID, validation.Required),
-		validation.Field(&a.ReferencesModelID, validation.Required),
+		validation.Field(&a.OwningModelName, validation.Required),
+		validation.Field(&a.ReferencesModelName, validation.Required),
 	)
 }
 

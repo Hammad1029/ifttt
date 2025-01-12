@@ -27,7 +27,7 @@ func (r *apiCall) Manipulate(dependencies map[common.IntIota]any) error {
 		return err
 	}
 
-	if manipulated, err := manipulateIfResolvable(r.Headers, dependencies); err != nil {
+	if manipulated, err := ManipulateIfResolvable(r.Headers, dependencies); err != nil {
 		return err
 	} else if mapped, ok := manipulated.(map[string]any); !ok {
 		return fmt.Errorf("could not cast headers to map")
@@ -35,7 +35,7 @@ func (r *apiCall) Manipulate(dependencies map[common.IntIota]any) error {
 		r.Headers = mapped
 	}
 
-	if manipulated, err := manipulateIfResolvable(r.Body, dependencies); err != nil {
+	if manipulated, err := ManipulateIfResolvable(r.Body, dependencies); err != nil {
 		return err
 	} else if mapped, ok := manipulated.(map[string]any); !ok {
 		return fmt.Errorf("could not cast body to map")
@@ -76,6 +76,10 @@ func (r *encode) Manipulate(dependencies map[common.IntIota]any) error {
 	return r.Input.Manipulate(dependencies)
 }
 
+func (r *getErrors) Manipulate(dependencies map[common.IntIota]any) error {
+	return nil
+}
+
 func (r *getRequest) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
@@ -101,13 +105,13 @@ func (r *getConst) Manipulate(dependencies map[common.IntIota]any) error {
 }
 
 func (r *jq) Manipulate(dependencies map[common.IntIota]any) error {
-	if manipulated, err := manipulateIfResolvable(&r.Input, dependencies); err != nil {
+	if manipulated, err := ManipulateIfResolvable(&r.Input, dependencies); err != nil {
 		return err
 	} else {
 		r.Input = manipulated
 	}
 
-	if manipulated, err := manipulateIfResolvable(r.Query, dependencies); err != nil {
+	if manipulated, err := ManipulateIfResolvable(r.Query, dependencies); err != nil {
 		return err
 	} else {
 		r.Query = manipulated
@@ -132,12 +136,12 @@ func (r *query) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (r *response) Manipulate(dependencies map[common.IntIota]any) error {
+func (r *event) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
 func (r *setRes) Manipulate(dependencies map[common.IntIota]any) error {
-	if manipulated, err := manipulateIfResolvable(r, dependencies); err != nil {
+	if manipulated, err := ManipulateIfResolvable(r, dependencies); err != nil {
 		return err
 	} else if mapped, ok := manipulated.(map[string]any); !ok {
 		return fmt.Errorf("could not cast setres to map")
@@ -148,7 +152,7 @@ func (r *setRes) Manipulate(dependencies map[common.IntIota]any) error {
 }
 
 func (r *setStore) Manipulate(dependencies map[common.IntIota]any) error {
-	if manipulated, err := manipulateIfResolvable(r, dependencies); err != nil {
+	if manipulated, err := ManipulateIfResolvable(r, dependencies); err != nil {
 		return err
 	} else if mapped, ok := manipulated.(map[string]any); !ok {
 		return fmt.Errorf("could not cast setstore to map")
@@ -176,7 +180,7 @@ func (r *uuid) Manipulate(dependencies map[common.IntIota]any) error {
 }
 
 func (r *cast) Manipulate(dependencies map[common.IntIota]any) error {
-	if manipulated, err := manipulateIfResolvable(r.Input, dependencies); err != nil {
+	if manipulated, err := ManipulateIfResolvable(r.Input, dependencies); err != nil {
 		return err
 	} else {
 		r.Input = manipulated
@@ -226,7 +230,7 @@ func (r *Orm) Manipulate(dependencies map[common.IntIota]any) error {
 		}
 		colsSorted := lo.Keys(*r.Columns)
 		sort.Strings(colsSorted)
-		if manipulated, err := manipulateIfResolvable(r.Columns, dependencies); err != nil {
+		if manipulated, err := ManipulateIfResolvable(r.Columns, dependencies); err != nil {
 			return err
 		} else if mapped, ok := manipulated.(map[string]any); !ok {
 			return fmt.Errorf("could not cast manipulated to map")
@@ -300,7 +304,7 @@ func (d *dateInput) Manipulate(dependencies map[common.IntIota]any) error {
 }
 
 func (f *forEach) Manipulate(dependencies map[common.IntIota]any) error {
-	if manipulated, err := manipulateIfResolvable(f.Input, dependencies); err != nil {
+	if manipulated, err := ManipulateIfResolvable(f.Input, dependencies); err != nil {
 		return err
 	} else {
 		f.Input = manipulated

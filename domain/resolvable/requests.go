@@ -88,6 +88,10 @@ func (s *setLog) Validate() error {
 		)))
 }
 
+func (g *getErrors) Validate() error {
+	return nil
+}
+
 func (g *getRequest) Validate() error {
 	return nil
 }
@@ -127,11 +131,11 @@ func (c *apiCall) Validate() error {
 			})),
 		validation.Field(&c.Headers, validation.By(func(value any) error {
 			m := value.(map[string]any)
-			return validateIfResolvable(m)
+			return ValidateIfResolvable(m)
 		})),
 		validation.Field(&c.Body, validation.By(func(value any) error {
 			m := value.(map[string]any)
-			return validateIfResolvable(m)
+			return ValidateIfResolvable(m)
 		})),
 		validation.Field(&c.Aysnc),
 		validation.Field(&c.Timeout),
@@ -230,18 +234,22 @@ func (c *query) Validate() error {
 	)
 }
 
-func (c *response) Validate() error {
-	return nil
+func (e *event) Validate() error {
+	return validation.ValidateStruct(e,
+		validation.Field(&e.Trigger, validation.In(
+			common.EventSuccess, common.EventExhaust, common.EventBadRequest, common.EventNotFound, common.EventSystemMalfunction,
+		)),
+	)
 }
 
 func (c *setRes) Validate() error {
 	var mapCasted map[string]any = *c
-	return validateIfResolvable(mapCasted)
+	return ValidateIfResolvable(mapCasted)
 }
 
 func (c *setStore) Validate() error {
 	var mapCasted map[string]any = *c
-	return validateIfResolvable(mapCasted)
+	return ValidateIfResolvable(mapCasted)
 }
 
 func (c *cast) Validate() error {
@@ -249,7 +257,7 @@ func (c *cast) Validate() error {
 		validation.Field(&c.To, validation.In(common.ConvertStringToInterfaceArray(
 			[]string{common.CastToString, common.CastToNumber, common.CastToBoolean})...)),
 		validation.Field(&c.Input, validation.By(func(value any) error {
-			return validateIfResolvable(value)
+			return ValidateIfResolvable(value)
 		})),
 	)
 }
@@ -280,7 +288,7 @@ func (o *Orm) Validate() error {
 			validation.When(o.Operation == common.OrmInsert,
 				validation.By(
 					func(value any) error {
-						return validateIfResolvable(value)
+						return ValidateIfResolvable(value)
 					}),
 			).Else(validation.Nil)),
 		validation.Field(&o.Populate,
@@ -290,7 +298,7 @@ func (o *Orm) Validate() error {
 						return castError
 					} else {
 						for _, p := range *casted {
-							if err := p.Validate(validateIfResolvable); err != nil {
+							if err := p.Validate(ValidateIfResolvable); err != nil {
 								return err
 							}
 						}
@@ -304,7 +312,7 @@ func (o *Orm) Validate() error {
 					if v, ok := value.(*orm_schema.Where); !ok {
 						return castError
 					} else {
-						return v.Validate(validateIfResolvable)
+						return v.Validate(ValidateIfResolvable)
 					}
 				}),
 			).Else(validation.Nil)),
@@ -358,11 +366,11 @@ func (f *forEach) Validate() error {
 	return validation.ValidateStruct(f,
 		validation.Field(&f.Input, validation.NotNil, validation.By(
 			func(value any) error {
-				return validateIfResolvable(value)
+				return ValidateIfResolvable(value)
 			})),
 		validation.Field(&f.Do, validation.NotNil, validation.By(
 			func(value any) error {
-				return validateIfResolvable(value)
+				return ValidateIfResolvable(value)
 			})),
 	)
 }

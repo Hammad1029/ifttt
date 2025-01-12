@@ -12,6 +12,7 @@ import (
 
 const (
 	accessorJq                  = "jq"
+	accessorGetErrors           = "getErrors"
 	accessorGetRequest          = "getReq"
 	accessorGetResponse         = "getRes"
 	accessorGetStore            = "getStore"
@@ -22,7 +23,7 @@ const (
 	accessorSetRes              = "setRes"
 	accessorSetStore            = "setStore"
 	accessorSetLog              = "log"
-	accessorResponse            = "sendRes"
+	accessorEvent               = "event"
 	accessorPreConfig           = "getPreConfig"
 	accessorStringInterpolation = "stringInterpolation"
 	accessorEncode              = "encode"
@@ -41,6 +42,7 @@ const (
 
 var resolveTypes = []string{
 	accessorJq,
+	accessorGetErrors,
 	accessorGetRequest,
 	accessorGetResponse,
 	accessorGetStore,
@@ -51,7 +53,7 @@ var resolveTypes = []string{
 	accessorSetRes,
 	accessorSetStore,
 	accessorSetLog,
-	accessorResponse,
+	accessorEvent,
 	accessorPreConfig,
 	accessorStringInterpolation,
 	accessorEncode,
@@ -78,6 +80,8 @@ func factory(template any) (resolvableInterface, error) {
 	switch base.ResolveType {
 	case accessorJq:
 		resolver = &jq{}
+	case accessorGetErrors:
+		resolver = &getErrors{}
 	case accessorGetRequest:
 		resolver = &getRequest{}
 	case accessorGetResponse:
@@ -98,8 +102,8 @@ func factory(template any) (resolvableInterface, error) {
 		resolver = &setStore{}
 	case accessorSetLog:
 		resolver = &setLog{}
-	case accessorResponse:
-		resolver = &response{}
+	case accessorEvent:
+		resolver = &event{}
 	case accessorPreConfig:
 		resolver = &getPreConfig{}
 	case accessorStringInterpolation:
@@ -139,7 +143,7 @@ func factory(template any) (resolvableInterface, error) {
 	return resolver, nil
 }
 
-func manipulateIfResolvable(val any, dependencies map[common.IntIota]any) (any, error) {
+func ManipulateIfResolvable(val any, dependencies map[common.IntIota]any) (any, error) {
 	if val == nil {
 		return nil, nil
 	}
@@ -178,7 +182,7 @@ func manipulateIfResolvable(val any, dependencies map[common.IntIota]any) (any, 
 			}
 			for key := range mapCloned {
 				val := mapCloned[key]
-				if v, err := manipulateIfResolvable(&val, dependencies); err != nil {
+				if v, err := ManipulateIfResolvable(&val, dependencies); err != nil {
 					return nil, err
 				} else {
 					mapCloned[key] = v
@@ -193,7 +197,7 @@ func manipulateIfResolvable(val any, dependencies map[common.IntIota]any) (any, 
 				return nil, err
 			}
 			for idx, item := range oArr {
-				if v, err := manipulateIfResolvable(&item, dependencies); err != nil {
+				if v, err := ManipulateIfResolvable(&item, dependencies); err != nil {
 					return nil, err
 				} else {
 					oArr[idx] = v
@@ -206,7 +210,7 @@ func manipulateIfResolvable(val any, dependencies map[common.IntIota]any) (any, 
 	return concrete, nil
 }
 
-func validateIfResolvable(val any) error {
+func ValidateIfResolvable(val any) error {
 	if val == nil {
 		return nil
 	}
@@ -237,7 +241,7 @@ func validateIfResolvable(val any) error {
 			}
 			for key := range mapCloned {
 				val := mapCloned[key]
-				if err = validateIfResolvable(&val); err != nil {
+				if err = ValidateIfResolvable(&val); err != nil {
 					return err
 				}
 			}
@@ -249,7 +253,7 @@ func validateIfResolvable(val any) error {
 				return err
 			}
 			for _, item := range oArr {
-				if err := validateIfResolvable(&item); err != nil {
+				if err := ValidateIfResolvable(&item); err != nil {
 					return err
 				}
 			}
@@ -321,7 +325,7 @@ func (p *Orm) ManipulatePopulate(
 }
 
 func (w *Orm) ManipulateWhere(where *orm_schema.Where, dependencies map[common.IntIota]any) error {
-	if manipulated, err := manipulateIfResolvable(where.Values, dependencies); err != nil {
+	if manipulated, err := ManipulateIfResolvable(where.Values, dependencies); err != nil {
 		return err
 	} else if mapped, ok := manipulated.([]any); !ok {
 		return fmt.Errorf("could not cast conditionsValues to map")

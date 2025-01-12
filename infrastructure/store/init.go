@@ -7,9 +7,9 @@ import (
 	"ifttt/manager/domain/api"
 	"ifttt/manager/domain/auth"
 	"ifttt/manager/domain/cron"
+	eventprofiles "ifttt/manager/domain/event_profiles"
 	"ifttt/manager/domain/orm_schema"
 	"ifttt/manager/domain/resolvable"
-	responseprofiles "ifttt/manager/domain/response_profiles"
 	"ifttt/manager/domain/rule"
 	triggerflow "ifttt/manager/domain/trigger_flow"
 	"ifttt/manager/domain/user"
@@ -40,15 +40,15 @@ type cacheStorer interface {
 }
 
 type ConfigStore struct {
-	Store               configStorer
-	CasbinEnforcer      *casbin.Enforcer
-	CronRepo            cron.Repository
-	APIRepo             api.Repository
-	RuleRepo            rule.Repository
-	TriggerFlowRepo     triggerflow.Repository
-	UserRepo            user.Repository
-	OrmRepo             orm_schema.OrmRepository
-	ResponseProfileRepo responseprofiles.Repository
+	Store            configStorer
+	CasbinEnforcer   *casbin.Enforcer
+	CronRepo         cron.Repository
+	APIRepo          api.Repository
+	RuleRepo         rule.Repository
+	TriggerFlowRepo  triggerflow.Repository
+	UserRepo         user.Repository
+	OrmRepo          orm_schema.OrmRepository
+	EventProfileRepo eventprofiles.Repository
 }
 
 type DataStore struct {

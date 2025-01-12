@@ -38,6 +38,8 @@ type encode struct {
 	Alg   string     `json:"alg" mapstructure:"alg"`
 }
 
+type getErrors struct{}
+
 type getRequest struct{}
 
 type getResponse struct{}
@@ -64,11 +66,6 @@ type query struct {
 	PositionalParameters []Resolvable          `json:"positionalParameters" mapstructure:"positionalParameters"`
 	Async                bool                  `json:"async" mapstructure:"async"`
 	Timeout              uint                  `json:"timeout" mapstructure:"timeout"`
-}
-
-type response struct {
-	ResponseCode        string `json:"responseCode" mapstructure:"responseCode"`
-	ResponseDescription string `json:"responseDescription" mapstructure:"responseDescription"`
 }
 
 type setRes map[string]any
@@ -129,4 +126,8 @@ type dateInput struct {
 	Input    *Resolvable `json:"input" mapstructure:"input"`
 	Parse    string      `json:"parse" mapstructure:"parse"`
 	Timezone string      `json:"timezone" mapstructure:"timezone"`
+}
+
+type event struct {
+	Trigger string `json:"trigger" mapstructure:"trigger"`
 }

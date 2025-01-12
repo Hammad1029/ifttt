@@ -86,26 +86,13 @@ type orm_association struct {
 	ReferencesModel      orm_model `gorm:"foreignKey:ReferencesModelID" mapstructure:"referencesModel" json:"referencesModel"`
 }
 
-type response_profile struct {
+type event_profile struct {
 	gorm.Model
-	MappedCode     string                 `gorm:"not null" json:"mappedCode" mapstructure:"mappedCode"`
-	HttpStatus     int                    `gorm:"not null" json:"httpStatus" mapstructure:"httpStatus"`
-	Internal       bool                   `gorm:"not null" json:"internal" mapstructure:"internal"`
-	CodeId         uint                   `gorm:"not null" json:"codeId" mapstructure:"codeId"`
-	DescriptionId  uint                   `gorm:"not null" json:"descriptionId" mapstructure:"descriptionId"`
-	DataId         uint                   `gorm:"not null" json:"dataId" mapstructure:"dataId"`
-	ErrorsId       uint                   `gorm:"not null" json:"errorsId" mapstructure:"errorsId"`
-	Code           response_profile_field `gorm:"foreignKey:CodeId" json:"code" mapstructure:"code"`
-	Description    response_profile_field `gorm:"foreignKey:DescriptionId" json:"description" mapstructure:"description"`
-	Data           response_profile_field `gorm:"foreignKey:DataId" json:"data" mapstructure:"data"`
-	Errors         response_profile_field `gorm:"foreignKey:ErrorsId" json:"errors" mapstructure:"errors"`
-	ParentID       *uint                  `gorm:"index" json:"parentId" mapstructure:"parentId"`
-	MappedProfiles *[]response_profile    `gorm:"foreignKey:ParentID" json:"mappedProfiles" mapstructure:"mappedProfiles"`
-}
-
-type response_profile_field struct {
-	gorm.Model
-	Key      string       `json:"key" mapstructure:"key"`
-	Default  pgtype.JSONB `gorm:"type:jsonb;default:'null';not null" json:"default" mapstructure:"default"`
-	Disabled bool         `gorm:"default:false;not null" json:"disabled" mapstructure:"disabled"`
+	Trigger            string           `gorm:"not null" json:"trigger" mapstructure:"trigger"`
+	ResponseHTTPStatus int              `gorm:"not null" json:"responseHTTPStatus" mapstructure:"responseHTTPStatus"`
+	UseBody            bool             `gorm:"not null" json:"useBody" mapstructure:"useBody"`
+	ResponseBody       pgtype.JSONB     `gorm:"type:jsonb;default:'{}';not null" json:"responseBody" mapstructure:"responseBody"`
+	Internal           bool             `gorm:"not null" json:"internal" mapstructure:"internal"`
+	ParentID           *uint            `gorm:"index" json:"parentId" mapstructure:"parentId"`
+	MappedProfiles     *[]event_profile `gorm:"foreignKey:ParentID" json:"mappedProfiles" mapstructure:"mappedProfiles"`
 }

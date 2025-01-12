@@ -1,6 +1,7 @@
 package orm_schema
 
 type Model struct {
+	ID                     uint               `mapstructure:"ID" json:"ID"`
 	Name                   string             `mapstructure:"name" json:"name"`
 	Table                  string             `mapstructure:"table" json:"table"`
 	Projections            []Projection       `mapstructure:"projections" json:"projections"`
@@ -27,6 +28,8 @@ type ModelAssociation struct {
 	JoinTableTargetField string `mapstructure:"joinTableTargetField" json:"joinTableTargetField"`
 	OwningModelID        uint   `mapstructure:"owningModelID" json:"owningModelID"`
 	ReferencesModelID    uint   `mapstructure:"referencesModelID" json:"referencesModelID"`
+	OwningModelName      string `mapstructure:"owningModelName" json:"owningModelName"`
+	ReferencesModelName  string `mapstructure:"referencesModelName" json:"referencesModelName"`
 	OwningModel          Model  `mapstructure:"owningModel" json:"owningModel"`
 	ReferencesModel      Model  `mapstructure:"referencesModel" json:"referencesModel"`
 }

@@ -203,7 +203,7 @@ func (s *ormSchemaController) CreateAssociation(c *gin.Context) {
 		return
 	}
 
-	if model, err := s.serverCore.ConfigStore.OrmRepo.GetModelByIdOrName(reqBody.OwningModelID, ""); err != nil {
+	if model, err := s.serverCore.ConfigStore.OrmRepo.GetModelByIdOrName(0, reqBody.OwningModelName); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else if model == nil || model.Table != reqBody.TableName ||
@@ -216,8 +216,10 @@ func (s *ormSchemaController) CreateAssociation(c *gin.Context) {
 		}) {
 		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["InvalidORM"]})
 		return
+	} else {
+		reqBody.OwningModelID = model.ID
 	}
-	if model, err := s.serverCore.ConfigStore.OrmRepo.GetModelByIdOrName(reqBody.ReferencesModelID, ""); err != nil {
+	if model, err := s.serverCore.ConfigStore.OrmRepo.GetModelByIdOrName(0, reqBody.ReferencesModelName); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else if model == nil || model.Table != reqBody.ReferencesTable ||
@@ -230,6 +232,8 @@ func (s *ormSchemaController) CreateAssociation(c *gin.Context) {
 		}) {
 		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["InvalidORM"]})
 		return
+	} else {
+		reqBody.ReferencesModelID = model.ID
 	}
 
 	if err := s.serverCore.ConfigStore.OrmRepo.CreateAssociation(&reqBody); err != nil {

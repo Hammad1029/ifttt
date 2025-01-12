@@ -63,3 +63,11 @@ const (
 	DateOperatorAdd      = "+"
 	DateOperatorSubtract = "-"
 )
+
+const (
+	EventSuccess           = "000"
+	EventExhaust           = "010"
+	EventBadRequest        = "400"
+	EventNotFound          = "404"
+	EventSystemMalfunction = "500"
+)
