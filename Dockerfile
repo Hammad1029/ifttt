@@ -1,5 +1,5 @@
 # Dockerfile
-FROM golang:1.21.5-alpine AS build-stage
+FROM golang:1.23-alpine AS build-stage
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
