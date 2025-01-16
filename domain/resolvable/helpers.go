@@ -5,6 +5,7 @@ import (
 	"ifttt/manager/common"
 	"ifttt/manager/domain/orm_schema"
 	"reflect"
+	"sort"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/samber/lo"
@@ -380,7 +381,40 @@ func (o *Orm) ManipulateProjection(
 	}
 
 	for idx, p := range *projections {
-		(*projections)[idx].DataType = modelProjectionsMapped[p.Column].DataType
+		(*projections)[idx].SchemaType = modelProjectionsMapped[p.Column].SchemaType
+		(*projections)[idx].ModelType = modelProjectionsMapped[p.Column].ModelType
+		(*projections)[idx].NotNull = modelProjectionsMapped[p.Column].NotNull
+	}
+
+	return nil
+}
+
+func (r *Orm) ManipulateColumns(model *orm_schema.Model, dependencies map[common.IntIota]any) error {
+	allowedColumns := lo.SliceToMap(model.Projections,
+		func(p orm_schema.Projection) (string, orm_schema.Projection) {
+			return p.Column, p
+		})
+	for col := range *r.Columns {
+		if _, ok := allowedColumns[col]; !ok {
+			return fmt.Errorf("column %s not in model %s projections", col, model.Name)
+		}
+	}
+	colsSorted := lo.Keys(*r.Columns)
+	sort.Strings(colsSorted)
+	if manipulated, err := ManipulateIfResolvable(r.Columns, dependencies); err != nil {
+		return err
+	} else if mapped, ok := manipulated.(map[string]any); !ok {
+		return fmt.Errorf("could not cast manipulated to map")
+	} else {
+		r.Columns = &mapped
+		for key, v := range *r.Columns {
+			if converted, err := anyToResolvable(v); err != nil {
+				return err
+			} else {
+				r.Query.NamedParameters[key] = *converted
+			}
+		}
+		r.Query.Named = true
 	}
 
 	return nil

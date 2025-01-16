@@ -11,9 +11,11 @@ type Model struct {
 }
 
 type Projection struct {
-	Column   string `mapstructure:"column" json:"column"`
-	As       string `mapstructure:"as" json:"as"`
-	DataType string `mapstructure:"dataType" json:"dataType"`
+	Column     string `mapstructure:"column" json:"column"`
+	As         string `mapstructure:"as" json:"as"`
+	SchemaType string `mapstructure:"schemaType" json:"schemaType"`
+	ModelType  string `mapstructure:"modelType" json:"modelType"`
+	NotNull    bool   `mapstructure:"notNull" json:"notNull"`
 }
 
 type ModelAssociation struct {

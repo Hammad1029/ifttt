@@ -247,10 +247,15 @@ func (c *Projection) Validate(dataType bool) error {
 	return validation.ValidateStruct(c,
 		validation.Field(&c.As, validation.Required),
 		validation.Field(&c.Column, validation.Required),
-		validation.Field(&c.DataType,
+		validation.Field(&c.SchemaType,
 			validation.When(dataType, validation.Required, validation.In(
 				common.DatabaseTypeString, common.DatabaseTypeNumber, common.DatabaseTypeBoolean,
 			)).Else(validation.Empty)),
+		validation.Field(&c.ModelType,
+			validation.When(dataType, validation.Required, validation.In(
+				common.DatabaseTypeString, common.DatabaseTypeNumber, common.DatabaseTypeBoolean,
+			)).Else(validation.Empty)),
+		validation.Field(&c.NotNull),
 	)
 }
 

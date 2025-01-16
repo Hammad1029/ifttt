@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"ifttt/manager/common"
 	"ifttt/manager/domain/orm_schema"
-	"sort"
-
-	"github.com/samber/lo"
 )
 
 func (r *Resolvable) Manipulate(dependencies map[common.IntIota]any) error {
@@ -219,31 +216,8 @@ func (r *Orm) Manipulate(dependencies map[common.IntIota]any) error {
 	}
 
 	if r.Columns != nil {
-		allowedColumns := lo.SliceToMap(rootModel.Projections,
-			func(p orm_schema.Projection) (string, orm_schema.Projection) {
-				return p.Column, p
-			})
-		for col := range *r.Columns {
-			if _, ok := allowedColumns[col]; !ok {
-				return fmt.Errorf("column %s not in model %s projections", col, rootModel.Name)
-			}
-		}
-		colsSorted := lo.Keys(*r.Columns)
-		sort.Strings(colsSorted)
-		if manipulated, err := ManipulateIfResolvable(r.Columns, dependencies); err != nil {
+		if err := r.ManipulateColumns(rootModel, dependencies); err != nil {
 			return err
-		} else if mapped, ok := manipulated.(map[string]any); !ok {
-			return fmt.Errorf("could not cast manipulated to map")
-		} else {
-			r.Columns = &mapped
-			for key, v := range *r.Columns {
-				if converted, err := anyToResolvable(v); err != nil {
-					return err
-				} else {
-					r.Query.NamedParameters[key] = *converted
-				}
-			}
-			r.Query.Named = true
 		}
 	}
 

@@ -63,10 +63,12 @@ type orm_model struct {
 
 type orm_projection struct {
 	gorm.Model
-	ModelID  uint   `gorm:"not null"`
-	Column   string `gorm:"type:varchar(255);not null" mapstructure:"column" json:"column"`
-	As       string `gorm:"type:varchar(255);not null" mapstructure:"as" json:"as"`
-	DataType string `gorm:"type:varchar(255);not null" mapstructure:"dataType" json:"dataType"`
+	ModelID    uint   `gorm:"not null"`
+	Column     string `gorm:"type:varchar(255);not null" mapstructure:"column" json:"column"`
+	As         string `gorm:"type:varchar(255);not null" mapstructure:"as" json:"as"`
+	SchemaType string `gorm:"type:varchar(255);not null" mapstructure:"schemaType" json:"schemaType"`
+	ModelType  string `gorm:"type:varchar(255);not null" mapstructure:"modelType" json:"modelType"`
+	NotNull    bool   `gorm:"default:false" mapstructure:"notNull" json:"notNull"`
 }
 
 type orm_association struct {
