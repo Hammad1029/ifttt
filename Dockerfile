@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Copy the env.json file to the working directory
-COPY env.json ./
+COPY config/env.json ./
 
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -o main .
