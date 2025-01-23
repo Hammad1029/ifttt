@@ -318,6 +318,7 @@ func (p *Orm) ManipulatePopulate(
 			return err
 		}
 
+		*p.ModelsInUse = append(*p.ModelsInUse, child.Model)
 		if err := p.ManipulatePopulate(&child.Populate, models, dependencies); err != nil {
 			return err
 		}

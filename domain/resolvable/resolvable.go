@@ -61,6 +61,7 @@ type jq struct {
 
 type query struct {
 	QueryString          string                `json:"queryString" mapstructure:"queryString"`
+	Scan                 bool                  `json:"scan" mapstructure:"scan"`
 	Named                bool                  `json:"named" mapstructure:"named"`
 	NamedParameters      map[string]Resolvable `json:"namedParameters" mapstructure:"namedParameters"`
 	PositionalParameters []Resolvable          `json:"positionalParameters" mapstructure:"positionalParameters"`
@@ -90,15 +91,16 @@ type cast struct {
 }
 
 type Orm struct {
-	Query     *query                   `json:"query" mapstructure:"query"`
-	Operation string                   `json:"operation" mapstructure:"operation"`
-	Model     string                   `json:"model" mapstructure:"model"`
-	Project   *[]orm_schema.Projection `json:"project" mapstructure:"project"`
-	Columns   *map[string]any          `json:"columns" mapstructure:"columns"`
-	Populate  *[]orm_schema.Populate   `json:"populate" mapstructure:"populate"`
-	Where     *orm_schema.Where        `json:"where" mapstructure:"where"`
-	OrderBy   string                   `json:"orderBy" mapstructure:"orderBy"`
-	Limit     int                      `json:"limit" mapstructure:"limit"`
+	Query       *query                   `json:"query" mapstructure:"query"`
+	Operation   string                   `json:"operation" mapstructure:"operation"`
+	Model       string                   `json:"model" mapstructure:"model"`
+	Project     *[]orm_schema.Projection `json:"project" mapstructure:"project"`
+	Columns     *map[string]any          `json:"columns" mapstructure:"columns"`
+	Populate    *[]orm_schema.Populate   `json:"populate" mapstructure:"populate"`
+	Where       *orm_schema.Where        `json:"where" mapstructure:"where"`
+	OrderBy     string                   `json:"orderBy" mapstructure:"orderBy"`
+	Limit       int                      `json:"limit" mapstructure:"limit"`
+	ModelsInUse *[]string                `json:"modelsInUse" mapstructure:"modelsInUse"`
 }
 
 type forEach struct {

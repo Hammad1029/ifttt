@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"ifttt/manager/common"
 	"ifttt/manager/domain/orm_schema"
+
+	"github.com/samber/lo"
 )
 
 func (r *Resolvable) Manipulate(dependencies map[common.IntIota]any) error {
@@ -201,6 +203,7 @@ func (r *Orm) Manipulate(dependencies map[common.IntIota]any) error {
 	}
 
 	if r.Operation == common.OrmSelect {
+		r.Query.Scan = true
 	} else if r.Operation == common.OrmInsert {
 	} else {
 		return fmt.Errorf("operation %s not allowed", r.Operation)
@@ -237,6 +240,8 @@ func (r *Orm) Manipulate(dependencies map[common.IntIota]any) error {
 		r.Where = &orm_schema.Where{}
 	}
 
+	r.ModelsInUse = &[]string{}
+	*r.ModelsInUse = append(*r.ModelsInUse, r.Model)
 	if r.Populate != nil {
 		if err := r.ManipulatePopulate(r.Populate, &allModels, dependencies); err != nil {
 			return err
@@ -244,6 +249,7 @@ func (r *Orm) Manipulate(dependencies map[common.IntIota]any) error {
 	} else {
 		r.Populate = &[]orm_schema.Populate{}
 	}
+	*r.ModelsInUse = lo.Uniq(*r.ModelsInUse)
 
 	if queryString, err := queryGenerator.Generate(r, rootModel, allModels); err != nil {
 		return err
