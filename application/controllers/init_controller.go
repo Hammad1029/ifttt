@@ -13,7 +13,7 @@ type AllController struct {
 	UserController          *userController
 	RoleController          *roleController
 	CronController          *cronController
-	EventProfilesController *eventProfilesController
+	ConfigurationController *configurationController
 }
 
 func NewAllController(serverCore *core.ServerCore) *AllController {
@@ -26,6 +26,6 @@ func NewAllController(serverCore *core.ServerCore) *AllController {
 		UserController:          newUserController(serverCore),
 		RoleController:          newRoleController(serverCore),
 		CronController:          newCronController(serverCore),
-		EventProfilesController: newEventProfilesController(serverCore),
+		ConfigurationController: newConfigurationController(serverCore),
 	}
 }

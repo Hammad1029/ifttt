@@ -9,10 +9,11 @@ const (
 )
 
 type RequestParameter struct {
-	Regex    string         `json:"regex" mapstructure:"regex"`
-	DataType string         `json:"dataType" mapstructure:"dataType"`
-	Required bool           `json:"required" mapstructure:"required"`
-	Config   map[string]any `json:"config" mapstructure:"config"`
+	Regex       string         `json:"regex" mapstructure:"regex"`
+	DataType    string         `json:"dataType" mapstructure:"dataType"`
+	Required    bool           `json:"required" mapstructure:"required"`
+	InternalTag string         `json:"internalTag" mapstructure:"internalTag"`
+	Config      map[string]any `json:"config" mapstructure:"config"`
 }
 
 type textValue struct {

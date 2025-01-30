@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"ifttt/manager/domain/api"
+	configuration "ifttt/manager/domain/configuration"
 	"ifttt/manager/domain/cron"
-	eventprofiles "ifttt/manager/domain/event_profiles"
 	"ifttt/manager/domain/orm_schema"
 	requestvalidator "ifttt/manager/domain/request_validator"
-	"ifttt/manager/domain/resolvable"
 	"ifttt/manager/domain/rule"
 	triggerflow "ifttt/manager/domain/trigger_flow"
 
@@ -112,15 +111,15 @@ func (a *apis) fromDomain(domainApi *api.CreateApiRequest, attachTriggers *[]tri
 	a.Description = domainApi.Description
 
 	if reqMarshalled, err := json.Marshal(domainApi.Request); err != nil {
-		return fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal request: %s", err)
+		return fmt.Errorf("could not marshal request: %s", err)
 	} else {
 		a.Request = pgtype.JSONB{Bytes: reqMarshalled, Status: pgtype.Present}
 	}
 
-	if preConfigMarshalled, err := json.Marshal(domainApi.PreConfig); err != nil {
-		return fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal pre config: %s", err)
+	if respMarshalled, err := json.Marshal(domainApi.Response); err != nil {
+		return fmt.Errorf("could not marshal response: %s", err)
 	} else {
-		a.PreConfig = pgtype.JSONB{Bytes: preConfigMarshalled, Status: pgtype.Present}
+		a.Response = pgtype.JSONB{Bytes: respMarshalled, Status: pgtype.Present}
 	}
 
 	for _, dtf := range *attachTriggers {
@@ -128,7 +127,7 @@ func (a *apis) fromDomain(domainApi *api.CreateApiRequest, attachTriggers *[]tri
 	}
 
 	if tConditionsMarshalled, err := json.Marshal(domainApi.Triggers); err != nil {
-		return fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal trigger conditions: %s", err)
+		return fmt.Errorf("could not marshal trigger conditions: %s", err)
 	} else {
 		a.TriggerFlows = pgtype.JSONB{Bytes: tConditionsMarshalled, Status: pgtype.Present}
 	}
@@ -144,7 +143,7 @@ func (a *apis) toDomain() (*api.Api, error) {
 		Method:      a.Method,
 		Description: a.Description,
 		Request:     map[string]requestvalidator.RequestParameter{},
-		PreConfig:   map[string]resolvable.Resolvable{},
+		Response:    map[uint]api.ResponseDefinition{},
 		Triggers:    &[]triggerflow.TriggerCondition{},
 	}
 
@@ -152,7 +151,7 @@ func (a *apis) toDomain() (*api.Api, error) {
 		return nil, err
 	}
 
-	if err := json.Unmarshal(a.PreConfig.Bytes, &domainApi.PreConfig); err != nil {
+	if err := json.Unmarshal(a.Response.Bytes, &domainApi.Response); err != nil {
 		return nil, err
 	}
 
@@ -273,40 +272,61 @@ func (o *orm_association) toDomain() (*orm_schema.ModelAssociation, error) {
 	return &domain, nil
 }
 
-func (p *event_profile) fromDomain(dProfile *eventprofiles.Profile) error {
-	p.Trigger = dProfile.Trigger
+func (p *response_profile) fromDomain(dProfile *configuration.ResponseProfile) error {
+	p.Name = dProfile.Name
 	p.ResponseHTTPStatus = dProfile.ResponseHTTPStatus
-	p.Internal = dProfile.Internal
-	p.UseBody = dProfile.UseBody
-	if marshalled, err := json.Marshal(dProfile.ResponseBody); err != nil {
+	if marshalled, err := json.Marshal(dProfile.BodyFormat); err != nil {
 		return err
 	} else {
-		p.ResponseBody = pgtype.JSONB{Bytes: marshalled, Status: pgtype.Present}
+		p.BodyFormat = pgtype.JSONB{Bytes: marshalled, Status: pgtype.Present}
 	}
 	return nil
 }
 
-func (p *event_profile) toDomain() (*eventprofiles.Profile, error) {
-	dProfile := eventprofiles.Profile{
+func (p *response_profile) toDomain() (*configuration.ResponseProfile, error) {
+	dProfile := configuration.ResponseProfile{
 		ID:                 p.ID,
-		Trigger:            p.Trigger,
+		Name:               p.Name,
 		ResponseHTTPStatus: p.ResponseHTTPStatus,
-		Internal:           p.Internal,
-		UseBody:            p.UseBody,
 	}
-	if err := json.Unmarshal(p.ResponseBody.Bytes, &dProfile.ResponseBody); err != nil {
+	if err := json.Unmarshal(p.BodyFormat.Bytes, &dProfile.BodyFormat); err != nil {
 		return nil, err
 	}
-	if p.MappedProfiles != nil {
-		mappedProfiles := make([]eventprofiles.Profile, 0, len(*p.MappedProfiles))
-		for _, mp := range *p.MappedProfiles {
-			if dP, err := mp.toDomain(); err != nil {
-				return nil, err
-			} else {
-				mappedProfiles = append(mappedProfiles, *dP)
-			}
-		}
-		dProfile.MappedProfiles = &mappedProfiles
-	}
 	return &dProfile, nil
+}
+
+func (g *internal_tag_group) fromDomain(dG *configuration.InternalTagGroup) {
+	g.Name = dG.Name
+}
+
+func (g *internal_tag_group) toDomain() *configuration.InternalTagGroup {
+	dGroup := configuration.InternalTagGroup{
+		ID:   g.ID,
+		Name: g.Name,
+	}
+	for _, t := range g.Tags {
+		dGroup.Tags = append(dGroup.Tags, t.toDomain())
+	}
+	return &dGroup
+}
+
+func (p *internal_tag) fromDomain(dP *configuration.InternalTag) {
+	p.Name = dP.Name
+	p.All = dP.All
+	p.Reserved = dP.Reserved
+
+	for _, g := range dP.Groups {
+		p.Groups = append(p.Groups, &internal_tag_group{Model: gorm.Model{ID: g.ID}})
+	}
+}
+
+func (p *internal_tag) toDomain() *configuration.InternalTag {
+	dPTag := configuration.InternalTag{
+		ID:   p.ID,
+		Name: p.Name,
+	}
+	for _, g := range p.Groups {
+		dPTag.Groups = append(dPTag.Groups, configuration.InternalTagGroup{Name: g.Name})
+	}
+	return &dPTag
 }

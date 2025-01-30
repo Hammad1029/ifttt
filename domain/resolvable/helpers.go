@@ -14,18 +14,13 @@ import (
 const (
 	accessorJq                  = "jq"
 	accessorGetErrors           = "getErrors"
-	accessorGetRequest          = "getReq"
-	accessorGetResponse         = "getRes"
 	accessorGetStore            = "getStore"
 	accessorGetConst            = "const"
 	accessorArithmetic          = "arithmetic"
 	accessorQuery               = "query"
 	accessorApiCall             = "api"
-	accessorSetRes              = "setRes"
 	accessorSetStore            = "setStore"
 	accessorSetLog              = "log"
-	accessorEvent               = "event"
-	accessorPreConfig           = "getPreConfig"
 	accessorStringInterpolation = "stringInterpolation"
 	accessorEncode              = "encode"
 	accessorSetCache            = "setCache"
@@ -39,23 +34,20 @@ const (
 	accessorDateInput           = "dateInput"
 	accessorDateManipulator     = "dateManipulator"
 	accessorDateFunc            = "dateFunc"
+	accessorResponse            = "response"
 )
 
 var resolveTypes = []string{
 	accessorJq,
 	accessorGetErrors,
-	accessorGetRequest,
-	accessorGetResponse,
 	accessorGetStore,
 	accessorGetConst,
 	accessorArithmetic,
 	accessorQuery,
 	accessorApiCall,
-	accessorSetRes,
 	accessorSetStore,
 	accessorSetLog,
-	accessorEvent,
-	accessorPreConfig,
+	accessorResponse,
 	accessorStringInterpolation,
 	accessorEncode,
 	accessorSetCache,
@@ -83,10 +75,6 @@ func factory(template any) (resolvableInterface, error) {
 		resolver = &jq{}
 	case accessorGetErrors:
 		resolver = &getErrors{}
-	case accessorGetRequest:
-		resolver = &getRequest{}
-	case accessorGetResponse:
-		resolver = &getResponse{}
 	case accessorGetStore:
 		resolver = &getStore{}
 	case accessorGetConst:
@@ -97,16 +85,12 @@ func factory(template any) (resolvableInterface, error) {
 		resolver = &query{}
 	case accessorApiCall:
 		resolver = &apiCall{}
-	case accessorSetRes:
-		resolver = &setRes{}
 	case accessorSetStore:
 		resolver = &setStore{}
 	case accessorSetLog:
 		resolver = &setLog{}
-	case accessorEvent:
-		resolver = &event{}
-	case accessorPreConfig:
-		resolver = &getPreConfig{}
+	case accessorResponse:
+		resolver = &response{}
 	case accessorStringInterpolation:
 		resolver = &stringInterpolation{}
 	case accessorEncode:

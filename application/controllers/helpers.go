@@ -21,17 +21,15 @@ func validateAndBind(c *gin.Context, output common.Validatable) bool {
 		return false
 	}
 
-	if validator, ok := output.(common.Validatable); ok {
-		if err := validator.Validate(); err != nil {
-			if internalErr, ok := err.(validation.InternalError); ok {
-				common.HandleErrorResponse(c,
-					fmt.Errorf("method validateAndBind: could not validate: %s", internalErr))
-				return false
-			}
-
-			c.AbortWithStatusJSON(http.StatusBadRequest, err)
+	if err := output.Validate(); err != nil {
+		if internalErr, ok := err.(validation.InternalError); ok {
+			common.HandleErrorResponse(c,
+				fmt.Errorf("method validateAndBind: could not validate: %s", internalErr))
 			return false
 		}
+
+		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return false
 	}
 
 	return true

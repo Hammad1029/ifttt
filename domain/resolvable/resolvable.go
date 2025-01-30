@@ -40,13 +40,7 @@ type encode struct {
 
 type getErrors struct{}
 
-type getRequest struct{}
-
-type getResponse struct{}
-
 type getStore struct{}
-
-type getPreConfig struct{}
 
 type getHeaders struct{}
 
@@ -68,8 +62,6 @@ type query struct {
 	Async                bool                  `json:"async" mapstructure:"async"`
 	Timeout              uint                  `json:"timeout" mapstructure:"timeout"`
 }
-
-type setRes map[string]any
 
 type setStore map[string]any
 
@@ -130,6 +122,6 @@ type dateInput struct {
 	Timezone string      `json:"timezone" mapstructure:"timezone"`
 }
 
-type event struct {
-	Trigger string `json:"trigger" mapstructure:"trigger"`
+type response struct {
+	Trigger uint `json:"trigger" mapstructure:"trigger"`
 }

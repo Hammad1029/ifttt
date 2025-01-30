@@ -75,9 +75,18 @@ func (ac *apiController) Create(c *gin.Context) {
 		return
 	}
 
-	if err := requestvalidator.GenerateAll(&reqBody.Request); err != nil {
+	if err := requestvalidator.GenerateAll(&reqBody.Request, &ac.serverCore.ConfigStore.InternalTagRepo); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
+	}
+
+	for _, profile := range reqBody.Response {
+		if err := api.ValidateResponseDefinition(
+			&profile, &ac.serverCore.ConfigStore.ResponseProfileRepo, &ac.serverCore.ConfigStore.InternalTagRepo,
+		); err != nil {
+			common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["NotFound"]})
+			return
+		}
 	}
 
 	if manipulated, err := resolvable.ManipulateMap(reqBody.PreConfig, ac.serverCore.ResolvableDependencies); err != nil {

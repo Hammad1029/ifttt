@@ -28,7 +28,7 @@ type apis struct {
 	Method       string          `gorm:"type:varchar(10);not null" mapstructure:"method"`
 	Description  string          `gorm:"type:text;default:''" mapstructure:"description"`
 	Request      pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"request"`
-	PreConfig    pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"preConfig"`
+	Response     pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"response"`
 	Triggers     []trigger_flows `gorm:"many2many:api_trigger_flows_main;joinForeignKey:ApiId;joinReferences:FlowId;" mapstructure:"triggerFlows"`
 	TriggerFlows pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"triggerConditions"`
 }
@@ -88,13 +88,23 @@ type orm_association struct {
 	ReferencesModel      orm_model `gorm:"foreignKey:ReferencesModelID" mapstructure:"referencesModel" json:"referencesModel"`
 }
 
-type event_profile struct {
+type response_profile struct {
 	gorm.Model
-	Trigger            string           `gorm:"not null" json:"trigger" mapstructure:"trigger"`
-	ResponseHTTPStatus int              `gorm:"not null" json:"responseHTTPStatus" mapstructure:"responseHTTPStatus"`
-	UseBody            bool             `gorm:"not null" json:"useBody" mapstructure:"useBody"`
-	ResponseBody       pgtype.JSONB     `gorm:"type:jsonb;default:'{}';not null" json:"responseBody" mapstructure:"responseBody"`
-	Internal           bool             `gorm:"not null" json:"internal" mapstructure:"internal"`
-	ParentID           *uint            `gorm:"index" json:"parentId" mapstructure:"parentId"`
-	MappedProfiles     *[]event_profile `gorm:"foreignKey:ParentID" json:"mappedProfiles" mapstructure:"mappedProfiles"`
+	Name               string       `gorm:"not null" json:"trigger" mapstructure:"trigger"`
+	ResponseHTTPStatus int          `gorm:"not null" json:"responseHTTPStatus" mapstructure:"responseHTTPStatus"`
+	BodyFormat         pgtype.JSONB `gorm:"type:jsonb;default:'{}';not null" json:"bodyFormat" mapstructure:"bodyFormat"`
+}
+
+type internal_tag_group struct {
+	gorm.Model
+	Name string          `json:"name" mapstructure:"name"`
+	Tags []*internal_tag `gorm:"many2many:internal_tag_group_mapping;" json:"tags" mapstructure:"tags"`
+}
+
+type internal_tag struct {
+	gorm.Model
+	Name     string                `json:"name" mapstructure:"name"`
+	Groups   []*internal_tag_group `gorm:"many2many:internal_tag_group_mapping;" json:"groups" mapstructure:"groups"`
+	All      bool                  `json:"all" mapstructure:"all"`
+	Reserved bool                  `json:"reserved" mapstructure:"reserved"`
 }

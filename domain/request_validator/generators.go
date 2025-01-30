@@ -2,17 +2,29 @@ package requestvalidator
 
 import (
 	"fmt"
+	"ifttt/manager/domain/configuration"
 
 	"github.com/fatih/structs"
 	"github.com/go-viper/mapstructure/v2"
 )
 
 type ParameterConfig interface {
-	Generate() (string, error)
+	Generate(configRepo *configuration.InternalTagRepository, tagsInUse *map[uint]bool) (string, error)
 	GetMap() map[string]any
 }
 
-func (r *RequestParameter) Generate() (string, error) {
+func (r *RequestParameter) Generate(configRepo *configuration.InternalTagRepository, tagsInUse *map[uint]bool) (string, error) {
+	if r.InternalTag == "" {
+	} else if pTag, err := (*configRepo).GetByIDOrName(0, r.InternalTag); err != nil {
+		return "", fmt.Errorf("error in getting internal tag %s", r.InternalTag)
+	} else if pTag == nil {
+		return "", fmt.Errorf("internal tag %s not found", r.InternalTag)
+	} else if exists, ok := (*tagsInUse)[pTag.ID]; exists || ok {
+		return "", fmt.Errorf("internal tag (id: %d, name: %s) used twice", pTag.ID, pTag.Name)
+	} else {
+		(*tagsInUse)[pTag.ID] = true
+	}
+
 	var generator ParameterConfig
 	switch r.DataType {
 	case dataTypeText:
@@ -31,7 +43,7 @@ func (r *RequestParameter) Generate() (string, error) {
 	if err := mapstructure.Decode(&r.Config, generator); err != nil {
 		return "", fmt.Errorf("datatype %s could not be decoded", r.DataType)
 	}
-	if generatedRegex, err := generator.Generate(); err != nil {
+	if generatedRegex, err := generator.Generate(configRepo, tagsInUse); err != nil {
 		return "", fmt.Errorf("error in generating regex for datatype %s: %s", r.DataType, err)
 	} else {
 		if r.DataType == dataTypeArray || r.DataType == dataTypeMap {
@@ -41,7 +53,7 @@ func (r *RequestParameter) Generate() (string, error) {
 	}
 }
 
-func (t *textValue) Generate() (string, error) {
+func (t *textValue) Generate(configRepo *configuration.InternalTagRepository, tagsInUse *map[uint]bool) (string, error) {
 	var regex string
 
 	if len(t.In) > 0 {
@@ -70,7 +82,7 @@ func (t *textValue) GetMap() map[string]any {
 	return structs.Map(*t)
 }
 
-func (n *numberValue) Generate() (string, error) {
+func (n *numberValue) Generate(configRepo *configuration.InternalTagRepository, tagsInUse *map[uint]bool) (string, error) {
 	var regex string
 	regex += fmt.Sprintf("[%s]+", numericRegex)
 	regex += n.in()
@@ -81,7 +93,7 @@ func (n *numberValue) GetMap() map[string]any {
 	return structs.Map(*n)
 }
 
-func (b *booleanValue) Generate() (string, error) {
+func (b *booleanValue) Generate(configRepo *configuration.InternalTagRepository, tagsInUse *map[uint]bool) (string, error) {
 	return booleanRegex, nil
 }
 
@@ -89,8 +101,8 @@ func (b *booleanValue) GetMap() map[string]any {
 	return structs.Map(*b)
 }
 
-func (a *arrayValue) Generate() (string, error) {
-	elementRegex, err := a.OfType.Generate()
+func (a *arrayValue) Generate(configRepo *configuration.InternalTagRepository, tagsInUse *map[uint]bool) (string, error) {
+	elementRegex, err := a.OfType.Generate(configRepo, tagsInUse)
 	if err != nil {
 		return "", err
 	}
@@ -102,9 +114,9 @@ func (a *arrayValue) GetMap() map[string]any {
 	return structs.Map(*a)
 }
 
-func (m *mapValue) Generate() (string, error) {
+func (m *mapValue) Generate(configRepo *configuration.InternalTagRepository, tagsInUse *map[uint]bool) (string, error) {
 	for key, value := range *m {
-		valueRegex, err := value.Generate()
+		valueRegex, err := value.Generate(configRepo, tagsInUse)
 		if err != nil {
 			return "", err
 		}

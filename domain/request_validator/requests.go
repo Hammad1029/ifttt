@@ -13,6 +13,7 @@ func (r *RequestParameter) Validate() error {
 		validation.Field(&r.DataType, validation.Required,
 			validation.In(dataTypeText, dataTypeNumber, dataTypeBoolean, dataTypeArray, dataTypeMap)),
 		validation.Field(&r.Required),
+		validation.Field(&r.InternalTag),
 		validation.Field(&r.Config, validation.Required, validation.By(
 			func(value interface{}) error {
 				var validator common.Validatable
@@ -34,7 +35,10 @@ func (r *RequestParameter) Validate() error {
 				if err := mapstructure.Decode(data, &validator); err != nil {
 					return validation.NewInternalError(err)
 				}
-				return validator.Validate()
+				if err := validator.Validate(); err != nil {
+					return err
+				}
+				return nil
 			})),
 	)
 }
@@ -79,13 +83,10 @@ func (a *arrayValue) Validate() error {
 }
 
 func (m *mapValue) Validate() error {
-	return validation.Validate(m, validation.By(
-		func(_ interface{}) error {
-			for _, val := range *m {
-				if err := val.Validate(); err != nil {
-					return err
-				}
-			}
-			return nil
-		}))
+	for _, v := range *m {
+		if err := v.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

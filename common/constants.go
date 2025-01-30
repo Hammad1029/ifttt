@@ -57,6 +57,7 @@ const (
 const (
 	DependencyOrmQueryRepo = iota
 	DependencyOrmSchemaRepo
+	DependencyInternalTagRepo
 )
 
 const (
@@ -65,9 +66,9 @@ const (
 )
 
 const (
-	EventSuccess           = "000"
-	EventExhaust           = "010"
-	EventBadRequest        = "400"
-	EventNotFound          = "404"
-	EventSystemMalfunction = "500"
+	EventSuccess           = 0
+	EventExhaust           = 10
+	EventBadRequest        = 400
+	EventNotFound          = 404
+	EventSystemMalfunction = 500
 )

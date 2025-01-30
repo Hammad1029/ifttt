@@ -79,19 +79,7 @@ func (r *getErrors) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (r *getRequest) Manipulate(dependencies map[common.IntIota]any) error {
-	return nil
-}
-
-func (r *getResponse) Manipulate(dependencies map[common.IntIota]any) error {
-	return nil
-}
-
 func (r *getStore) Manipulate(dependencies map[common.IntIota]any) error {
-	return nil
-}
-
-func (r *getPreConfig) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
@@ -135,18 +123,7 @@ func (r *query) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (r *event) Manipulate(dependencies map[common.IntIota]any) error {
-	return nil
-}
-
-func (r *setRes) Manipulate(dependencies map[common.IntIota]any) error {
-	if manipulated, err := ManipulateIfResolvable(r, dependencies); err != nil {
-		return err
-	} else if mapped, ok := manipulated.(map[string]any); !ok {
-		return fmt.Errorf("could not cast setres to map")
-	} else {
-		*r = setRes(mapped)
-	}
+func (r *response) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 

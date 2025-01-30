@@ -92,19 +92,7 @@ func (g *getErrors) Validate() error {
 	return nil
 }
 
-func (g *getRequest) Validate() error {
-	return nil
-}
-
-func (g *getResponse) Validate() error {
-	return nil
-}
-
 func (g *getStore) Validate() error {
-	return nil
-}
-
-func (g *getPreConfig) Validate() error {
 	return nil
 }
 
@@ -234,17 +222,12 @@ func (c *query) Validate() error {
 	)
 }
 
-func (e *event) Validate() error {
+func (e *response) Validate() error {
 	return validation.ValidateStruct(e,
 		validation.Field(&e.Trigger, validation.In(
 			common.EventSuccess, common.EventExhaust, common.EventBadRequest, common.EventNotFound, common.EventSystemMalfunction,
 		)),
 	)
-}
-
-func (c *setRes) Validate() error {
-	var mapCasted map[string]any = *c
-	return ValidateIfResolvable(mapCasted)
 }
 
 func (c *setStore) Validate() error {

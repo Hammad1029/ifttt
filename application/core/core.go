@@ -41,8 +41,9 @@ func NewServerCore() (*ServerCore, error) {
 		serverCore.TokenService = tokenService
 	}
 	serverCore.ResolvableDependencies = map[common.IntIota]any{
-		common.DependencyOrmQueryRepo:  serverCore.DataStore.OrmQueryGeneratorRepo,
-		common.DependencyOrmSchemaRepo: serverCore.ConfigStore.OrmRepo,
+		common.DependencyOrmQueryRepo:    serverCore.DataStore.OrmQueryGeneratorRepo,
+		common.DependencyOrmSchemaRepo:   serverCore.ConfigStore.OrmRepo,
+		common.DependencyInternalTagRepo: serverCore.ConfigStore.InternalTagRepo,
 	}
 
 	return &serverCore, nil
