@@ -4,11 +4,9 @@ import (
 	"ifttt/manager/application/core"
 	"ifttt/manager/common"
 	"ifttt/manager/domain/cron"
-	"ifttt/manager/domain/resolvable"
-	triggerflow "ifttt/manager/domain/trigger_flow"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/samber/lo"
 )
 
 type cronController struct {
@@ -47,7 +45,7 @@ func (cC *cronController) GetByName(c *gin.Context) {
 }
 
 func (cC *cronController) Create(c *gin.Context) {
-	var reqBody cron.CreateCronRequest
+	var reqBody cron.Cron
 	if ok := validateAndBind(c, &reqBody); !ok {
 		return
 	}
@@ -60,36 +58,16 @@ func (cC *cronController) Create(c *gin.Context) {
 		return
 	}
 
-	tNames := lo.Map(reqBody.Triggers, func(t triggerflow.TriggerConditionRequest, _ int) string {
-		return t.Trigger
-	})
-
-	requiredTFlows, err := cC.serverCore.ConfigStore.TriggerFlowRepo.GetTriggerFlowsByNames(tNames)
-	if err != nil {
+	if api, err := cC.serverCore.ConfigStore.APIRepo.GetApiByNameOrPath(reqBody.ApiName, ""); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
-	} else if len(*requiredTFlows) != len(reqBody.Triggers) {
-		common.ResponseHandler(c,
-			common.ResponseConfig{Response: common.Responses["TriggerFlowNotFound"]})
+	} else if api == nil {
+		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["NotFound"]})
 		return
-	}
-
-	if manipulated, err := resolvable.ManipulateMap(reqBody.PreConfig, cC.serverCore.ResolvableDependencies); err != nil {
-		common.HandleErrorResponse(c, err)
+	} else if api.Method != http.MethodGet {
+		common.ResponseHandler(c, common.ResponseConfig{Response: common.Response{Code: "21", Description: "only get allowed"}})
 		return
-	} else {
-		reqBody.PreConfig = manipulated
-	}
-
-	for idx, tc := range reqBody.Triggers {
-		if err := tc.Manipulate(cC.serverCore.ResolvableDependencies); err != nil {
-			common.HandleErrorResponse(c, err)
-			return
-		}
-		reqBody.Triggers[idx] = tc
-	}
-
-	if err := cC.serverCore.ConfigStore.CronRepo.InsertCron(&reqBody, requiredTFlows); err != nil {
+	} else if err := cC.serverCore.ConfigStore.CronRepo.InsertCron(&reqBody, api.ID); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	}

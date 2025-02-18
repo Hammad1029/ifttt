@@ -29,9 +29,9 @@ type CreateApiRequest struct {
 	Path        string                                       `json:"path" mapstructure:"path"`
 	Method      string                                       `json:"method" mapstructure:"method"`
 	Description string                                       `json:"description" mapstructure:"description"`
+	PreConfig   []resolvable.Resolvable                      `json:"preConfig" mapstructure:"preConfig"`
 	Request     map[string]requestvalidator.RequestParameter `json:"request" mapstructure:"request"`
 	Response    map[uint]ResponseDefinition                  `json:"response" mapstructure:"response"`
-	PreConfig   map[string]resolvable.Resolvable             `json:"preConfig" mapstructure:"preConfig"`
 	Triggers    []triggerflow.TriggerConditionRequest        `json:"triggers" mapstructure:"triggers"`
 }
 
@@ -42,6 +42,10 @@ func (a *CreateApiRequest) Validate() error {
 		validation.Field(&a.Method, validation.In(
 			http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete)),
 		validation.Field(&a.Description, validation.Required, validation.Length(3, 0)),
+		validation.Field(&a.PreConfig, validation.Each(validation.By(func(value interface{}) error {
+			r := value.(resolvable.Resolvable)
+			return r.Validate()
+		}))),
 		validation.Field(&a.Request, validation.By(
 			func(value any) error {
 				pMap := value.(map[string]requestvalidator.RequestParameter)
@@ -62,24 +66,24 @@ func (a *CreateApiRequest) Validate() error {
 					common.EventNotFound:          false,
 					common.EventSystemMalfunction: false,
 				}
-				for trigger, profile := range rdMap {
-					if _, ok := requiredCodes[trigger]; !ok {
-						return fmt.Errorf("invalid trigger %d", trigger)
+				for event, profile := range rdMap {
+					if _, ok := requiredCodes[event]; !ok {
+						return fmt.Errorf("invalid event %d", event)
 					} else if err := profile.Validate(); err != nil {
 						return err
 					}
-					requiredCodes[trigger] = true
+					requiredCodes[event] = true
 				}
-				for trigger, validated := range requiredCodes {
+				for event, validated := range requiredCodes {
 					if !validated {
-						return fmt.Errorf("profile for trigger %d not found", trigger)
+						return fmt.Errorf("profile for event %d not found", event)
 					}
 				}
 				return nil
 			})),
 		validation.Field(&a.PreConfig, validation.By(
-			func(value interface{}) error {
-				rMap := value.(map[string]resolvable.Resolvable)
+			func(value any) error {
+				rMap := value.([]resolvable.Resolvable)
 				for _, r := range rMap {
 					if err := r.Validate(); err != nil {
 						return err

@@ -3,7 +3,6 @@ package postgres
 import (
 	"fmt"
 	"ifttt/manager/domain/cron"
-	triggerflow "ifttt/manager/domain/trigger_flow"
 
 	"gorm.io/gorm"
 )
@@ -18,9 +17,7 @@ func NewPostgresCronRepository(base *PostgresBaseRepository) *PostgresCronReposi
 
 func (p *PostgresCronRepository) GetAllCrons() (*[]cron.Cron, error) {
 	var pgCron []crons
-	if err := p.client.
-		Preload("TriggerFlowRef").Preload("TriggerFlowRef.Rules").
-		Find(&pgCron).Error; err != nil {
+	if err := p.client.Preload("API").Find(&pgCron).Error; err != nil {
 		return nil, err
 	}
 
@@ -38,8 +35,7 @@ func (p *PostgresCronRepository) GetAllCrons() (*[]cron.Cron, error) {
 
 func (p *PostgresCronRepository) GetCronByName(name string) (*cron.Cron, error) {
 	var pgCron crons
-	if err := p.client.
-		Preload("TriggerFlowRef").Preload("TriggerFlowRef.Rules").
+	if err := p.client.Preload("API").
 		First(&pgCron, "name ilike ?", fmt.Sprintf("%%%s%%", name)).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -57,9 +53,9 @@ func (p *PostgresCronRepository) GetCronByName(name string) (*cron.Cron, error) 
 	return &domainCron, nil
 }
 
-func (p *PostgresCronRepository) InsertCron(req *cron.CreateCronRequest, attachTriggers *[]triggerflow.TriggerFlow) error {
+func (p *PostgresCronRepository) InsertCron(req *cron.Cron, apiID uint) error {
 	var pgCron crons
-	err := pgCron.fromDomain(req, attachTriggers)
+	err := pgCron.fromDomain(req, apiID)
 	if err != nil {
 		return err
 	}

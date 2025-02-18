@@ -208,7 +208,7 @@ func (s *ormSchemaController) CreateAssociation(c *gin.Context) {
 		return
 	} else if model == nil || model.Table != reqBody.TableName ||
 		!lo.SomeBy(model.Projections, func(p orm_schema.Projection) bool {
-			if reqBody.Type == common.AssociationsHasMany || reqBody.Type == common.AssociationsHasOne {
+			if reqBody.Type == common.AssociationsHasMany {
 				return p.Column == reqBody.ColumnName && model.PrimaryKey == reqBody.ColumnName
 			} else {
 				return p.Column == reqBody.ColumnName
@@ -227,7 +227,7 @@ func (s *ormSchemaController) CreateAssociation(c *gin.Context) {
 			if reqBody.Type == common.AssociationsBelongsTo {
 				return p.Column == reqBody.ReferencesField && model.PrimaryKey == reqBody.ReferencesField
 			} else {
-				return p.Column == reqBody.ColumnName
+				return p.Column == reqBody.ReferencesField
 			}
 		}) {
 		common.ResponseHandler(c, common.ResponseConfig{Response: common.Responses["InvalidORM"]})

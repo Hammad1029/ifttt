@@ -48,10 +48,10 @@ const (
 )
 
 const (
-	OrmSelect = "select"
-	OrmUpdate = "update"
-	OrmInsert = "insert"
-	OrmDelete = "delete"
+	OrmSelect = "SELECT"
+	OrmUpdate = "UPDATE"
+	OrmInsert = "INSERT"
+	OrmDelete = "DELETE"
 )
 
 const (
@@ -71,4 +71,59 @@ const (
 	EventBadRequest        = 400
 	EventNotFound          = 404
 	EventSystemMalfunction = 500
+)
+
+const (
+	ComparatorEquals            = "eq"
+	ComparatorNotEquals         = "ne"
+	ComparatorIn                = "in"
+	ComparatorNotIn             = "ni"
+	ComparatorLessThan          = "lt"
+	ComparatorLessThanEquals    = "lte"
+	ComparatorGreaterThan       = "gt"
+	ComparatorGreaterThanEquals = "gte"
+)
+
+const (
+	ComparisionTypeString  = "string"
+	ComparisionTypeNumber  = "number"
+	ComparisionTypeBoolean = "boolean"
+	ComparisionTypeDate    = "date"
+	ComparisionTypeBcrypt  = "bcrypt"
+)
+
+const (
+	CalculatorAdd      = "+"
+	CalculatorSubtract = "-"
+	CalculatorMultiply = "*"
+	CalculatorDivide   = "/"
+	CalculatorModulus  = "%"
+)
+
+var DateManipulatorUnits = []string{
+	"y", "year", "years",
+	"Q", "quarter", "quarters",
+	"M", "month", "months",
+	"w", "week", "weeks",
+	"d", "day", "days",
+	"h", "hour", "hours",
+	"m", "minute", "minutes",
+	"s", "second", "seconds",
+	"ms", "millisecond", "milliseconds",
+	"ns", "nanosecond", "nanoseconds",
+}
+
+var (
+	ConditionTypeAnd = "AND"
+	ConditionTypeOr  = "OR"
+	OperandTypes     = []string{
+		ComparatorEquals,
+		ComparatorNotEquals,
+		ComparatorIn,
+		ComparatorNotIn,
+		ComparatorLessThan,
+		ComparatorLessThanEquals,
+		ComparatorGreaterThan,
+		ComparatorGreaterThanEquals,
+	}
 )

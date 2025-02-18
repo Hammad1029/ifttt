@@ -14,32 +14,34 @@ func (r *RequestParameter) Validate() error {
 			validation.In(dataTypeText, dataTypeNumber, dataTypeBoolean, dataTypeArray, dataTypeMap)),
 		validation.Field(&r.Required),
 		validation.Field(&r.InternalTag),
-		validation.Field(&r.Config, validation.Required, validation.By(
-			func(value interface{}) error {
-				var validator common.Validatable
-				switch r.DataType {
-				case dataTypeText:
-					validator = &textValue{}
-				case dataTypeNumber:
-					validator = &numberValue{}
-				case dataTypeBoolean:
-					validator = &booleanValue{}
-				case dataTypeArray:
-					validator = &arrayValue{}
-				case dataTypeMap:
-					validator = &mapValue{}
-				default:
-					return validation.NewError("datatype_not_found", fmt.Sprintf("datatype %s not found", r.DataType))
-				}
-				data := value.(map[string]any)
-				if err := mapstructure.Decode(data, &validator); err != nil {
-					return validation.NewInternalError(err)
-				}
-				if err := validator.Validate(); err != nil {
-					return err
-				}
-				return nil
-			})),
+		validation.Field(&r.Config,
+			validation.When(r.DataType == dataTypeBoolean, validation.Empty).Else(validation.Required),
+			validation.By(
+				func(value interface{}) error {
+					var validator common.Validatable
+					switch r.DataType {
+					case dataTypeText:
+						validator = &textValue{}
+					case dataTypeNumber:
+						validator = &numberValue{}
+					case dataTypeBoolean:
+						validator = &booleanValue{}
+					case dataTypeArray:
+						validator = &arrayValue{}
+					case dataTypeMap:
+						validator = &mapValue{}
+					default:
+						return validation.NewError("datatype_not_found", fmt.Sprintf("datatype %s not found", r.DataType))
+					}
+					data := value.(map[string]any)
+					if err := mapstructure.Decode(data, &validator); err != nil {
+						return validation.NewInternalError(err)
+					}
+					if err := validator.Validate(); err != nil {
+						return err
+					}
+					return nil
+				})),
 	)
 }
 

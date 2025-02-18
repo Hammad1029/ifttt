@@ -16,7 +16,7 @@ func (t *textValue) minMax() string {
 	if t.Minimum > 0 || t.Maximum > 0 {
 		return fmt.Sprintf("{%d,%d}", t.Minimum, t.Maximum)
 	} else {
-		return "+"
+		return "*"
 	}
 }
 

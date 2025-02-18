@@ -11,5 +11,9 @@ type resolvableInterface interface {
 }
 
 type OrmQueryGenerator interface {
-	Generate(r *Orm, rootModel *orm_schema.Model, models map[string]*orm_schema.Model) (string, error)
+	GenerateSelect(r *Orm, rootModel *orm_schema.Model, models map[string]*orm_schema.Model) (string, error)
+	GenerateInsert(tableName string, colSq []string) (string, error)
+	GenerateUpdate(tableName string, where string, colSq []string) (string, error)
+	GenerateDelete(tableName string, where string) (string, error)
+	GenerateSuccessive(r *Orm, rootModel *orm_schema.Model) (string, *[]Resolvable, error)
 }

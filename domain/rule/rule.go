@@ -1,7 +1,6 @@
 package rule
 
 import (
-	"ifttt/manager/domain/condition"
 	"ifttt/manager/domain/resolvable"
 )
 
@@ -20,7 +19,7 @@ type RuleSwitch struct {
 }
 
 type RuleSwitchCase struct {
-	Condition condition.Condition     `json:"condition" mapstructure:"condition"`
+	Condition resolvable.Condition    `json:"condition" mapstructure:"condition"`
 	Do        []resolvable.Resolvable `json:"do" mapstructure:"do"`
 	Return    uint                    `json:"return" mapstructure:"return"`
 }

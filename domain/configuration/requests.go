@@ -20,10 +20,10 @@ func (g *InternalTagGroup) Validate() error {
 }
 
 type InternalTagRequest struct {
-	Name     string `json:"name" mapstructure:"name"`
-	Groups   []uint `json:"groups" mapstructure:"groups"`
-	All      bool   `json:"all" mapstructure:"all"`
-	Reserved bool   `json:"reserved" mapstructure:"reserved"`
+	Name     string   `json:"name" mapstructure:"name"`
+	Groups   []string `json:"groups" mapstructure:"groups"`
+	All      bool     `json:"all" mapstructure:"all"`
+	Reserved bool     `json:"reserved" mapstructure:"reserved"`
 }
 
 func (p *InternalTagRequest) Validate() error {

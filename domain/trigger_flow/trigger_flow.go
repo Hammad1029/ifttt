@@ -1,7 +1,7 @@
 package triggerflow
 
 import (
-	"ifttt/manager/domain/condition"
+	"ifttt/manager/domain/resolvable"
 	"ifttt/manager/domain/rule"
 )
 
@@ -20,6 +20,6 @@ type BranchFlow struct {
 }
 
 type TriggerCondition struct {
-	If      condition.Condition `json:"if" mapstructure:"if"`
-	Trigger TriggerFlow         `json:"trigger" mapstructure:"trigger"`
+	If      resolvable.Condition `json:"if" mapstructure:"if"`
+	Trigger TriggerFlow          `json:"trigger" mapstructure:"trigger"`
 }

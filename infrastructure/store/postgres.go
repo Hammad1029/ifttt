@@ -64,8 +64,8 @@ func (p *postgresStore) createCasbinAdapter() (*gormadapter.Adapter, error) {
 func (p *postgresStore) createDataStore() *DataStore {
 	postgresBase := postgresInfra.NewPostgresBaseRepository(p.store, false)
 	return &DataStore{
-		Store:                 p,
-		SchemaRepo:            postgresInfra.NewPostgresSchemaRepository(postgresBase),
-		OrmQueryGeneratorRepo: postgresInfra.NewPostgresOrmQueryGeneratorRepository(postgresBase),
+		Store:      p,
+		SchemaRepo: postgresInfra.NewPostgresSchemaRepository(postgresBase),
+		// OrmQueryGeneratorRepo: postgresInfra.NewPostgresOrmQueryGeneratorRepository(postgresBase),
 	}
 }

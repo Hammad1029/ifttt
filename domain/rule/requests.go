@@ -2,7 +2,6 @@ package rule
 
 import (
 	"ifttt/manager/common"
-	"ifttt/manager/domain/condition"
 	"ifttt/manager/domain/resolvable"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -47,26 +46,26 @@ func (rs *RuleSwitch) Validate() error {
 	return validation.ValidateStruct(rs,
 		validation.Field(&rs.Cases, validation.Each(validation.By(func(value interface{}) error {
 			rsw := value.(RuleSwitchCase)
-			return rsw.Validate()
+			return rsw.Validate(false)
 		}))),
 		validation.Field(&rs.Default, validation.Required, validation.By(func(value interface{}) error {
 			rsw := value.(RuleSwitchCase)
-			return rsw.Validate()
+			return rsw.Validate(true)
 		})),
 	)
 }
 
-func (rsw *RuleSwitchCase) Validate() error {
+func (rsw *RuleSwitchCase) Validate(isDefault bool) error {
 	allowedReturnsAny := []any{}
 	for _, r := range common.RuleAllowedReturns {
 		allowedReturnsAny = append(allowedReturnsAny, r)
 	}
 
 	return validation.ValidateStruct(rsw,
-		validation.Field(&rsw.Condition, validation.By(func(value interface{}) error {
-			c := value.(condition.Condition)
+		validation.Field(&rsw.Condition, validation.When(!isDefault, validation.By(func(value interface{}) error {
+			c := value.(resolvable.Condition)
 			return c.Validate()
-		})),
+		}))),
 		validation.Field(&rsw.Do, validation.Each(validation.By(func(value interface{}) error {
 			r := value.(resolvable.Resolvable)
 			return r.Validate()

@@ -3,6 +3,7 @@ module ifttt/manager
 go 1.23
 
 require (
+	github.com/blastrain/vitess-sqlparser v0.0.0-20201030050434-a139afbb1aba
 	github.com/casbin/casbin/v2 v2.99.0
 	github.com/casbin/gorm-adapter/v3 v3.28.0
 	github.com/fatih/structs v1.1.0
@@ -18,6 +19,8 @@ require (
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.11
 )
+
+replace github.com/knocknote/vitess-sqlparser => github.com/blastrain/vitess-sqlparser v0.0.0-20201030050434-a139afbb1aba
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496 // indirect
@@ -44,6 +47,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/juju/errors v0.0.0-20170703010042-c7d06af17c68 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/microsoft/go-mssqldb v1.6.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230126093431-47fa9a501578 // indirect

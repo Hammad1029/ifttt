@@ -226,6 +226,7 @@ func (c *Constraint) Validate() error {
 
 func (m *Model) Validate() error {
 	return validation.ValidateStruct(m,
+		validation.Field(&m.ID, validation.Empty),
 		validation.Field(&m.Name, validation.Required),
 		validation.Field(&m.Table, validation.Required),
 		validation.Field(&m.Projections, validation.Required, validation.Each(validation.By(
@@ -301,11 +302,11 @@ func (p *Populate) Validate(cb func(val any) error) error {
 				return v.Validate(false)
 			})),
 		),
-		validation.Field(&p.Where, validation.Each(validation.By(
+		validation.Field(&p.Where, validation.By(
 			func(value any) error {
 				v := value.(Where)
 				return v.Validate(cb)
-			}))),
+			})),
 		validation.Field(&p.Populate, validation.Each(validation.By(
 			func(value any) error {
 				v := value.(Populate)

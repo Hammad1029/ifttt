@@ -89,11 +89,11 @@ func (ac *apiController) Create(c *gin.Context) {
 		}
 	}
 
-	if manipulated, err := resolvable.ManipulateMap(reqBody.PreConfig, ac.serverCore.ResolvableDependencies); err != nil {
+	if manipulated, err := resolvable.ManipulateArray(&reqBody.PreConfig, ac.serverCore.ResolvableDependencies); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else {
-		reqBody.PreConfig = manipulated
+		reqBody.PreConfig = *manipulated
 	}
 
 	for idx, tc := range reqBody.Triggers {

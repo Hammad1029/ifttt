@@ -5,6 +5,7 @@ import (
 	"ifttt/manager/common"
 	"ifttt/manager/domain/orm_schema"
 
+	"github.com/blastrain/vitess-sqlparser/sqlparser"
 	"github.com/samber/lo"
 )
 
@@ -71,6 +72,10 @@ func (r *getCache) Manipulate(dependencies map[common.IntIota]any) error {
 	return r.Key.Manipulate(dependencies)
 }
 
+func (r *deleteCache) Manipulate(dependencies map[common.IntIota]any) error {
+	return r.Key.Manipulate(dependencies)
+}
+
 func (r *encode) Manipulate(dependencies map[common.IntIota]any) error {
 	return r.Input.Manipulate(dependencies)
 }
@@ -80,6 +85,12 @@ func (r *getErrors) Manipulate(dependencies map[common.IntIota]any) error {
 }
 
 func (r *getStore) Manipulate(dependencies map[common.IntIota]any) error {
+	if manipulated, err := ManipulateIfResolvable(r.Query, dependencies); err != nil {
+		return err
+	} else {
+		r.Query = manipulated
+	}
+
 	return nil
 }
 
@@ -108,16 +119,14 @@ func (r *jq) Manipulate(dependencies map[common.IntIota]any) error {
 }
 
 func (r *query) Manipulate(dependencies map[common.IntIota]any) error {
-	if manipulated, err := ManipulateMap(r.NamedParameters, dependencies); err != nil {
-		return err
-	} else {
-		r.NamedParameters = manipulated
+	if _, err := sqlparser.Parse(r.QueryString); err != nil {
+		return fmt.Errorf("parsing query failed: %s", err)
 	}
 
-	if manipulated, err := ManipulateArray(r.PositionalParameters, dependencies); err != nil {
+	if manipulated, err := ManipulateArray(&r.Parameters, dependencies); err != nil {
 		return err
 	} else {
-		r.PositionalParameters = manipulated
+		r.Parameters = *manipulated
 	}
 
 	return nil
@@ -143,10 +152,10 @@ func (r *setLog) Manipulate(dependencies map[common.IntIota]any) error {
 }
 
 func (r *stringInterpolation) Manipulate(dependencies map[common.IntIota]any) error {
-	if manipulated, err := ManipulateArray(r.Parameters, dependencies); err != nil {
+	if manipulated, err := ManipulateArray(&r.Parameters, dependencies); err != nil {
 		return err
 	} else {
-		r.Parameters = manipulated
+		r.Parameters = *manipulated
 		return nil
 	}
 }
@@ -165,6 +174,12 @@ func (r *cast) Manipulate(dependencies map[common.IntIota]any) error {
 }
 
 func (r *Orm) Manipulate(dependencies map[common.IntIota]any) error {
+	switch r.Operation {
+	case common.OrmSelect, common.OrmInsert, common.OrmUpdate, common.OrmDelete:
+	default:
+		return fmt.Errorf("operation %s not allowed", r.Operation)
+	}
+
 	queryGenerator, ok := dependencies[common.DependencyOrmQueryRepo].(OrmQueryGenerator)
 	if !ok {
 		return fmt.Errorf("could not get query generator repo")
@@ -175,15 +190,7 @@ func (r *Orm) Manipulate(dependencies map[common.IntIota]any) error {
 	}
 
 	r.Query = &query{
-		NamedParameters:      map[string]Resolvable{},
-		PositionalParameters: []Resolvable{},
-	}
-
-	if r.Operation == common.OrmSelect {
-		r.Query.Scan = true
-	} else if r.Operation == common.OrmInsert {
-	} else {
-		return fmt.Errorf("operation %s not allowed", r.Operation)
+		Parameters: []Resolvable{},
 	}
 
 	allModels, err := ormRepo.GetAllModels()
@@ -195,9 +202,12 @@ func (r *Orm) Manipulate(dependencies map[common.IntIota]any) error {
 		return fmt.Errorf("model %s not found", r.Model)
 	}
 
+	var colSq []string
 	if r.Columns != nil {
-		if err := r.ManipulateColumns(rootModel, dependencies); err != nil {
+		if sq, err := r.ManipulateColumns(rootModel, dependencies); err != nil {
 			return err
+		} else {
+			colSq = sq
 		}
 	}
 
@@ -228,10 +238,44 @@ func (r *Orm) Manipulate(dependencies map[common.IntIota]any) error {
 	}
 	*r.ModelsInUse = lo.Uniq(*r.ModelsInUse)
 
-	if queryString, err := queryGenerator.Generate(r, rootModel, allModels); err != nil {
+	switch r.Operation {
+	case common.OrmSelect:
+		r.Query.Scan = true
+		r.Query.QueryString, err = queryGenerator.GenerateSelect(r, rootModel, allModels)
+	case common.OrmInsert:
+		r.Query.QueryString, err = queryGenerator.GenerateInsert(rootModel.Table, colSq)
+	case common.OrmUpdate:
+		r.Query.QueryString, err = queryGenerator.GenerateUpdate(rootModel.Table, r.Where.Template, colSq)
+	case common.OrmDelete:
+		r.Query.QueryString, err = queryGenerator.GenerateDelete(rootModel.Table, r.Where.Template)
+	default:
+		return fmt.Errorf("generator for %s not available", r.Operation)
+	}
+
+	if err := r.Query.Manipulate(dependencies); err != nil {
 		return err
-	} else {
-		r.Query.QueryString = queryString
+	}
+
+	if r.Operation == common.OrmInsert || r.Operation == common.OrmUpdate {
+		r.SuccessiveQuery = &query{
+			Scan: true,
+		}
+		if queryString, params, err := queryGenerator.GenerateSuccessive(r, rootModel); err != nil {
+			return fmt.Errorf("could not generate successive query: %s", err)
+		} else {
+			r.SuccessiveQuery.QueryString = queryString
+			if params != nil && len(*params) > 0 {
+				r.SuccessiveQuery.Parameters = *params
+			}
+		}
+
+		if err := r.SuccessiveQuery.Manipulate(dependencies); err != nil {
+			return err
+		}
+	}
+
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -267,15 +311,50 @@ func (f *forEach) Manipulate(dependencies map[common.IntIota]any) error {
 		f.Input = manipulated
 	}
 
-	if manipulated, err := ManipulateArray(*f.Do, dependencies); err != nil {
+	if manipulated, err := ManipulateArray(f.Do, dependencies); err != nil {
 		return err
 	} else {
-		f.Do = &manipulated
+		f.Do = manipulated
 	}
 
 	return nil
 }
 
 func (f *getIter) Manipulate(dependencies map[common.IntIota]any) error {
+	return nil
+}
+
+func (c *Condition) Manipulate(dependencies map[common.IntIota]any) error {
+	if c.Group {
+		for _, cnd := range c.Conditions {
+			if err := cnd.Manipulate(dependencies); err != nil {
+				return err
+			}
+		}
+	} else if err := c.Operator1.Manipulate(dependencies); err != nil {
+		return err
+	} else if err := c.Operator2.Manipulate(dependencies); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *conditional) Manipulate(dependencies map[common.IntIota]any) error {
+	if err := c.Condition.Manipulate(dependencies); err != nil {
+		return err
+	}
+
+	if manipulated, err := ManipulateArray(&c.True, dependencies); err != nil {
+		return err
+	} else {
+		c.True = *manipulated
+	}
+
+	if manipulated, err := ManipulateArray(&c.False, dependencies); err != nil {
+		return err
+	} else {
+		c.False = *manipulated
+	}
+
 	return nil
 }

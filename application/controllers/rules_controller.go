@@ -53,11 +53,11 @@ func (rc *rulesController) Create(c *gin.Context) {
 		return
 	}
 
-	if manipulated, err := resolvable.ManipulateArray(reqBody.Pre, rc.serverCore.ResolvableDependencies); err != nil {
+	if manipulated, err := resolvable.ManipulateArray(&reqBody.Pre, rc.serverCore.ResolvableDependencies); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else {
-		reqBody.Pre = manipulated
+		reqBody.Pre = *manipulated
 	}
 
 	if err := reqBody.Switch.Manipulate(rc.serverCore.ResolvableDependencies); err != nil {
@@ -65,11 +65,11 @@ func (rc *rulesController) Create(c *gin.Context) {
 		return
 	}
 
-	if manipulated, err := resolvable.ManipulateArray(reqBody.Finally, rc.serverCore.ResolvableDependencies); err != nil {
+	if manipulated, err := resolvable.ManipulateArray(&reqBody.Finally, rc.serverCore.ResolvableDependencies); err != nil {
 		common.HandleErrorResponse(c, err)
 		return
 	} else {
-		reqBody.Finally = manipulated
+		reqBody.Finally = *manipulated
 	}
 
 	if err := rc.serverCore.ConfigStore.RuleRepo.InsertRule(&reqBody); err != nil {

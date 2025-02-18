@@ -1,7 +1,7 @@
 package triggerflow
 
 import (
-	"ifttt/manager/domain/condition"
+	"ifttt/manager/domain/resolvable"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
@@ -19,8 +19,8 @@ type GetDetailsRequest struct {
 }
 
 type TriggerConditionRequest struct {
-	If      condition.Condition `json:"if" mapstructure:"if"`
-	Trigger string              `json:"trigger" mapstructure:"trigger"`
+	If      resolvable.Condition `json:"if" mapstructure:"if"`
+	Trigger string               `json:"trigger" mapstructure:"trigger"`
 }
 
 func (g *GetDetailsRequest) Validate() error {
@@ -51,7 +51,7 @@ func (b *BranchFlow) Validate() error {
 func (t *TriggerConditionRequest) Validate() error {
 	return validation.ValidateStruct(t,
 		validation.Field(&t.If, validation.By(func(value interface{}) error {
-			c := value.(condition.Condition)
+			c := value.(resolvable.Condition)
 			return c.Validate()
 		})),
 		validation.Field(&t.Trigger, validation.Required),

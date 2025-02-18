@@ -8,6 +8,7 @@ import (
 	"ifttt/manager/domain/cron"
 	"ifttt/manager/domain/orm_schema"
 	requestvalidator "ifttt/manager/domain/request_validator"
+	"ifttt/manager/domain/resolvable"
 	"ifttt/manager/domain/rule"
 	triggerflow "ifttt/manager/domain/trigger_flow"
 
@@ -42,7 +43,9 @@ func (pgRule *rules) fromDomain(domainRule *rule.CreateRuleRequest) error {
 	pgRule.Name = domainRule.Name
 	pgRule.Description = domainRule.Description
 
-	if preMarshalled, err := json.Marshal(domainRule.Pre); err != nil {
+	if len(domainRule.Pre) == 0 {
+		pgRule.Pre = pgtype.JSONB{Bytes: []byte("[]"), Status: pgtype.Present}
+	} else if preMarshalled, err := json.Marshal(domainRule.Pre); err != nil {
 		return fmt.Errorf("could not marshal Pre: %s", err)
 	} else {
 		pgRule.Pre = pgtype.JSONB{Bytes: preMarshalled, Status: pgtype.Present}
@@ -54,7 +57,9 @@ func (pgRule *rules) fromDomain(domainRule *rule.CreateRuleRequest) error {
 		pgRule.Switch = pgtype.JSONB{Bytes: switchMarshalled, Status: pgtype.Present}
 	}
 
-	if finallyMarshalled, err := json.Marshal(domainRule.Finally); err != nil {
+	if len(domainRule.Finally) == 0 {
+		pgRule.Finally = pgtype.JSONB{Bytes: []byte("[]"), Status: pgtype.Present}
+	} else if finallyMarshalled, err := json.Marshal(domainRule.Finally); err != nil {
 		return fmt.Errorf("could not marshal finally: %s", err)
 	} else {
 		pgRule.Finally = pgtype.JSONB{Bytes: finallyMarshalled, Status: pgtype.Present}
@@ -110,6 +115,14 @@ func (a *apis) fromDomain(domainApi *api.CreateApiRequest, attachTriggers *[]tri
 	a.Method = domainApi.Method
 	a.Description = domainApi.Description
 
+	if len(domainApi.PreConfig) == 0 {
+		a.PreConfig = pgtype.JSONB{Bytes: []byte("[]"), Status: pgtype.Present}
+	} else if preConfigMarshalled, err := json.Marshal(domainApi.PreConfig); err != nil {
+		return fmt.Errorf("could not marshal Pre: %s", err)
+	} else {
+		a.PreConfig = pgtype.JSONB{Bytes: preConfigMarshalled, Status: pgtype.Present}
+	}
+
 	if reqMarshalled, err := json.Marshal(domainApi.Request); err != nil {
 		return fmt.Errorf("could not marshal request: %s", err)
 	} else {
@@ -142,9 +155,14 @@ func (a *apis) toDomain() (*api.Api, error) {
 		Path:        a.Path,
 		Method:      a.Method,
 		Description: a.Description,
+		PreConfig:   []resolvable.Resolvable{},
 		Request:     map[string]requestvalidator.RequestParameter{},
 		Response:    map[uint]api.ResponseDefinition{},
 		Triggers:    &[]triggerflow.TriggerCondition{},
+	}
+
+	if err := json.Unmarshal(a.PreConfig.Bytes, &domainApi.PreConfig); err != nil {
+		return nil, err
 	}
 
 	if err := json.Unmarshal(a.Request.Bytes, &domainApi.Request); err != nil {
@@ -182,66 +200,26 @@ func (a *apis) toDomain() (*api.Api, error) {
 	return &domainApi, nil
 }
 
-func (c *crons) fromDomain(dCron *cron.CreateCronRequest, attachTriggers *[]triggerflow.TriggerFlow) error {
+func (c *crons) fromDomain(dCron *cron.Cron, apiID uint) error {
 	c.Name = dCron.Name
 	c.Description = dCron.Description
-	c.Cron = dCron.Cron
-
-	if preConfigMarshalled, err := json.Marshal(dCron.PreConfig); err != nil {
-		return fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal pre config: %s", err)
-	} else {
-		c.PreConfig = pgtype.JSONB{Bytes: preConfigMarshalled, Status: pgtype.Present}
-	}
-
-	for _, dtf := range *attachTriggers {
-		c.TriggerFlowRef = append(c.TriggerFlowRef, trigger_flows{Model: gorm.Model{ID: dtf.ID}})
-	}
-
-	if tConditionsMarshalled, err := json.Marshal(dCron.Triggers); err != nil {
-		return fmt.Errorf("method *PostgresAPIRepository.FromDomain: could not marshal trigger conditions: %s", err)
-	} else {
-		c.TriggerFlows = pgtype.JSONB{Bytes: tConditionsMarshalled, Status: pgtype.Present}
-	}
+	c.CronExpr = dCron.CronExpr
+	c.ApiID = apiID
 
 	return nil
 }
 
 func (c *crons) toDomain() (*cron.Cron, error) {
 	dCron := cron.Cron{
-		ID:           c.ID,
-		Name:         c.Name,
-		Description:  c.Name,
-		Cron:         c.Cron,
-		TriggerFlows: &[]triggerflow.TriggerCondition{},
+		Name:        c.Name,
+		Description: c.Name,
+		CronExpr:    c.CronExpr,
 	}
 
-	if err := json.Unmarshal(c.PreConfig.Bytes, &dCron.PreConfig); err != nil {
-		return nil,
-			fmt.Errorf("method *PostgresAPIRepository.ToDomain: could not cast pgApi: %s", err)
-	}
-
-	var tConditions []triggerflow.TriggerConditionRequest
-	if err := json.Unmarshal(c.TriggerFlows.Bytes, &tConditions); err != nil {
-		return nil,
-			fmt.Errorf("method *PostgresAPIRepository.ToDomain: could not cast pgApi: %s", err)
-	}
-
-	triggerFlowMap := make(map[string]trigger_flows)
-	for _, tFlow := range c.TriggerFlowRef {
-		triggerFlowMap[tFlow.Name] = tFlow
-	}
-
-	for _, tc := range tConditions {
-		tcModel, ok := triggerFlowMap[tc.Trigger]
-		if !ok {
-			return nil,
-				fmt.Errorf("method *PostgresAPIRepository.ToDomain: trigger flow not found from conditions")
-		}
-		domainTFlow, err := tcModel.toDomain()
-		if err != nil {
-			return nil, fmt.Errorf("method *PostgresAPIRepository.ToDomain: %s", err)
-		}
-		*dCron.TriggerFlows = append(*dCron.TriggerFlows, triggerflow.TriggerCondition{If: tc.If, Trigger: *domainTFlow})
+	if dApi, err := c.API.toDomain(); err != nil {
+		return nil, err
+	} else {
+		dCron.API = dApi
 	}
 
 	return &dCron, nil

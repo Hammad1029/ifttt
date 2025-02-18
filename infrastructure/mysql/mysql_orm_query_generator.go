@@ -16,43 +16,82 @@ func NewMySqlOrmQueryGeneratorRepository(base *MySqlBaseRepository) *MySqlOrmQue
 	return &MySqlOrmQueryGeneratorRepository{MySqlBaseRepository: base}
 }
 
-func (m *MySqlOrmQueryGeneratorRepository) Generate(
-	r *resolvable.Orm, rootModel *orm_schema.Model, models map[string]*orm_schema.Model,
-) (string, error) {
+func (m *MySqlOrmQueryGeneratorRepository) GenerateSuccessive(r *resolvable.Orm, rootModel *orm_schema.Model) (string, *[]resolvable.Resolvable, error) {
+	projections := m.buildProjections(rootModel, nil, rootModel.Name)
+	query := fmt.Sprintf("SELECT %s FROM `%s` AS `%s`",
+		strings.Join(projections, ","), rootModel.Table, rootModel.Name)
+	var whereParams []resolvable.Resolvable
+
 	switch r.Operation {
-	case common.OrmSelect:
-		return m.generateSelect(r, rootModel, models)
+	case common.OrmUpdate:
+		if r.Where.Template != "" {
+			query = fmt.Sprintf("%s WHERE %s", query, r.Where.Template)
+			if len(r.Where.Values) > 0 && len(r.Query.Parameters) >= len(r.Where.Values) {
+				whereParams = r.Query.Parameters[len(r.Query.Parameters)-len(r.Where.Values):]
+			}
+		}
 	case common.OrmInsert:
-		return m.generateInsert(r, rootModel)
+		query = fmt.Sprintf("%s WHERE %s = LAST_INSERT_ID()", query, rootModel.PrimaryKey)
 	default:
-		return "", fmt.Errorf("generator for %s not available", r.Operation)
+		return "", nil, fmt.Errorf("no successive generator for %s", r.Operation)
 	}
+
+	return query, &whereParams, nil
 }
 
-func (m *MySqlOrmQueryGeneratorRepository) generateInsert(
-	r *resolvable.Orm, rootModel *orm_schema.Model,
+func (m *MySqlOrmQueryGeneratorRepository) GenerateUpdate(
+	tableName string, where string, colSq []string,
 ) (string, error) {
-	if r.Columns == nil || len(*r.Columns) == 0 {
-		return "", fmt.Errorf("nil columns in insert")
+	if len(colSq) == 0 {
+		return "", fmt.Errorf("nil columns in update")
 	}
 
-	insertCols := make([]string, len(*r.Columns))
-	insertValues := make([]string, len(*r.Columns))
-
-	idx := 0
-	for col := range *r.Columns {
-		insertCols[idx] = col
-		insertValues[idx] = fmt.Sprintf("@%s", col)
-		idx++
+	setString := make([]string, len(colSq))
+	for idx, col := range colSq {
+		setString[idx] = fmt.Sprintf("%s = ?", col)
 	}
 
-	queryString := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
-		rootModel.Table, strings.Join(insertCols, ","), strings.Join(insertValues, ","))
+	queryString := fmt.Sprintf("UPDATE %s SET %s", tableName, strings.Join(setString, ", "))
+
+	if where != "" {
+		queryString += fmt.Sprintf(" WHERE %s", where)
+	}
 
 	return queryString, nil
 }
 
-func (m *MySqlOrmQueryGeneratorRepository) generateSelect(
+func (m *MySqlOrmQueryGeneratorRepository) GenerateDelete(
+	tableName string, where string,
+) (string, error) {
+	queryString := fmt.Sprintf("DELETE FROM %s", tableName)
+	if where != "" {
+		queryString += fmt.Sprintf(" WHERE %s", where)
+	}
+	return queryString, nil
+}
+
+func (m *MySqlOrmQueryGeneratorRepository) GenerateInsert(
+	tableName string, colSq []string,
+) (string, error) {
+	if len(colSq) == 0 {
+		return "", fmt.Errorf("nil columns in insert")
+	}
+
+	insertCols := make([]string, len(colSq))
+	insertValues := make([]string, len(colSq))
+
+	for idx, col := range colSq {
+		insertCols[idx] = col
+		insertValues[idx] = "?"
+	}
+
+	queryString := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+		tableName, strings.Join(insertCols, ","), strings.Join(insertValues, ","))
+
+	return queryString, nil
+}
+
+func (m *MySqlOrmQueryGeneratorRepository) GenerateSelect(
 	r *resolvable.Orm, rootModel *orm_schema.Model, models map[string]*orm_schema.Model,
 ) (string, error) {
 	var joins []string
@@ -88,7 +127,7 @@ func (m *MySqlOrmQueryGeneratorRepository) buildProjections(
 	model *orm_schema.Model, customProjections *[]orm_schema.Projection, alias string) []string {
 	var projs []string
 	var pKey bool
-	if len(*customProjections) > 0 {
+	if customProjections != nil && len(*customProjections) > 0 {
 		for _, p := range *customProjections {
 			if p.Column == model.PrimaryKey {
 				pKey = true
@@ -191,31 +230,45 @@ func (m *MySqlOrmQueryGeneratorRepository) buildJoin(
 
 	switch association.Type {
 	case common.AssociationsHasOne, common.AssociationsHasMany, common.AssociationsBelongsTo:
-		return fmt.Sprintf("%s `%s` AS `%s` ON `%s`.`%s` = `%s`.`%s`",
-			joinType,
-			association.ReferencesTable,
-			alias,
-			joinAlias,
-			association.ColumnName,
-			alias,
-			association.ReferencesField,
-		), nil
-
+		if association.ReferencesTable == joinAlias {
+			return fmt.Sprintf("%s `%s` AS `%s` ON `%s`.`%s` = `%s`.`%s`",
+				joinType,
+				association.TableName,
+				alias,
+				joinAlias,
+				association.ReferencesField,
+				alias,
+				association.ColumnName,
+			), nil
+		} else {
+			return fmt.Sprintf("%s `%s` AS `%s` ON `%s`.`%s` = `%s`.`%s`",
+				joinType,
+				association.ReferencesTable,
+				alias,
+				joinAlias,
+				association.ColumnName,
+				alias,
+				association.ReferencesField,
+			), nil
+		}
 	case common.AssociationsBelongsToMany:
-		return fmt.Sprintf("%s `%s` AS `%s` ON `%s`.`%s` = `%s`.`%s` %s `%s` ON `%s`.`%s` = `%s`.`%s`",
+		m2mAlias := fmt.Sprintf("%s_m2m_%s", joinAlias, alias)
+		return fmt.Sprintf("%s `%s` AS `%s` ON `%s`.`%s` = `%s`.`%s` %s `%s` AS `%s` ON `%s`.`%s` = `%s`.`%s`",
 			joinType,
 			association.JoinTable,
-			alias,
-			alias,
+			m2mAlias,
+			m2mAlias,
 			association.JoinTableSourceField,
 			joinAlias,
 			association.ColumnName,
 			joinType,
 			association.ReferencesTable,
-			association.ReferencesTable,
+			alias,
+			alias,
 			association.ReferencesField,
-			association.JoinTable,
-			association.JoinTableTargetField), nil
+			m2mAlias,
+			association.JoinTableTargetField,
+		), nil
 
 	default:
 		return "", fmt.Errorf("unsupported association type: %s", association.Type)

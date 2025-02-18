@@ -79,8 +79,8 @@ func (r *configurationController) AddInternalTag(c *gin.Context) {
 	}
 
 	filteredGroups := lo.Filter(*groups, func(g configuration.InternalTagGroup, _ int) bool {
-		return lo.ContainsBy(reqBody.Groups, func(id uint) bool {
-			return g.ID == id
+		return lo.ContainsBy(reqBody.Groups, func(name string) bool {
+			return g.Name == name
 		})
 	})
 	if len(filteredGroups) != len(reqBody.Groups) {

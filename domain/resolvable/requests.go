@@ -1,12 +1,12 @@
 package resolvable
 
 import (
-	"fmt"
 	"ifttt/manager/common"
 	"ifttt/manager/domain/orm_schema"
 	"net/http"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
 var castError = validation.NewError("resolvable_not_casted", "could not cast resolvable")
@@ -37,6 +37,11 @@ func (g *getCache) Validate() error {
 	}))
 }
 
+func (g *deleteCache) Validate() error {
+	return validation.Validate(&g.Key, validation.By(func(value any) error {
+		return mustBeResolvable(value)
+	}))
+}
 func (s *setCache) Validate() error {
 	return validation.ValidateStruct(s,
 		validation.Field(&s.Key, validation.Required, validation.By(func(value any) error {
@@ -93,7 +98,17 @@ func (g *getErrors) Validate() error {
 }
 
 func (g *getStore) Validate() error {
-	return nil
+	return validation.ValidateStruct(g,
+		validation.Field(&g.Query, validation.Required, validation.By(func(value any) error {
+			if _, ok := value.(string); ok {
+				return nil
+			}
+			if r, ok := value.(map[string]any); ok {
+				return mustBeResolvable(r)
+			}
+			return validation.NewError("jq_invalid_query", "jq query must be string or resolvable")
+		})),
+	)
 }
 
 func (g *getHeaders) Validate() error {
@@ -134,7 +149,10 @@ func (c *arithmetic) Validate() error {
 	return validation.ValidateStruct(c,
 		validation.Field(&c.Group, validation.NotNil),
 		validation.Field(&c.Operation, validation.When(c.Group, validation.Required,
-			validation.In("+", "-", "*", "/", "%")).Else(validation.Empty)),
+			validation.In(
+				common.CalculatorAdd, common.CalculatorSubtract, common.CalculatorMultiply,
+				common.CalculatorDivide, common.CalculatorModulus,
+			)).Else(validation.Empty)),
 		validation.Field(&c.Operators, validation.Each(validation.Required, validation.By(
 			func(value any) error {
 				a := value.(arithmetic)
@@ -190,33 +208,16 @@ func (c *stringInterpolation) Validate() error {
 }
 
 func (c *query) Validate() error {
-	namedParams := common.RegexNamedParameters.FindAllString(c.QueryString, -1)
-	namedCount := len(namedParams)
-	positionalCount := len(common.RegexPositionalParameters.FindAllString(c.QueryString, -1))
+	count := len(common.RegexPositionalParameters.FindAllString(c.QueryString, -1))
 	return validation.ValidateStruct(c,
 		validation.Field(&c.QueryString, validation.Required),
-		validation.Field(&c.Named, validation.NotNil),
-		validation.Field(&c.NamedParameters, validation.When(c.Named,
-			validation.Length(namedCount, namedCount), validation.By(
-				func(value any) error {
-					paramMap := value.(map[string]Resolvable)
-					for _, key := range namedParams {
-						if r, ok := paramMap[key]; !ok {
-							return validation.NewError("named_param_not_found",
-								fmt.Sprintf("named parameter %s not found", key))
-						} else if err := r.Validate(); err != nil {
-							return err
-						}
-					}
-					return nil
-				})).Else(validation.Empty)),
-		validation.Field(&c.PositionalParameters, validation.When(!c.Named,
-			validation.Length(positionalCount, positionalCount), validation.Each(validation.By(
+		validation.Field(&c.Parameters,
+			validation.Length(count, count), validation.Each(validation.By(
 				func(value any) error {
 					param := value.(Resolvable)
 					return param.Validate()
 				},
-			))).Else(validation.Empty)),
+			))),
 		validation.Field(&c.Async),
 		validation.Field(&c.Timeout),
 	)
@@ -224,7 +225,7 @@ func (c *query) Validate() error {
 
 func (e *response) Validate() error {
 	return validation.ValidateStruct(e,
-		validation.Field(&e.Trigger, validation.In(
+		validation.Field(&e.Event, validation.In(
 			common.EventSuccess, common.EventExhaust, common.EventBadRequest, common.EventNotFound, common.EventSystemMalfunction,
 		)),
 	)
@@ -248,8 +249,9 @@ func (c *cast) Validate() error {
 func (o *Orm) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.Query, validation.Nil),
-		validation.Field(&o.Operation, validation.In(
-			common.OrmSelect, common.OrmInsert)),
+		validation.Field(&o.SuccessiveQuery, validation.Nil),
+		validation.Field(&o.Operation, is.UpperCase, validation.In(
+			common.OrmSelect, common.OrmInsert, common.OrmUpdate, common.OrmDelete)),
 		validation.Field(&o.Model, validation.NotNil),
 		validation.Field(&o.Project,
 			validation.When(o.Operation == common.OrmSelect,
@@ -257,47 +259,47 @@ func (o *Orm) Validate() error {
 					func(value any) error {
 						if casted, ok := value.(*[]orm_schema.Projection); !ok {
 							return castError
-						} else {
+						} else if casted != nil {
 							for _, p := range *casted {
 								if err := p.Validate(false); err != nil {
 									return err
 								}
 							}
-							return nil
 						}
+						return nil
 					}),
 			).Else(validation.Nil)),
 		validation.Field(&o.Columns,
-			validation.When(o.Operation == common.OrmInsert,
-				validation.By(
-					func(value any) error {
-						return ValidateIfResolvable(value)
-					}),
+			validation.When(o.Operation == common.OrmInsert || o.Operation == common.OrmUpdate,
+				validation.Each(validation.By(func(value any) error {
+					return ValidateIfResolvable(value)
+				})),
 			).Else(validation.Nil)),
 		validation.Field(&o.Populate,
 			validation.When(o.Operation == common.OrmSelect, validation.By(
 				func(value any) error {
 					if casted, ok := value.(*[]orm_schema.Populate); !ok {
 						return castError
-					} else {
+					} else if casted != nil {
 						for _, p := range *casted {
 							if err := p.Validate(ValidateIfResolvable); err != nil {
 								return err
 							}
 						}
-						return nil
 					}
+					return nil
 				}),
 			).Else(validation.Nil)),
 		validation.Field(&o.Where,
-			validation.When(o.Operation == common.OrmSelect, validation.By(
-				func(value any) error {
-					if v, ok := value.(*orm_schema.Where); !ok {
-						return castError
-					} else {
-						return v.Validate(ValidateIfResolvable)
-					}
-				}),
+			validation.When(o.Operation == common.OrmSelect || o.Operation == common.OrmUpdate || o.Operation == common.OrmDelete,
+				validation.By(
+					func(value any) error {
+						if v, ok := value.(*orm_schema.Where); !ok {
+							return castError
+						} else {
+							return v.Validate(ValidateIfResolvable)
+						}
+					}),
 			).Else(validation.Nil)),
 		validation.Field(&o.OrderBy, validation.When(o.Operation != common.OrmSelect, validation.Empty)),
 		validation.Field(&o.Limit, validation.When(o.Operation != common.OrmSelect, validation.Empty)),
@@ -329,7 +331,8 @@ func (d *dateManipulator) Validate() error {
 				v := value.(Resolvable)
 				return v.Validate()
 			})),
-		validation.Field(&d.Unit, validation.Required),
+		validation.Field(&d.Unit, validation.Required, validation.In(
+			common.ConvertStringToInterfaceArray(common.DateManipulatorUnits)...)),
 	)
 }
 
@@ -355,9 +358,72 @@ func (f *forEach) Validate() error {
 			func(value any) error {
 				return ValidateIfResolvable(value)
 			})),
+		validation.Field(&f.Async),
 	)
 }
 
 func (f *getIter) Validate() error {
 	return nil
+}
+
+func (c *Condition) Validate() error {
+	return validation.ValidateStruct(c,
+		validation.Field(&c.ConditionType,
+			validation.When(c.Group, validation.In(common.ConditionTypeAnd, common.ConditionTypeOr)).Else(validation.Empty)),
+		validation.Field(&c.Conditions,
+			validation.When(c.Group, validation.Length(1, 0),
+				validation.Each(validation.By(func(value interface{}) error {
+					c := value.(Condition)
+					return c.Validate()
+				}))).Else(validation.Nil)),
+		validation.Field(&c.Group),
+		validation.Field(&c.ComparisionType, validation.When(!c.Group, validation.Required,
+			validation.In(
+				common.ComparisionTypeString, common.ComparisionTypeNumber,
+				common.ComparisionTypeBoolean, common.ComparisionTypeDate, common.ComparisionTypeBcrypt,
+			)).Else(validation.Empty)),
+		validation.Field(&c.Operator1, validation.When(!c.Group, validation.By(
+			func(value interface{}) error {
+				r := value.(*Resolvable)
+				if r == nil {
+					return validation.NewError("resolvable-not-nil", "Operator resolvable cannot be nil")
+				}
+				return r.Validate()
+			}),
+		).Else(validation.Nil)),
+		validation.Field(&c.Operand, validation.When(!c.Group, validation.In(
+			common.ConvertStringToInterfaceArray(common.OperandTypes)...)).Else(validation.Empty)),
+		validation.Field(&c.Operator2, validation.When(!c.Group, validation.By(
+			func(value interface{}) error {
+				r := value.(*Resolvable)
+				if r == nil {
+					return validation.NewError("resolvable-not-nil", "Operator resolvable cannot be nil")
+				}
+				return r.Validate()
+			}),
+		).Else(validation.Nil)),
+	)
+}
+
+func (c *conditional) Validate() error {
+	return validation.ValidateStruct(c,
+		validation.Field(&c.Condition, validation.Required, validation.By(func(value any) error {
+			r := value.(Condition)
+			return r.Validate()
+		})),
+		validation.Field(&c.True,
+			validation.Required, validation.Each(validation.By(
+				func(value any) error {
+					param := value.(Resolvable)
+					return param.Validate()
+				},
+			))),
+		validation.Field(&c.False,
+			validation.Required, validation.Each(validation.By(
+				func(value any) error {
+					param := value.(Resolvable)
+					return param.Validate()
+				},
+			))),
+	)
 }

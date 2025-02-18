@@ -1,15 +1,11 @@
 package cron
 
-import (
-	"ifttt/manager/domain/resolvable"
-	triggerflow "ifttt/manager/domain/trigger_flow"
-)
+import "ifttt/manager/domain/api"
 
 type Cron struct {
-	ID           uint                             `json:"id" mapstructure:"id"`
-	Name         string                           `json:"name" mapstructure:"name"`
-	Description  string                           `json:"description" mapstructure:"description"`
-	Cron         string                           `json:"cron" mapstructure:"cron"`
-	PreConfig    map[string]resolvable.Resolvable `json:"preConfig" mapstructure:"preConfig"`
-	TriggerFlows *[]triggerflow.TriggerCondition  `json:"triggerFlows" mapstructure:"triggerFlows"`
+	Name        string   `json:"name" mapstructure:"name"`
+	Description string   `json:"description" mapstructure:"description"`
+	CronExpr    string   `json:"cronExpr" mapstructure:"cronExpr"`
+	ApiName     string   `json:"apiName" maptructure:"apiName"`
+	API         *api.Api `json:"api" mapstructure:"api"`
 }

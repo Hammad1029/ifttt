@@ -2,6 +2,7 @@ package api
 
 import (
 	requestvalidator "ifttt/manager/domain/request_validator"
+	"ifttt/manager/domain/resolvable"
 	triggerflow "ifttt/manager/domain/trigger_flow"
 )
 
@@ -11,6 +12,7 @@ type Api struct {
 	Path        string                                       `json:"path" mapstructure:"path"`
 	Method      string                                       `json:"method" mapstructure:"method"`
 	Description string                                       `json:"description" mapstructure:"description"`
+	PreConfig   []resolvable.Resolvable                      `json:"preConfig" mapstructure:"preConfig"`
 	Request     map[string]requestvalidator.RequestParameter `json:"request" mapstructure:"request"`
 	Response    map[uint]ResponseDefinition                  `json:"response" mapstructure:"response"`
 	Triggers    *[]triggerflow.TriggerCondition              `json:"triggers" mapstructure:"triggers"`

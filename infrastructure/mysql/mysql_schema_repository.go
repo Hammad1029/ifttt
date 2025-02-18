@@ -40,7 +40,7 @@ func (p *MySqlSchemaRepository) GetAllColumns(tables []string) (*[]orm_schema.Co
 				"CHARACTER_MAXIMUM_LENGTH as CharacterMaximumLength, "+
 				"NUMERIC_PRECISION as NumericPrecision",
 		).
-		Where("table_name IN ?", tables).
+		Where("table_schema = database() and table_name IN ?", tables).
 		Order("ordinal_position").
 		Scan(&columns).Error; err != nil {
 		return nil,

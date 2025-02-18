@@ -13,12 +13,11 @@ type users struct {
 
 type crons struct {
 	gorm.Model
-	Name           string          `gorm:"type:varchar(50);not null;unique" mapstructure:"name"`
-	Description    string          `gorm:"type:text;default:''" mapstructure:"description"`
-	Cron           string          `gorm:"type:varchar(30);default:''" mapstructure:"description"`
-	PreConfig      pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"preConfig"`
-	TriggerFlowRef []trigger_flows `gorm:"many2many:cron_trigger_flows;joinForeignKey:CronId;joinReferences:FlowId;" mapstructure:"triggerFlows"`
-	TriggerFlows   pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"triggerConditions"`
+	Name        string `gorm:"type:varchar(50);not null;unique" mapstructure:"name"`
+	Description string `gorm:"type:text;default:''" mapstructure:"description"`
+	CronExpr    string `gorm:"type:varchar(30);default:''" mapstructure:"cronExpr"`
+	ApiID       uint   `gorm:"not null" mapstructure:"apiId" json:"apiId"`
+	API         apis   `gorm:"foreignKey:ApiID" mapstructure:"api" json:"api"`
 }
 
 type apis struct {
@@ -27,6 +26,7 @@ type apis struct {
 	Path         string          `gorm:"type:varchar(50);not null;unique" mapstructure:"path"`
 	Method       string          `gorm:"type:varchar(10);not null" mapstructure:"method"`
 	Description  string          `gorm:"type:text;default:''" mapstructure:"description"`
+	PreConfig    pgtype.JSONB    `gorm:"type:jsonb;default:'[]';not null" mapstructure:"preConfig"`
 	Request      pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"request"`
 	Response     pgtype.JSONB    `gorm:"type:jsonb;default:'{}';not null" mapstructure:"response"`
 	Triggers     []trigger_flows `gorm:"many2many:api_trigger_flows_main;joinForeignKey:ApiId;joinReferences:FlowId;" mapstructure:"triggerFlows"`
@@ -103,7 +103,7 @@ type internal_tag_group struct {
 
 type internal_tag struct {
 	gorm.Model
-	Name     string                `json:"name" mapstructure:"name"`
+	Name     string                `gorm:"unique" json:"name" mapstructure:"name"`
 	Groups   []*internal_tag_group `gorm:"many2many:internal_tag_group_mapping;" json:"groups" mapstructure:"groups"`
 	All      bool                  `json:"all" mapstructure:"all"`
 	Reserved bool                  `json:"reserved" mapstructure:"reserved"`

@@ -5,7 +5,6 @@ import (
 	"ifttt/manager/common"
 	"ifttt/manager/domain/orm_schema"
 	"reflect"
-	"sort"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/samber/lo"
@@ -25,16 +24,16 @@ const (
 	accessorEncode              = "encode"
 	accessorSetCache            = "setCache"
 	accessorGetCache            = "getCache"
+	accessorDeleteCache         = "deleteCache"
 	accessorUUID                = "uuid"
 	accessorHeaders             = "headers"
 	accessorCast                = "cast"
 	accessorOrm                 = "orm"
 	accessorForEach             = "forEach"
 	accessorGetIter             = "getIter"
-	accessorDateInput           = "dateInput"
-	accessorDateManipulator     = "dateManipulator"
 	accessorDateFunc            = "dateFunc"
 	accessorResponse            = "response"
+	accessorConditional         = "conditional"
 )
 
 var resolveTypes = []string{
@@ -52,15 +51,15 @@ var resolveTypes = []string{
 	accessorEncode,
 	accessorSetCache,
 	accessorGetCache,
+	accessorDeleteCache,
 	accessorUUID,
 	accessorHeaders,
 	accessorCast,
 	accessorOrm,
 	accessorForEach,
 	accessorGetIter,
-	accessorDateInput,
-	accessorDateManipulator,
 	accessorDateFunc,
+	accessorConditional,
 }
 
 func factory(template any) (resolvableInterface, error) {
@@ -99,6 +98,8 @@ func factory(template any) (resolvableInterface, error) {
 		resolver = &setCache{}
 	case accessorGetCache:
 		resolver = &getCache{}
+	case accessorDeleteCache:
+		resolver = &deleteCache{}
 	case accessorUUID:
 		resolver = &uuid{}
 	case accessorHeaders:
@@ -111,12 +112,10 @@ func factory(template any) (resolvableInterface, error) {
 		resolver = &forEach{}
 	case accessorGetIter:
 		resolver = &getIter{}
-	case accessorDateInput:
-		resolver = &dateInput{}
-	case accessorDateManipulator:
-		resolver = &dateManipulator{}
 	case accessorDateFunc:
 		resolver = &dateFunc{}
+	case accessorConditional:
+		resolver = &conditional{}
 	default:
 		return nil, fmt.Errorf("resolvable %s not found", base.ResolveType)
 	}
@@ -266,15 +265,15 @@ func checkIfResolvable(val any) *Resolvable {
 	return &r
 }
 
-func ManipulateArray(arr []Resolvable, dependencies map[common.IntIota]any) ([]Resolvable, error) {
+func ManipulateArray(arr *[]Resolvable, dependencies map[common.IntIota]any) (*[]Resolvable, error) {
 	var manipulated []Resolvable
-	for _, r := range arr {
+	for _, r := range *arr {
 		if err := r.Manipulate(dependencies); err != nil {
 			return nil, err
 		}
 		manipulated = append(manipulated, r)
 	}
-	return manipulated, nil
+	return &manipulated, nil
 }
 
 func ManipulateMap(arr map[string]Resolvable, dependencies map[common.IntIota]any) (map[string]Resolvable, error) {
@@ -323,7 +322,7 @@ func (w *Orm) ManipulateWhere(where *orm_schema.Where, dependencies map[common.I
 		if converted, err := anyToResolvable(v); err != nil {
 			return err
 		} else {
-			w.Query.PositionalParameters = append(w.Query.PositionalParameters, *converted)
+			w.Query.Parameters = append(w.Query.Parameters, *converted)
 		}
 	}
 	return nil
@@ -374,33 +373,29 @@ func (o *Orm) ManipulateProjection(
 	return nil
 }
 
-func (r *Orm) ManipulateColumns(model *orm_schema.Model, dependencies map[common.IntIota]any) error {
+func (r *Orm) ManipulateColumns(model *orm_schema.Model, dependencies map[common.IntIota]any) ([]string, error) {
 	allowedColumns := lo.SliceToMap(model.Projections,
 		func(p orm_schema.Projection) (string, orm_schema.Projection) {
 			return p.Column, p
 		})
-	for col := range *r.Columns {
+	colSq := make([]string, len(r.Columns))
+
+	idx := 0
+	for col, val := range r.Columns {
 		if _, ok := allowedColumns[col]; !ok {
-			return fmt.Errorf("column %s not in model %s projections", col, model.Name)
+			return nil, fmt.Errorf("column %s not in model %s projections", col, model.Name)
 		}
-	}
-	colsSorted := lo.Keys(*r.Columns)
-	sort.Strings(colsSorted)
-	if manipulated, err := ManipulateIfResolvable(r.Columns, dependencies); err != nil {
-		return err
-	} else if mapped, ok := manipulated.(map[string]any); !ok {
-		return fmt.Errorf("could not cast manipulated to map")
-	} else {
-		r.Columns = &mapped
-		for key, v := range *r.Columns {
-			if converted, err := anyToResolvable(v); err != nil {
-				return err
-			} else {
-				r.Query.NamedParameters[key] = *converted
-			}
+		if resolved, err := ManipulateIfResolvable(val, dependencies); err != nil {
+			return nil, err
+		} else if converted, err := anyToResolvable(resolved); err != nil {
+			return nil, err
+		} else {
+			colSq[idx] = col
+			r.Columns[col] = converted
+			r.Query.Parameters = append(r.Query.Parameters, *converted)
+			idx++
 		}
-		r.Query.Named = true
 	}
 
-	return nil
+	return colSq, nil
 }
