@@ -348,7 +348,7 @@ func (d *dateInput) Validate() error {
 	)
 }
 
-func (f *forEach) Validate() error {
+func (f *filterMap) Validate() error {
 	return validation.ValidateStruct(f,
 		validation.Field(&f.Input, validation.NotNil, validation.By(
 			func(value any) error {
@@ -358,6 +358,11 @@ func (f *forEach) Validate() error {
 			func(value any) error {
 				return ValidateIfResolvable(value)
 			})),
+		validation.Field(&f.Condition, validation.Required, validation.By(func(value any) error {
+			r := value.(Condition)
+			return r.Validate()
+		})),
+
 		validation.Field(&f.Async),
 	)
 }
@@ -426,4 +431,21 @@ func (c *conditional) Validate() error {
 				},
 			))),
 	)
+}
+
+func (d *dateIntervals) Validate() error {
+	return validation.ValidateStruct(d,
+		validation.Field(&d.Start, validation.By(func(value any) error {
+			input := value.(dateInput)
+			return input.Validate()
+		})),
+		validation.Field(&d.End, validation.By(func(value any) error {
+			input := value.(dateInput)
+			return input.Validate()
+		})),
+		validation.Field(&d.Unit, validation.Required, validation.In(
+			common.ConvertStringToInterfaceArray(common.DateManipulatorUnits)...)),
+		validation.Field(&d.Format),
+	)
+
 }

@@ -100,13 +100,15 @@ type Orm struct {
 	ModelsInUse     *[]string                `json:"modelsInUse" mapstructure:"modelsInUse"`
 }
 
-type forEach struct {
-	Input any           `json:"input" mapstructure:"input"`
-	Do    *[]Resolvable `json:"do" mapstructure:"do"`
-	Async bool          `json:"async" mapstructure:"async"`
+type filterMap struct {
+	Input     any           `json:"input" mapstructure:"input"`
+	Do        *[]Resolvable `json:"do" mapstructure:"do"`
+	Condition Condition     `json:"condition" mapstructure:"condition"`
+	Async     bool          `json:"async" mapstructure:"async"`
 }
 
 type getIter struct {
+	Index bool `json:"index" mapstructure:"index"`
 }
 
 type dateFunc struct {
@@ -126,6 +128,13 @@ type dateInput struct {
 	Input    *Resolvable `json:"input" mapstructure:"input"`
 	Parse    string      `json:"parse" mapstructure:"parse"`
 	Timezone string      `json:"timezone" mapstructure:"timezone"`
+}
+
+type dateIntervals struct {
+	Start  dateInput `json:"start" mapstructure:"start"`
+	End    dateInput `json:"end" mapstructure:"end"`
+	Unit   string    `json:"unit" mapstructure:"unit"`
+	Format string    `json:"format" mapstructure:"format"`
 }
 
 type response struct {

@@ -29,9 +29,10 @@ const (
 	accessorHeaders             = "headers"
 	accessorCast                = "cast"
 	accessorOrm                 = "orm"
-	accessorForEach             = "forEach"
+	accessorFilterMap           = "filterMap"
 	accessorGetIter             = "getIter"
 	accessorDateFunc            = "dateFunc"
+	accessorDateIntervals       = "dateIntervals"
 	accessorResponse            = "response"
 	accessorConditional         = "conditional"
 )
@@ -56,9 +57,10 @@ var resolveTypes = []string{
 	accessorHeaders,
 	accessorCast,
 	accessorOrm,
-	accessorForEach,
+	accessorFilterMap,
 	accessorGetIter,
 	accessorDateFunc,
+	accessorDateIntervals,
 	accessorConditional,
 }
 
@@ -108,12 +110,14 @@ func factory(template any) (resolvableInterface, error) {
 		resolver = &cast{}
 	case accessorOrm:
 		resolver = &Orm{}
-	case accessorForEach:
-		resolver = &forEach{}
+	case accessorFilterMap:
+		resolver = &filterMap{}
 	case accessorGetIter:
 		resolver = &getIter{}
 	case accessorDateFunc:
 		resolver = &dateFunc{}
+	case accessorDateIntervals:
+		resolver = &dateIntervals{}
 	case accessorConditional:
 		resolver = &conditional{}
 	default:

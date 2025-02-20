@@ -304,7 +304,11 @@ func (d *dateInput) Manipulate(dependencies map[common.IntIota]any) error {
 	return nil
 }
 
-func (f *forEach) Manipulate(dependencies map[common.IntIota]any) error {
+func (f *filterMap) Manipulate(dependencies map[common.IntIota]any) error {
+	if err := f.Condition.Manipulate(dependencies); err != nil {
+		return err
+	}
+
 	if manipulated, err := ManipulateIfResolvable(f.Input, dependencies); err != nil {
 		return err
 	} else {
@@ -354,6 +358,16 @@ func (c *conditional) Manipulate(dependencies map[common.IntIota]any) error {
 		return err
 	} else {
 		c.False = *manipulated
+	}
+
+	return nil
+}
+
+func (d *dateIntervals) Manipulate(dependencies map[common.IntIota]any) error {
+	if err := d.Start.Manipulate(dependencies); err != nil {
+		return err
+	} else if err := d.End.Manipulate(dependencies); err != nil {
+		return err
 	}
 
 	return nil
